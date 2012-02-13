@@ -1,0 +1,38 @@
+#ABSTRACT:
+RNA viruses are present in a single host as a population of different
+but related strains. This population, shaped by the combination of
+genetic change and selection, is called quasispecies. Genetic change
+is due to both point mutations and recombination events. We present a
+jumping hidden Markov model that describes the generation of the viral
+quasispecies and a method to infer its parameters by analysing next
+generation sequencing data. The model introduces position-specific
+probability tables over the sequence alphabet to explain the diversity
+that can be found in the population at each site. Recombination events
+are indicated by a change of state, allowing a single observed read to
+originate from multiple sequences. We present an implementation of the
+EM algorithm to find maximum likelihood estimates of the model
+parameters and a method to estimate the  distribution of viral strains
+in the quasispecies. The model is validated on simulated data, showing
+the advantage of explicitly taking the recombination process into
+account, and tested by applying to reads obtained from experimental 
+HIV samples.
+
+#CONTENT:
+This java command line application is a toolbox, offering all necessary
+steps to analyse Next Generation Sequencing (NGS) data and infer the
+population of quasispecies.
+
+#PREREQUISITES:
+ - JDK 7 (http://jdk7.java.net/)
+ - Maven 3 (http://maven.apache.org/)
+
+#INSTALL:
+cd QuasiRecomb
+mvn clean package
+
+#USE / SHOW HELP:
+java -jar target/QuasiRecomb*one-jar.jar
+
+#CONTACT:
+Armin Töpfer
+http://www.bsse.ethz.ch/cbg/people/toepfera

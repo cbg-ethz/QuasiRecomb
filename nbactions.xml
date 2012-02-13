@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>run</actionName>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
+            </goals>
+            <properties>
+                <exec.classpathScope>runtime</exec.classpathScope>
+                <exec.args>-classpath %classpath ch.ethz.bsse.quasirecomb.Startup -train /Users/toepfera/Dropbox/QuasiRecomb/src/main/resources/haplotypes/dataset_1.fasta -K 2 -e 0.01 -verbose -o /Users/toepfera/Dropbox/QuasiRecomb/src/main/resources/d1 -f .8,.1,.05,.05</exec.args>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>debug</actionName>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
+            </goals>
+            <properties>
+                <exec.classpathScope>runtime</exec.classpathScope>
+                <exec.args>-Xdebug -Xrunjdwp:transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath ch.ethz.bsse.quasirecomb.Startup -train /Users/toepfera/Dropbox/QuasiRecomb/src/main/resources/haplotypes/dataset_1.fasta -K 2 -e 0.01 -verbose -o /Users/toepfera/Dropbox/QuasiRecomb/src/main/resources/d1 -f .8,.1,.05,.05</exec.args>
+                <jpda.listen>true</jpda.listen>
+                <exec.executable>java</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>profile</actionName>
+            <goals>
+                <goal>process-classes</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+            </goals>
+            <properties>
+                <exec.args>${profiler.args} -classpath %classpath ch.ethz.bsse.quasirecomb.Startup -train /Users/toepfera/Dropbox/QuasiRecomb/src/main/resources/haplotypes/dataset_1.fasta -K 2 -e 0.01 -verbose -o /Users/toepfera/Dropbox/QuasiRecomb/src/main/resources/d1 -f .8,.1,.05,.05</exec.args>
+                <profiler.action>profile</profiler.action>
+                <exec.executable>${profiler.java}</exec.executable>
+            </properties>
+        </action>
+        <action>
+            <actionName>build</actionName>
+            <goals>
+                <goal>install</goal>
+                
+            </goals>
+        </action>
+        <action>
+            <actionName>rebuild</actionName>
+            <goals>
+                <goal>clean</goal>
+                <goal>package</goal>
+                
+            </goals>
+        </action>
+    </actions>
