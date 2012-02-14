@@ -45,10 +45,12 @@ public class ReadHMMWorker extends RecursiveTask<List<ReadHMM>> {
     protected List<ReadHMM> compute() {
         if (end - start < Globals.STEPSIZE) {
             List<ReadHMM> list = new LinkedList<>();
+//            long time = System.currentTimeMillis();
             for (int i = start; i < end; i++) {
                 ReadHMM readHMM = new ReadHMM(L, K, n, reads[i], rho, pi, mu, eps, antieps);
                 list.add(readHMM);
             }
+//            System.out.println(start+"-"+end+"\t:"+(System.currentTimeMillis()-time));
             return list;
         } else {
             final int mid = start + (end - start) / 2;

@@ -14,7 +14,7 @@ public class Globals {
     public static boolean SAVE = true;
     public static String filePrefix = "";
     public static String savePath = "C:\\Users\\XLR\\Dropbox\\JData\\";
-    public static double ESTIMATION_EPSILON = .0001;
+    public static double ESTIMATION_EPSILON = .001;
     public static double SAMPLING_EPSILON = .0003333333;
     public static double FILTER_LLH = 1e-4;
     public static double DELTA_LLH = 1e-8;
@@ -36,7 +36,7 @@ public class Globals {
     public static boolean ADD_ALPHA = false;
     public static int MAX_PRE_BREAK = 50;
     public static int PARALLEL_RESTARTS_UPPER_BOUND = 10;
-    public static boolean PARALLEL_JHMM = false;
+    public static boolean PARALLEL_JHMM = true;
     public static boolean PARALLEL_RESTARTS = false;
     public static boolean NO_REFINE = false;
     public static boolean NO_BREAK_THRESHOLD = false;

@@ -113,7 +113,7 @@ public class JHMM {
     }
 
     private void calculateLoglikelihood() {
-        long time = System.currentTimeMillis();
+//        long time = System.currentTimeMillis();
         this.loglikelihood = 0d;
         for (ReadHMM r : this.readHMMMap.keySet()) {
             for (int j = 0; j < L; j++) {
@@ -130,11 +130,11 @@ public class JHMM {
                 this.likelihood += llh;
             }
         }
-        System.out.println("L\t: " + (System.currentTimeMillis() - time));
+//        System.out.println("L\t: " + (System.currentTimeMillis() - time));
     }
 
     private void start() {
-        long time = System.currentTimeMillis();
+//        long time = System.currentTimeMillis();
         byte[][] uniqueReads = new byte[clusterReads.keySet().size()][L];
         for (byte[] read : this.clusterReads.keySet()) {
             uniqueReads[mapSize++] = read;
@@ -151,11 +151,11 @@ public class JHMM {
         for (ReadHMM r : rArray) {
             this.readHMMMap.put(r, clusterReads.get(r.getRead()));
         }
-        System.out.println("R\t: " + (System.currentTimeMillis() - time));
+//        System.out.println("R\t: " + (System.currentTimeMillis() - time));
     }
 
     public void restart() {
-        long time = System.currentTimeMillis();
+//        long time = System.currentTimeMillis();
         if (Globals.PARALLEL_JHMM) {
             Globals.fjPool.invoke(new ReadHMMWorkerRecalc(this.readHMMMap.keySet().toArray(new ReadHMM[this.readHMMMap.keySet().size()]), rho, pi, mu, eps, 0, mapSize));
         } else {
@@ -163,7 +163,7 @@ public class JHMM {
                 r.recalc(rho, pi, mu, eps);
             }
         }
-        System.out.println("R\t: " + (System.currentTimeMillis() - time));
+//        System.out.println("R\t: " + (System.currentTimeMillis() - time));
         this.calculate();
     }
 
@@ -174,7 +174,7 @@ public class JHMM {
     }
 
     private void eStep() {
-        long time = System.currentTimeMillis();
+//        long time = System.currentTimeMillis();
         this.nJK = new double[L][K];
         this.nJKL = new double[L][K][K];
         this.nJKV = new double[L][K][n];
@@ -217,7 +217,7 @@ public class JHMM {
                 }
             }
         }
-        System.out.println("E\t: " + (System.currentTimeMillis() - time));
+//        System.out.println("E\t: " + (System.currentTimeMillis() - time));
     }
 
     private double[][][] calcMu() {
@@ -304,16 +304,16 @@ public class JHMM {
     }
 
     private void mStep() {
-        long time = System.currentTimeMillis();
+//        long time = System.currentTimeMillis();
         if (!Globals.rho0) {
             this.rho = this.calcRho();
         }
         this.pi = this.calcPi();
         this.mu_old = this.mu;
         this.mu = this.calcMu();
-        System.out.println("M\t: " + (System.currentTimeMillis() - time));
+//        System.out.println("M\t: " + (System.currentTimeMillis() - time));
 //        this.eps = (1d/(n-1d))*(this.nneq/((double)this.nneq+this.neq));
-        System.out.println("#EPS: "+eps);
+//        System.out.println("#EPS: "+eps);
     }
     public double[][][] mu_old;
 

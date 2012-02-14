@@ -4,6 +4,7 @@ import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 /**
  *
@@ -12,6 +13,7 @@ import java.util.Map;
 public class Sampling {
     
     public static String newline = System.getProperty("line.separator");
+    public static Random random = new Random();
 
     public static Map<String, Integer> fromHaplotypes(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
         return fromHaplotypes(Utils.parseFarFile(path), N, L, epsilon, hapProb, n, savePath);
@@ -37,7 +39,7 @@ public class Sampling {
             int hap = frequency.roll();
             hapFreq.put(hap, hapFreq.get(hap) + 1);
             char[] readArray = new char[L];
-            int start = (int) (Math.random() * L * .9);
+            int start = random.nextInt((int)(L*0.9));
             int length = 0;
             do {
                 length = (int) (Math.random() * 200);
