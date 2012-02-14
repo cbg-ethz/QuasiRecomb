@@ -1,5 +1,6 @@
 package ch.ethz.bsse.quasirecomb;
 
+import ch.ethz.bsse.quasirecomb.entropy.ShannonEntropy;
 import ch.ethz.bsse.quasirecomb.filter.Cutter;
 import ch.ethz.bsse.quasirecomb.filter.MAExtract;
 import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
@@ -18,12 +19,14 @@ import org.kohsuke.args4j.Option;
  */
 public class Startup {
 
-    @Option(name = "-sample", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
-    private String sample;
+    @Option(name = "-i")
+    private String input;
+    @Option(name = "--sample", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
+    private boolean sample;
     @Option(name = "-o", usage = "Path to the output directory (default: current directory)", metaVar = "PATH")
     private String output;
-    @Option(name = "-train", usage = "Train model for given multiple alignment")
-    private String train;
+    @Option(name = "--train", usage = "Train model for given multiple alignment")
+    private boolean train;
     @Option(name = "-noSample", usage = "Do not infer haplotypes from best model")
     private boolean noSample;
     @Option(name = "-K")
@@ -48,20 +51,22 @@ public class Startup {
     private boolean parallelRestarts;
     @Option(name = "-verbose")
     private boolean verbose;
-    @Option(name = "-filter")
-    private String filter;
+    @Option(name = "--filter")
+    private boolean filter;
     @Option(name = "-c")
     private double gapc = 0.01;
-    @Option(name = "-viz")
-    private String viz;
+    @Option(name = "--viz")
+    private boolean viz;
     @Option(name = "-exec")
     private String exec;
-    @Option(name = "-cut")
-    private String cut;
+    @Option(name = "--cut")
+    private boolean cut;
     @Option(name = "-begin")
     private int begin;
     @Option(name = "-end")
     private int end;
+    @Option(name = "--entropy")
+    private boolean entropy;
     
 
     public static void main(String[] args) throws IOException {
@@ -79,10 +84,10 @@ public class Startup {
                 this.output = System.getProperty("user.dir") + File.separator;
             }
 
-            if (this.sample != null) {
+            if (this.sample) {
                 int AMOUNT = 10000;
-                if (sample.contains("#")) {
-                    String[] splitBracket = sample.split("#");
+                if (input.contains("#")) {
+                    String[] splitBracket = input.split("#");
                     String[] split = splitBracket[1].split("-");
 
                     for (int i = Integer.parseInt(split[0]); i <= Integer.parseInt(split[1]); i++) {
@@ -90,10 +95,10 @@ public class Startup {
                         ModelSampling simulation = new ModelSampling(splitBracket[0] + i, output, AMOUNT);
                     }
                 } else {
-                    System.out.println("Sampling " + sample);
-                    ModelSampling simulation = new ModelSampling(sample, output, AMOUNT);
+                    System.out.println("Sampling " + input);
+                    ModelSampling simulation = new ModelSampling(input, output, AMOUNT);
                 }
-            } else if (this.train != null) {
+            } else if (this.train) {
                 int Kmin, Kmax;
                 if (K.contains(":")) {
                     Kmin = Integer.parseInt(K.split(":")[0]);
@@ -137,14 +142,16 @@ public class Startup {
                     Globals.rho0 = true;
                     Globals.rho0force = true;
                 }
-                ArtificialExperimentalForwarder.forward(exp, this.train, Kmin, Kmax, fArray, N);
-            } else if (viz != null) {
-                QuasiViz.paint(viz, output);
-            } else if (cut != null) {
-                Cutter.cut(cut, output, begin, end);
-            } else if (filter != null) {
-                if (filter.contains("#")) {
-                    String[] splitBracket = filter.split("#");
+                ArtificialExperimentalForwarder.forward(exp, this.input, Kmin, Kmax, fArray, N);
+            } else if (viz) {
+                QuasiViz.paint(input, output);
+            } else if (cut) {
+                Cutter.cut(input, output, begin, end);
+            } else if (entropy) {
+                ShannonEntropy.entropy(input);
+            } else if (filter) {
+                if (input.contains("#")) {
+                    String[] splitBracket = input.split("#");
                     String[] split = splitBracket[1].split("-");
 
                     for (int i = Integer.parseInt(split[0]); i <= Integer.parseInt(split[1]); i++) {
@@ -152,8 +159,8 @@ public class Startup {
                         MAExtract.calc(splitBracket[0]+i, output+i, gapc);
                     }
                 } else {
-                    System.out.println("Filtering " + filter);
-                    MAExtract.calc(filter, output, gapc);
+                    System.out.println("Filtering " + input);
+                    MAExtract.calc(input, output, gapc);
                 }
             } else {
                 throw new CmdLineException("No input given");
@@ -165,12 +172,15 @@ public class Startup {
             System.err.println(" ------------------------");
             System.err.println(" === GENERAL options ===");
             System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory)");
+            System.err.println("  -i PATH\t\t: Path to the input file [REQUIRED]\n\t\t\t More information about the input type in sections below");
             System.err.println("  -verbose\t\t: Print debug information");
             System.err.println(" ------------------------");
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === TRAINING options ===");
-            System.err.println("  -train INPUT\t\t: Multiple fasta file");
+            System.err.println("  --train");
+            System.err.println("  -i INPUT\t\t: Multiple fasta file");
+            System.err.println("");
             System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID");
             System.err.println("  -t INT\t\t: The number of EM restarts to find optimum (default: 50)");
             System.err.println("  -e DOUBLE\t\t: Error rate of the sequencing machine (default: 0.0001)");
@@ -181,42 +191,57 @@ public class Startup {
                     + "\t\t\t  If not specified, the input is treated as experimental dataset");
             System.err.println("  -parallelRestarts\t: Parallelize the EM restarts, use this only on machines with 10+ cores!");
             System.err.println("");
-            System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -train input.fasta");
+            System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar --train -i input.fasta");
 //            System.err.println("  -noSample\t\t: Do not infer haplotypes, only model training");
             System.err.println(" ------------------------");
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === FILTER alignment ===");
-            System.err.println("  -filter INPUT\t\t: Multiple alignment in fasta format");
+            System.err.println("  --filter");
+            System.err.println("  -i INPUT\t\t: Multiple alignment in fasta format");
+            System.err.println("");
             System.err.println("  -c DOUBLE\t\t: Percentage of gaps allowed (default: 0.01)");
             System.err.println("");
-            System.err.println("  Example for filtering:\n   java -jar QuasiRecomb.jar -filter input.fasta -o output_filtered.fasta");
+            System.err.println("  Example for filtering:\n   java -jar QuasiRecomb.jar --filter -i input.fasta -o output_filtered.fasta");
             System.err.println(" ------------------------");
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === Cut alignment ===");
-            System.err.println("  -cut INPUT\t\t: Multiple alignment in fasta format");
+            System.err.println("  --cut");
+            System.err.println("  -i INPUT\t\t: Multiple alignment in fasta format");
+            System.err.println("");
             System.err.println("  -begin INT\t\t: Beginning position of the window");
             System.err.println("  -end INT\t\t: Ending position of the window");
             System.err.println("");
-            System.err.println("  Example for cutting:\n   java -jar QuasiRecomb.jar -cut input.fasta -o output_w1200-2420.fasta -begin 1200 -end 2420");
+            System.err.println("  Example for cutting:\n   java -jar QuasiRecomb.jar --cut -i input.fasta -o output_w1200-2420.fasta -begin 1200 -end 2420");
             System.err.println(" ------------------------");
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === Visualize Quasispezies ===");
-            System.err.println("  -viz INPUT\t\t: Multiple alignment in fasta format");
+            System.err.println("  --viz");
+            System.err.println("  -i INPUT\t\t: Multiple alignment in fasta format");
+            System.err.println("");
             System.err.println("  -exec PATH\t\t: Executable dot file of graphviz");
 //            System.err.println("  -c DOUBLE\t\t\t: Percentage of gaps allowed (default: 0.01)");
             System.err.println("");
-            System.err.println("  Example for vizualization:\n   java -jar QuasiRecomb.jar -viz hapDist.fasta -o hapViz -exec /PATH/TO/dot");
+            System.err.println("  Example for vizualization:\n   java -jar QuasiRecomb.jar --viz -i hapDist.fasta -o hapViz -exec /PATH/TO/dot");
             System.err.println(" ------------------------");
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === SAMPLE from model === ");
-            System.err.println("  -sample FILE\t\t: Sample from given trained model");
-            System.err.println("  -sample FILE[1-5]\t: Sample from given trained model");
+            System.err.println("  --sample ");
+            System.err.println("  -i FILE\t\t: Sample from given trained model");
             System.err.println("");
-            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar -sample path/to/optimumJava");
+            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i path/to/optimumJava");
+            System.err.println("");
+            System.err.println(" ------------------------");
+            System.err.println("");
+            System.err.println(" ------------------------");
+            System.err.println(" === SHANNON ENTROPY === ");
+            System.err.println("  --entropy ");
+            System.err.println("  -i FILE\t\t: Multiple fasta file");
+            System.err.println("");
+            System.err.println("  Example for entropy:\n   java -jar QuasiRecomb.jar --entropy -i input.far");
             System.err.println("");
         }
     }

@@ -10,6 +10,8 @@ import java.util.Map;
  * @author Armin Töpfer (armin.toepfer@bsse.ethz.ch)
  */
 public class Sampling {
+    
+    public static String newline = System.getProperty("line.separator");
 
     public static Map<String, Integer> fromHaplotypes(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
         return fromHaplotypes(Utils.parseFarFile(path), N, L, epsilon, hapProb, n, savePath);
@@ -69,7 +71,12 @@ public class Sampling {
 //                    readArray[j] = '-';
 //                }
 //            }
-            read = String.valueOf(readArray);
+            StringBuilder s = new StringBuilder(length);
+            for (int j =start; j < start+length; j++) {
+                s.append(readArray[j]);
+            }
+//            read = String.valueOf(readArray);
+            read = s.toString();
             if (!map.containsKey(read)) {
                 map.put(read, 0);
             }
@@ -84,7 +91,8 @@ public class Sampling {
         sb.setLength(0);
         for (String readX : map.keySet()) {
             for (int i = 0; i < map.get(readX); i++) {
-                sb.append(">SAMPLED-").append(z++).append("\n").append(readX).append("\n");
+                sb.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
+                
             }
         }
         Utils.saveFile(savePath + "reads.fasta", sb.toString());
