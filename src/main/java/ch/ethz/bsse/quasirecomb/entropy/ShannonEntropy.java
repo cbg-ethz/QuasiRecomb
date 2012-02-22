@@ -6,7 +6,6 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.javatuples.Pair;
 
 /**
  *
@@ -30,14 +29,13 @@ public class ShannonEntropy {
             int L = far.values().iterator().next().length;
             double[] positionEntropy = new double[L];
             int[] coverage = new int[L];
-
+            
             for (int j = 0; j < L; j++) {
                 int l = 0;
                 Map<Byte, Integer> map = new HashMap<>();
                 for (String p : far.keySet()) {
                     byte c = far.get(p)[j];
-                    if (c != '-'
-                            && c != 'N') {
+                    if (c != 'N') {
                         l++;
                         if (!map.containsKey(c)) {
                             map.put(c, 0);
@@ -50,7 +48,7 @@ public class ShannonEntropy {
                 Double result = 0.0;
                 for (byte base : map.keySet()) {
                     Double frequency = (double) map.get(base) / l;
-                    result -= frequency * (Math.log(frequency) / Math.log(4));
+                    result -= frequency * Math.log(frequency);
                 }
                 positionEntropy[j] = result;
                 coverage[j] = l;

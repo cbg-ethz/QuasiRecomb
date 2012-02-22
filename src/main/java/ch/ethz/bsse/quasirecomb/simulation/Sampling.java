@@ -42,15 +42,15 @@ public class Sampling {
             int start = random.nextInt((int)(L*0.9));
             int length = 0;
             do {
-                length = (int) (Math.random() * 200);
+                length = random.nextInt(100);
                 if (start + length > L) {
-                    if (L - start < 30) {
-                        continue;
-                    }
+//                    if (L - start < 30) {
+//                        continue;
+//                    }
                     length = L - start;
                     break;
                 }
-            } while (length < 100);
+            } while (length < 50);
 //            for (int j = 0; j < start; j++) {
 //                readArray[j] = '-';
 //            }
@@ -142,6 +142,15 @@ public class Sampling {
             sb.append(map.get(readX)).append("\t").append(readX).append("\n");
         }
         Utils.saveFile(savePath + "sampledReadDistribution.txt", sb.toString());
+        int z = 0;
+        sb.setLength(0);
+        for (String readX : map.keySet()) {
+            for (int i = 0; i < map.get(readX); i++) {
+                sb.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
+                
+            }
+        }
+        Utils.saveFile(savePath + "reads.fasta", sb.toString());
         return map;
     }
 

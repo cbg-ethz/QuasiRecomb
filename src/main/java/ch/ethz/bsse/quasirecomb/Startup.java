@@ -1,6 +1,7 @@
 package ch.ethz.bsse.quasirecomb;
 
-import ch.ethz.bsse.quasirecomb.entropy.ShannonEntropy;
+import ch.ethz.bsse.quasirecomb.diversity.Diversity;
+import ch.ethz.bsse.quasirecomb.diversity.PairwiseEntropyComparison;
 import ch.ethz.bsse.quasirecomb.filter.Cutter;
 import ch.ethz.bsse.quasirecomb.filter.MAExtract;
 import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
@@ -33,6 +34,8 @@ public class Startup {
     private String K = "1:5";
     @Option(name = "-t")
     private int t = 50;
+    @Option(name = "-a")
+    private double a = 0.01;
     @Option(name = "-N")
     private int N = 2000;
     @Option(name = "-chunk")
@@ -65,9 +68,23 @@ public class Startup {
     private int begin;
     @Option(name = "-end")
     private int end;
-    @Option(name = "--entropy")
+    @Option(name = "-entropy")
     private boolean entropy;
+    @Option(name = "-plot")
+    private boolean plot;
+    @Option(name = "-shannonindex")
+    private boolean shannonindex;
+    @Option(name = "--diversity")
+    private boolean diversity;
+    @Option(name = "-desc")
+    private String description;
     
+    @Option(name = "--pairEntropyTest")
+    private boolean pairEntropyTest;
+    @Option(name = "-afile")
+    private String afile;
+    @Option(name = "-bfile")
+    private String bfile;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -108,7 +125,7 @@ public class Startup {
                     Kmax = Integer.parseInt(K);
                 }
                 double fArray[] = null;
-                 boolean exp = true;
+                boolean exp = true;
                 if (f != null) {
                     exp = false;
                     String[] split = f.split(",");
@@ -138,6 +155,7 @@ public class Startup {
                 Globals.STEPSIZE = chunk;
                 Globals.savePath = output + File.separator;
                 new File(Globals.savePath).mkdirs();
+                Globals.PRIOR_ALPHA = a;
                 if (Globals.PRIOR_ALPHA == 0.0) {
                     Globals.rho0 = true;
                     Globals.rho0force = true;
@@ -147,8 +165,34 @@ public class Startup {
                 QuasiViz.paint(input, output);
             } else if (cut) {
                 Cutter.cut(input, output, begin, end);
-            } else if (entropy) {
-                ShannonEntropy.entropy(input);
+            } else if (diversity) {
+                Diversity diversity = new Diversity(input, output, description, plot);
+                if (entropy) {
+                    diversity.entropy();
+                }
+//                if (shannonindex) {
+//                    diversity.shannonIndex();
+//                }
+            } else if (pairEntropyTest) {
+//                File dir;
+//                FileFilter fileFilter;
+//                if (input.contains(File.separator)) {
+//                    String[] split = input.split(File.separator);
+//                    String path = "";
+//                    for (int i = 0; i < split.length - 1; i++) {
+//                        path += split[i] + File.separator;
+//                    }
+//                    dir = new File(path);
+//                    fileFilter = new WildcardFileFilter(split[split.length - 1].replace("#", "*"));
+//                } else {
+//                    dir = new File(".");
+//                    fileFilter = new WildcardFileFilter(input.replace("#", "*"));
+//                }
+//                File[] files = dir.listFiles(fileFilter);
+//                for (int i = 0; i < files.length; i++) {
+//                    System.out.println(files[i]);
+//                }
+                new PairwiseEntropyComparison(afile,bfile);
             } else if (filter) {
                 if (input.contains("#")) {
                     String[] splitBracket = input.split("#");
@@ -156,7 +200,7 @@ public class Startup {
 
                     for (int i = Integer.parseInt(split[0]); i <= Integer.parseInt(split[1]); i++) {
                         System.out.println("Filtering " + splitBracket[0] + i);
-                        MAExtract.calc(splitBracket[0]+i, output+i, gapc);
+                        MAExtract.calc(splitBracket[0] + i, output + i, gapc);
                     }
                 } else {
                     System.out.println("Filtering " + input);
@@ -237,9 +281,13 @@ public class Startup {
             System.err.println(" ------------------------");
             System.err.println("");
             System.err.println(" ------------------------");
-            System.err.println(" === SHANNON ENTROPY === ");
-            System.err.println("  --entropy ");
+            System.err.println(" === DIVERSITY measurements === ");
+            System.err.println("  --diversity ");
             System.err.println("  -i FILE\t\t: Multiple fasta file");
+            System.err.println("  -desc STRING\t\t: Short description (i.e. name of strain)");
+            System.err.println("  -shannonindex\t\t\t: Calculate Shannon-index");
+            System.err.println("  -entropy\t\t\t: Plot site-wise Shannon-Entropy");
+            System.err.println("  -coverage\t\t\t: Plot site-wise Coverage");
             System.err.println("");
             System.err.println("  Example for entropy:\n   java -jar QuasiRecomb.jar --entropy -i input.far");
             System.err.println("");

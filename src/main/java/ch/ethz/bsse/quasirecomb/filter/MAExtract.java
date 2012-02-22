@@ -10,48 +10,65 @@ public class MAExtract {
 
     private static boolean verbose;
     private static int update;
-    private static int begin;
-    private static int end;
     private static int window = 200;
     private static int increment = 1;
     private static double gapc;
     private static boolean filter_only = false;
 
     public static void filter(StringBuilder sb, String head, BufferedWriter out) throws IOException {
-        String s = filter_only ? sb.toString() : sb.substring(begin - 1, end).toString();
-        for (int j = 0; j < s.length(); j += increment) {
-            int x = j + window;
-            if (acceptableRegion(s.substring(j, x < s.length() ? x : s.length()))) {
-                while (x <= s.length()) {
-                    x++;
-                    if (!acceptableRegion(s.substring(j, x < s.length() ? x : s.length()))) {
-                        x--;
-                        break;
-                    }
-                }
-                out.write(head + "###" + j + "-" + x + "\n");
-                if (filter_only) {
-                    out.write(s + "\n");
-                } else {
-                    StringBuilder gb = new StringBuilder();
-                    for (int i = 0; i < j; i++) {
-                        gb.append("-");
-                    }
-                    gb.append(s.substring(j, x));
-                    for (int i = 0; i < x; i++) {
-                        gb.append("-");
-                    }
-                    out.write(gb.toString() + "\n");
-                }
-                break;
+        String s = sb.toString();
+        int begin = 0;
+        int end = 0;
+        for (int j = 0; j < s.length(); j++) {
+            if (s.charAt(j) != '-') {
+               begin = j; 
+               break;
             }
         }
+        for (int j = s.length()-1; j >=begin; j--) {
+            if (s.charAt(j) != '-') {
+               end = j; 
+               break;
+            }
+        }
+        
+        if (acceptableRegion(s.substring(begin, end))) {
+            out.write(head + "\n" + s + "\n");
+        }
+        
+//        for (int j = 0; j < s.length(); j += increment) {
+//            int x = j + window;
+//            if (acceptableRegion(s.substring(j, x < s.length() ? x : s.length()))) {
+//                while (x <= s.length()) {
+//                    x++;
+//                    if (!acceptableRegion(s.substring(j, x < s.length() ? x : s.length()))) {
+//                        x--;
+//                        break;
+//                    }
+//                }
+//                out.write(head + "###" + j + "-" + x + "\n");
+//                if (filter_only) {
+//                    out.write(s + "\n");
+//                } else {
+//                    StringBuilder gb = new StringBuilder();
+//                    for (int i = 0; i < j; i++) {
+//                        gb.append("-");
+//                    }
+//                    gb.append(s.substring(j, x));
+//                    for (int i = 0; i < x; i++) {
+//                        gb.append("-");
+//                    }
+//                    out.write(gb.toString() + "\n");
+//                }
+//                break;
+//            }
+//        }
     }
 
     public static void calc(String input, String output, double p) {
         gapc = p;
         filter_only = true;
-        parse(input, output, true);
+        parse(input, output, false);
     }
 
     /**
@@ -158,16 +175,16 @@ public class MAExtract {
 //        if (s.endsWith("-")) {
 //            return false;
 //        }
-        if (s.contains("N")) {
-            return false;
-        }
+//        if (s.contains("N")) {
+//            return false;
+//        }
         int gaps = 0;
         for (char c : s.toCharArray()) {
             if (c == '-') {
                 gaps++;
             }
         }
-        if (gaps > s.length() * (gapc)) {
+        if (gaps > (s.length() * gapc)) {
             return false;
         }
 //        for (char c : s.toCharArray()) {
