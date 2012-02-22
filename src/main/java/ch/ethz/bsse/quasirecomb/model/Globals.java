@@ -11,6 +11,11 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class Globals {
 
+    public static double BETA_Z = 0.01;
+    public static double BETA_H = 0.01;
+    public static double ALPHA_Z = 0.001;
+    public static double ALPHA_H = 0.01;
+    
     public static boolean SAVE = true;
     public static String filePrefix = "";
     public static String savePath = "C:\\Users\\XLR\\Dropbox\\JData\\";

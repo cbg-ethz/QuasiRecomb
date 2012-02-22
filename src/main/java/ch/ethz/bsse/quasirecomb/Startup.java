@@ -54,6 +54,14 @@ public class Startup {
     private boolean parallelRestarts;
     @Option(name = "-verbose")
     private boolean verbose;
+    @Option(name = "-alphah")
+    private double alphah = 0.0001;
+    @Option(name = "-betah")
+    private double betah = 10;
+    @Option(name = "-alphaz")
+    private double alphaz = 0.0015;
+    @Option(name = "-betaz")
+    private double betaz = 0.0025;
     @Option(name = "--filter")
     private boolean filter;
     @Option(name = "-c")
@@ -78,7 +86,6 @@ public class Startup {
     private boolean diversity;
     @Option(name = "-desc")
     private String description;
-    
     @Option(name = "--pairEntropyTest")
     private boolean pairEntropyTest;
     @Option(name = "-afile")
@@ -141,6 +148,11 @@ public class Startup {
                         System.exit(0);
                     }
                 }
+
+                Globals.ALPHA_Z = this.alphaz;
+                Globals.ALPHA_H = this.alphah;
+                Globals.BETA_Z = this.betaz;
+                Globals.BETA_H = this.betah;
                 Globals.MIN_LLH = this.minLLH;
 
                 Globals.PARALLEL_RESTARTS = this.parallelRestarts;
@@ -192,7 +204,7 @@ public class Startup {
 //                for (int i = 0; i < files.length; i++) {
 //                    System.out.println(files[i]);
 //                }
-                new PairwiseEntropyComparison(afile,bfile);
+                new PairwiseEntropyComparison(afile, bfile);
             } else if (filter) {
                 if (input.contains("#")) {
                     String[] splitBracket = input.split("#");

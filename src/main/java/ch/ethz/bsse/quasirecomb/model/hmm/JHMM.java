@@ -67,8 +67,7 @@ public class JHMM {
                 (1 - (n - 1) * epsilon),
                 Random.generateInitRho(L - 1, K),
                 Random.generateInitPi(K),
-                Random.generateMuInit(L, K, n),
-                Random.generatePriorRho(L - 1, K));
+                Random.generateMuInit(L, K, n));
     }
 
     public JHMM(byte[][] reads, int N, int L, int K, int n, double epsilon) {
@@ -76,11 +75,10 @@ public class JHMM {
                 (1 - (n - 1) * epsilon),
                 Random.generateInitRho(L - 1, K),
                 Random.generateInitPi(K),
-                Random.generateMuInit(L, K, n),
-                Random.generatePriorRho(L - 1, K));
+                Random.generateMuInit(L, K, n));
     }
 
-    public JHMM(byte[][] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu, double[][][] priorRho) {
+    public JHMM(byte[][] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
         this.N = N;
         this.L = L;
         this.K = K;
@@ -91,7 +89,7 @@ public class JHMM {
         this.eps = eps;
         this.antieps = antieps;
         this.pi = pi;
-        this.priorRho = priorRho;
+        this.priorRho = rho;
         this.start();
         this.calculate();
     }
@@ -108,6 +106,44 @@ public class JHMM {
         this.antieps = antieps;
         this.pi = pi;
         this.priorRho = priorRho;
+        this.start();
+        this.calculate();
+    }
+
+    private JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
+        double[] e = new double[L * K];
+        int i = 0;
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                for (int v = 0; v < n; v++) {
+                    e[i] -= mu[j][k][v] * Math.log(mu[j][k][v]) / Math.log(n);
+                }
+                i++;
+            }
+        }
+        double muMean = 0d;
+        for (double d : e) {
+            muMean += d;
+        }
+        muMean /= L*K;
+        double muStddev = 0d;
+        for (double d : e) {
+            muStddev += Math.pow(d-muMean,2);
+        }
+        muStddev /= L*K;
+        System.out.println("MU Entropy mean\t: " + muMean);
+        System.out.println("MU Entropy stddev\t:" + muStddev);
+        this.N = N;
+        this.L = L;
+        this.K = K;
+        this.n = n;
+        this.clusterReads = reads;
+        this.rho = rho;
+        this.mu = mu;
+        this.eps = eps;
+        this.antieps = antieps;
+        this.pi = pi;
+        this.priorRho = rho;
         this.start();
         this.calculate();
     }
@@ -226,7 +262,7 @@ public class JHMM {
             for (int k = 0; k < K; k++) {
                 double sumV = 0d;
                 for (int v = 0; v < n; v++) {
-                    mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.PRIOR_ALPHA);
+                    mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.BETA_Z);
                     sumV += mu_[j][k][v];
                 }
                 if (sumV != 0) {
@@ -250,7 +286,7 @@ public class JHMM {
                     if (Double.isNaN(this.getnJKL(j, k, l))) {
                         System.out.println("rho");
                     }
-                    rho_[j - 1][k][l] = this.rho_f(this.getnJKL(j, k, l) + Globals.PRIOR_ALPHA);
+                    rho_[j - 1][k][l] = this.rho_f(this.getnJKL(j, k, l) + Globals.ALPHA_Z);
                     divisor += rho_[j - 1][k][l];
                 }
 
@@ -276,9 +312,9 @@ public class JHMM {
 
     private double rho_phi(double upsilon) {
         double x = -1d;
-        try { 
+        try {
             x = (upsilon > 7) ? rho_g(upsilon - .5) : (rho_phi(upsilon + 1) - 1 / upsilon);
-            
+
         } catch (StackOverflowError e) {
             System.err.println(upsilon);
             System.err.println(e);
