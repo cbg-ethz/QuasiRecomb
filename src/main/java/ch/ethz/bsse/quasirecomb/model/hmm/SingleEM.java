@@ -39,6 +39,16 @@ public class SingleEM {
         start(null);
     }
 
+    public SingleEM(OptimalResult or) {
+        this.N = or.getN();
+        this.K = or.getK();
+        this.L = or.getL();
+        this.n = or.getn();
+        this.reads = or.getReads();
+        this.haplotypesArray = or.getHaplotypesArray();
+        this.delta = Globals.DELTA_LLH_HARDER;
+        start(or);
+    }
     public SingleEM(int N, int K, int L, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray, double delta, OptimalResult or) {
         this.N = N;
         this.K = K;
@@ -56,7 +66,7 @@ public class SingleEM {
         if (givenPrior == null) {
             jhmm = new JHMM(reads, N, L, K, n, Globals.ESTIMATION_EPSILON);
         } else {
-            jhmm = new JHMM(reads, N, L, K, n, givenPrior);
+            jhmm = new JHMM(givenPrior);
         }
 
         double llh = Double.MIN_VALUE;

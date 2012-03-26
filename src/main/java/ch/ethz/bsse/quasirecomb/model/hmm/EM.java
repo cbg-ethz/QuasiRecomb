@@ -3,12 +3,12 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.RestartWorker;
+import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -91,7 +91,15 @@ public class EM extends Utils {
 //            Globals.maxMAX_LLH(Globals.MIN_LLH);
 //        }
         System.out.println("--------------------");
-        ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, haplotypesArray, Globals.DELTA_LLH, 0, Globals.REPEATS));
+        if (Globals.PARALLEL_RESTARTS) {
+            ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, haplotypesArray, Globals.DELTA_LLH, 0, Globals.REPEATS));
+        } else {
+            ors = new ArrayList<>();
+            for (int i = 0; i < Globals.REPEATS; i++) {
+                SingleEM sem = new SingleEM(N, K, L, n, reads, haplotypesArray, Globals.DELTA_LLH);
+                ors.add(sem.getOptimalResult());
+            }
+        }
         Globals.PARALLEL_JHMM = true;
         double maxBIC = Double.NEGATIVE_INFINITY;
         for (OptimalResult tmp : ors) {
@@ -105,6 +113,7 @@ public class EM extends Utils {
             this.or = bestEM.getOptimalResult();
         }
         this.saveEM();
+        System.out.println(new Summary().print(or));
     }
 
     private void saveEM() {
@@ -116,68 +125,7 @@ public class EM extends Utils {
             System.out.println("BIC:" + or.getBIC());
         }
         sb.setLength(0);
-        sb.append("#loglikelihood:").append(or.getLlh()).append("\n");
-        sb.append("#iterations:").append(iterations).append("\n");
-        sb.append("#BIC:").append(or.getBIC()).append("\n");
-        sb.append("#EPS:").append(or.getEps()).append("\n");
-        sb.append("#PI:\n");
-        for (int k = 0; k < or.getK(); k++) {
-            sb.append("##").append(or.getPi()[k]).append("\n");
-        }
-        sb.append("#RHO PRIOR:\n");
-        for (int j = 0; j < or.getL() - 1; j++) {
-            sb.append(j + 1).append("P\t");
-            for (int k = 0; k < K; k++) {
-                sb.append(Arrays.toString(or.getPriorRho()[j][k]));
-                sb.append("\t");
-            }
-            sb.append("\n");
-        }
-        sb.append("#RHO:\n");
-        for (int j = 0; j < or.getL() - 1; j++) {
-            sb.append(j + 1).append("\t");
-            for (int k = 0; k < K; k++) {
-                sb.append("[");
-                for (int l = 0; l < K; l++) {
-                    shorten(or.getRho()[j][k][l]);
-                    if (l + 1 < K) {
-                        sb.append(", ");
-                    }
-
-                }
-                sb.append("]\t");
-            }
-            sb.append("\n");
-        }
-        sb.append("#MU:\n");
-        for (int j = 0; j < or.getL(); j++) {
-            sb.append("##j:").append(j).append("\t");
-            for (byte[] b : haplotypesArray) {
-                sb.append(reverse((int) b[j]));
-            }
-            sb.append("|");
-            for (int k = 0; k < or.getK(); k++) {
-                double max = Double.MIN_VALUE;
-                Map<Double, Integer> m = new HashMap<>();
-                for (int v = 0; v < or.getMu()[0][0].length; v++) {
-                    max = Math.max(max, or.getMu()[j][k][v]);
-                    m.put(or.getMu()[j][k][v], v);
-                }
-                sb.append(reverse(m.get(max))).append("-");
-            }
-            for (int k = 0; k < or.getK(); k++) {
-                sb.append("[");
-                for (int v = 0; v < n; v++) {
-                    shorten(or.getMu()[j][k][v]);
-                    if (v + 1 < n) {
-                        sb.append(", ");
-                    }
-
-                }
-                sb.append("]\t");
-            }
-            sb.append("\n");
-        }
+        sb.append(new Summary().print(or));
         try {
             String s = Globals.savePath + "optimumJavaK" + (bestK ? "" : K);
             FileOutputStream fos = new FileOutputStream(s);

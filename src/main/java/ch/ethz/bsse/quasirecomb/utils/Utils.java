@@ -1,13 +1,16 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author Armin Töpfer (armin.toepfer@bsse.ethz.ch)
  */
-public class Utils {
+public class Utils extends FastaParser{
 
     public static String SAVEPATH = "";
 
@@ -140,6 +143,20 @@ public class Utils {
         return dest;
     }
 
+    public static String reverse(int[] intArray) {
+        StringBuilder sb = new StringBuilder();
+        for (int i : intArray) {
+            sb.append(reverse(i));
+        }
+        return sb.toString();
+    }
+    public static String reverse(byte[] bArray) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bArray) {
+            sb.append(reverse(b));
+        }
+        return sb.toString();
+    }
     public static String reverse(byte i) {
         switch (i) {
             case 0:
@@ -169,40 +186,10 @@ public class Utils {
             case 4:
                 return "-";
         }
-        throw new IllegalAccessError();
+        throw new IllegalAccessError(""+i);
     }
 
-    /**
-     *
-     * @param location
-     * @return
-     */
-    public static String[] parseFarFile(String location) {
-        List<String> readList = new LinkedList<>();
-        try {
-            FileInputStream fstream = new FileInputStream(location);
-            StringBuilder sb;
-            try (DataInputStream in = new DataInputStream(fstream)) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                String strLine;
-                sb = new StringBuilder();
-                while ((strLine = br.readLine()) != null) {
-                    if (strLine.startsWith(">")) {
-                        if (sb.length() > 0) {
-                            readList.add(sb.toString());
-                            sb.setLength(0);
-                        }
-                    } else {
-                        sb.append(strLine);
-                    }
-                }
-            }
-            readList.add(sb.toString());
-        } catch (Exception e) {
-            System.err.println("Error Far: " + e.getMessage());
-        }
-        return readList.toArray(new String[readList.size()]);
-    }
+    
 
     public static void save(Map<String, Integer> map, String path) {
         StringBuilder sb = new StringBuilder();

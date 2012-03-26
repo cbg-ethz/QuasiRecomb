@@ -31,7 +31,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<Boolean> {
     @Override
     protected Boolean compute() {
         if (end - start < Globals.STEPSIZE) {
-//            long time = System.currentTimeMillis();
+            long time = System.currentTimeMillis();
             for (int i = start; i < end; i++) {
                 this.readHMMArray[i].recalc(rho, pi, mu, eps);
             }

@@ -7,6 +7,7 @@ import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -58,8 +59,20 @@ public class JHMM {
         this(reads, reads.length, reads[0].length, K, n, epsilon);
     }
 
-    public JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, OptimalResult or) {
-        this(reads, N, L, K, n, Globals.ESTIMATION_EPSILON, (1 - (n - 1) * Globals.ESTIMATION_EPSILON), or.getRho(), or.getPi(), or.getMu(), or.getPriorRho());
+    public JHMM(OptimalResult or) {
+        this.N = or.getN();
+        this.L = or.getL();
+        this.K = or.getK();
+        this.n = or.getn();
+        this.clusterReads = or.getReads();
+        this.rho = or.getRho();
+        this.mu = or.getMu();
+        this.eps = Globals.ESTIMATION_EPSILON;
+        this.antieps = (1 - (n - 1) * Globals.ESTIMATION_EPSILON);
+        this.pi = or.getPi();
+        this.priorRho = or.getPriorRho();
+        this.start();
+        this.calculate();
     }
 
     public JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double epsilon) {
@@ -125,12 +138,12 @@ public class JHMM {
         for (double d : e) {
             muMean += d;
         }
-        muMean /= L*K;
+        muMean /= L * K;
         double muStddev = 0d;
         for (double d : e) {
-            muStddev += Math.pow(d-muMean,2);
+            muStddev += Math.pow(d - muMean, 2);
         }
-        muStddev /= L*K;
+        muStddev /= L * K;
         System.out.println("MU Entropy mean\t: " + muMean);
         System.out.println("MU Entropy stddev\t:" + muStddev);
         this.N = N;
@@ -217,7 +230,8 @@ public class JHMM {
         this.nVB = new double[n][n];
         this.nJeq = new double[L];
         this.nJneq = new double[L];
-        for (ReadHMM r : this.readHMMMap.keySet()) {
+        for (Iterator<ReadHMM> it = this.readHMMMap.keySet().iterator(); it.hasNext();) {
+            ReadHMM r = it.next();
             for (int x = 0; x < this.readHMMMap.get(r); x++) {
                 for (int j = 0; j < L; j++) {
                     for (int k = 0; k < K; k++) {
@@ -253,7 +267,6 @@ public class JHMM {
                 }
             }
         }
-//        System.out.println("E\t: " + (System.currentTimeMillis() - time));
     }
 
     private double[][][] calcMu() {
@@ -263,6 +276,9 @@ public class JHMM {
                 double sumV = 0d;
                 for (int v = 0; v < n; v++) {
                     mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.BETA_Z);
+//                    if (mu_[j][k][v] < 1e-20) {
+//                        mu_[j][k][v] = 0d;
+//                    }
                     sumV += mu_[j][k][v];
                 }
                 if (sumV != 0) {
@@ -282,21 +298,41 @@ public class JHMM {
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
                 double divisor = 0d;
+                double sum = 0d;
                 for (int l = 0; l < K; l++) {
                     if (Double.isNaN(this.getnJKL(j, k, l))) {
                         System.out.println("rho");
                     }
                     rho_[j - 1][k][l] = this.rho_f(this.getnJKL(j, k, l) + Globals.ALPHA_Z);
-                    divisor += rho_[j - 1][k][l];
+                    sum += this.getnJKL(j, k, l);
                 }
+                sum = this.rho_f(sum + K * Globals.ALPHA_Z);
 
 //                for (int l = 0; l < K; l++) {
 //                    divisor += this.getnJKL(j, k, l);
 //                }
 //                divisor = this.rho_f(divisor + Globals.PRIOR_ALPHA);
                 for (int l = 0; l < K; l++) {
+                    rho_[j - 1][k][l] /= sum;
+                    divisor += rho_[j - 1][k][l];
+                }
+                for (int l = 0; l < K; l++) {
                     rho_[j - 1][k][l] /= divisor;
                 }
+//                double current = rho_[j - 1][k][0];
+//                boolean uniform = true;
+//                for (int l = 1; l < K; l++) {
+//                    if (current != rho_[j - 1][k][l]) {
+//                        uniform = false;
+//                        break;
+//                    }
+//                }
+//                Utils.appendFile(Globals.savePath + "/problem", "x");
+//                if (uniform) {
+//                    for (int l = 0; l < K; l++) {
+//                        rho_[j - 1][k][l] = l == k ? 1 : 0;
+//                    }
+//                }
             }
         }
         return rho_;

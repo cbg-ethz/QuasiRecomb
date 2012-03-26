@@ -3,6 +3,7 @@ package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
 import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.model.hmm.SingleEM;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class RestartWorker extends RecursiveTask<List<OptimalResult>> {
     @Override
     protected List<OptimalResult> compute() {
         if (end - start <= Globals.PARALLEL_RESTARTS_UPPER_BOUND || !Globals.PARALLEL_RESTARTS) {
-            final List<OptimalResult> list = new LinkedList<>();
+            final List<OptimalResult> list = new ArrayList<>();
             System.out.println("+"+start+":"+end);
             for (int i = start; i < end; i++) {
                 System.out.println("\tx:"+i);

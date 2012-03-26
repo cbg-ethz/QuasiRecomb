@@ -1,22 +1,36 @@
 package ch.ethz.bsse.quasirecomb;
 
+import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.diversity.Diversity;
 import ch.ethz.bsse.quasirecomb.diversity.PairwiseEntropyComparison;
 import ch.ethz.bsse.quasirecomb.filter.Cutter;
 import ch.ethz.bsse.quasirecomb.filter.MAExtract;
+import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
 import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.modelsampling.ModelEntropy;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.quasiviz.QuasiViz;
+import ch.ethz.bsse.quasirecomb.utils.FastaParser;
+import ch.ethz.bsse.quasirecomb.utils.Summary;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import org.javatuples.Pair;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 /**
- * Hello world!
+ * Hello world! --train -i
+ * C:/Users/XLR/Dropbox/QuasiRecomb/src/main/resources/haplotypes/dataset_3.fasta
+ * -o C:/Users/XLR/Dropbox/QuasiRecomb/src/main/resources/d3Std -f
+ * .28,.28,.26,.03,.03,.03,.03,.03,.03 -K 3 -verbose
  *
+ * --trainHarder -i
+ * C:/Users/XLR/Dropbox/QuasiRecomb/src/main/resources/d3Std/optimumJavaK3
+ * -verbose -o C:/Users/XLR/Dropbox/QuasiRecomb/src/main/resources/d3Harder/
  */
 public class Startup {
 
@@ -26,10 +40,18 @@ public class Startup {
     private boolean sample;
     @Option(name = "-o", usage = "Path to the output directory (default: current directory)", metaVar = "PATH")
     private String output;
+    @Option(name = "--muentropy")
+    private boolean muentropy;
     @Option(name = "--train", usage = "Train model for given multiple alignment")
     private boolean train;
-    @Option(name = "-noSample", usage = "Do not infer haplotypes from best model")
-    private boolean noSample;
+    @Option(name = "--summary")
+    private boolean summary;
+//    @Option(name = "-noSample", usage = "Do not infer haplotypes from best model")
+//    private boolean noSample;
+    @Option(name = "-c10")
+    private boolean crossvalidation = false;
+    @Option(name = "-b")
+    private boolean bootstrap = false;
     @Option(name = "-K")
     private String K = "1:5";
     @Option(name = "-t")
@@ -45,7 +67,7 @@ public class Startup {
     @Option(name = "-f")
     private String f;
     @Option(name = "-e")
-    private double e = 0.0001;
+    private double e = 0.0003;
     @Option(name = "-d")
     private double d = 1e-8;
     @Option(name = "-min")
@@ -54,14 +76,19 @@ public class Startup {
     private boolean parallelRestarts;
     @Option(name = "-verbose")
     private boolean verbose;
+    @Option(name = "-noRecomb")
+    private boolean noRecomb;
     @Option(name = "-alphah")
-    private double alphah = 0.0001;
+//    private double alphah = 0.0001;
+    private double alphah = 0.01;
     @Option(name = "-betah")
     private double betah = 10;
     @Option(name = "-alphaz")
-    private double alphaz = 0.0015;
+//    private double alphaz = 0.0015;
+    private double alphaz = 0.01;
     @Option(name = "-betaz")
-    private double betaz = 0.0025;
+//    private double betaz = 0.0025;
+    private double betaz = 0.01;
     @Option(name = "--filter")
     private boolean filter;
     @Option(name = "-c")
@@ -88,10 +115,17 @@ public class Startup {
     private String description;
     @Option(name = "--pairEntropyTest")
     private boolean pairEntropyTest;
+    @Option(name = "--hamming")
+    private boolean hamming;
+    @Option(name = "--distance")
+    private boolean distance;
     @Option(name = "-afile")
     private String afile;
     @Option(name = "-bfile")
     private String bfile;
+    @Option(name = "-h")
+    private String haplotypes;
+    private int SAMPLING_AMOUNT = 10000;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -106,23 +140,63 @@ public class Startup {
             parser.parseArgument(args);
             if (output == null) {
                 this.output = System.getProperty("user.dir") + File.separator;
+            } else if (this.output.endsWith(File.separator)
+                    && !new File(this.output).exists()) {
+                new File(this.output).mkdirs();
             }
+            Globals.DEBUG = this.verbose;
 
             if (this.sample) {
-                int AMOUNT = 10000;
                 if (input.contains("#")) {
                     String[] splitBracket = input.split("#");
                     String[] split = splitBracket[1].split("-");
 
                     for (int i = Integer.parseInt(split[0]); i <= Integer.parseInt(split[1]); i++) {
                         System.out.println("Sampling " + splitBracket[0] + i);
-                        ModelSampling simulation = new ModelSampling(splitBracket[0] + i, output, AMOUNT);
+                        ModelSampling simulation = new ModelSampling(splitBracket[0] + i, output, SAMPLING_AMOUNT);
+                        simulation.save();
                     }
                 } else {
                     System.out.println("Sampling " + input);
-                    ModelSampling simulation = new ModelSampling(input, output, AMOUNT);
+                    ModelSampling simulation = new ModelSampling(input, output, SAMPLING_AMOUNT);
+                    simulation.save();
                 }
+            } else if (this.muentropy) {
+                new ModelEntropy(this.input);
+            } else if (this.hamming) {
+                System.out.println(DistanceUtils.calcHamming(afile, bfile));
+            } else if (this.summary) {
+                OptimalResult or = null;
+                try {
+                    FileInputStream fis = new FileInputStream(input);
+                    try (ObjectInputStream in = new ObjectInputStream(fis)) {
+                        or = (OptimalResult) in.readObject();
+                    }
+                } catch (IOException | ClassNotFoundException ex) {
+                    System.err.println(ex);
+                }
+
+                Summary s = new Summary();
+                System.out.println(s.print(or));
+                if (this.haplotypes != null) {
+                    ModelSampling ms = new ModelSampling(input, "", SAMPLING_AMOUNT);
+                    System.out.println("\n#Quasispecies:");
+                    ms.printQuasispecies();
+                    Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), ms.getReadsReversed());
+                    System.out.println("\n#Phi distance:");
+                    for (Pair p : phi) {
+                        System.out.println(p.getValue0() + "\t" + p.getValue1());
+                    }
+                }
+            } else if (this.distance) {
+//                Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), FastaParser.parse(input));
+//                    System.out.println("\n#Phi distance:");
+//                    for (Pair p : phi) {
+//                        System.out.println(p.getValue0() + "\t" + p.getValue1());
+//                    }
             } else if (this.train) {
+                Globals.CROSSVALIDATION = this.crossvalidation;
+                Globals.BOOTSTRAP = this.bootstrap;
                 int Kmin, Kmax;
                 if (K.contains(":")) {
                     Kmin = Integer.parseInt(K.split(":")[0]);
@@ -167,8 +241,7 @@ public class Startup {
                 Globals.STEPSIZE = chunk;
                 Globals.savePath = output + File.separator;
                 new File(Globals.savePath).mkdirs();
-                Globals.PRIOR_ALPHA = a;
-                if (Globals.PRIOR_ALPHA == 0.0) {
+                if (this.noRecomb) {
                     Globals.rho0 = true;
                     Globals.rho0force = true;
                 }
@@ -182,9 +255,9 @@ public class Startup {
                 if (entropy) {
                     diversity.entropy();
                 }
-//                if (shannonindex) {
-//                    diversity.shannonIndex();
-//                }
+                if (shannonindex) {
+                    diversity.shannonIndex();
+                }
             } else if (pairEntropyTest) {
 //                File dir;
 //                FileFilter fileFilter;
@@ -302,7 +375,16 @@ public class Startup {
             System.err.println("  -coverage\t\t\t: Plot site-wise Coverage");
             System.err.println("");
             System.err.println("  Example for entropy:\n   java -jar QuasiRecomb.jar --entropy -i input.far");
+            System.err.println(" ------------------------");
             System.err.println("");
+            System.err.println(" ------------------------");
+            System.err.println(" === DISTANCE (phi) === ");
+            System.err.println("  --distance ");
+            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies");
+            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes sampled from");
+            System.err.println("");
+            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasiespecies.fasta -h dataset.fasta");
+            System.err.println(" ------------------------");
         }
     }
 }

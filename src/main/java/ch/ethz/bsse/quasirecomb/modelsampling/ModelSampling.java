@@ -7,11 +7,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 /**
  *
@@ -32,6 +29,8 @@ public final class ModelSampling extends Utils {
     private int amount = 10000;
     private int[] recombPerObservation;
     private Map<String, Double> hexMap = new HashMap<>();
+    private StringBuilder sb = new StringBuilder();
+    private TreeMap<byte[], Integer> sorted_map;
 
     public ModelSampling(int L, int n, int K, double[][][] rho, double[] pi, double[][][] mu, String savePath) {
         this.L = L;
@@ -75,13 +74,9 @@ public final class ModelSampling extends Utils {
 
     public void start() {
         new File(savePath).mkdirs();
-//        saveFile(savePath + "simu-K-" + K + ".txt", "K:" + K);
-        if (new File(savePath + "K" + K + "-result.txt").exists()) {
-            new File(savePath + "K" + K + "-result.txt").renameTo(new File(savePath + "K" + K + "-opt.txt"));
-        }
         this.reads = new HashMap<>();
         ValueComparator bvc = new ValueComparator(reads);
-        TreeMap<byte[], Integer> sorted_map = new TreeMap(bvc);
+        this.sorted_map = new TreeMap(bvc);
         byte[][] readArray = new byte[amount][L];
         for (int i = 0; i < amount; i++) {
             readArray[i] = single(i);
@@ -102,84 +97,21 @@ public final class ModelSampling extends Utils {
             }
         }
 
-        sorted_map.putAll(reads);
-        StringBuilder sb = new StringBuilder();
-        int sum = 0;
-        for (byte[] read : reads.keySet()) {
-            sb.append(((double) reads.get(read))).append("\t");
-            sum += ((double) reads.get(read));
+//        sorted_map.putAll(reads);
+        int i = 0;
+//        for (byte[] read : sorted_map.keySet()) {
+        for (Object o : sortMapByValue(reads).keySet()) {
+            byte[] read = (byte[]) o;
+            sb.append(">read").append(i++).append("_").append(((double) reads.get(read)) / amount).append("\n");
             for (int r : read) {
                 sb.append(reverse(r));
             }
             sb.append("\n");
         }
-        Utils.saveFile(savePath + "haplotypeEnumNoSort-K" + K + ".txt", sb.toString());
-        Utils.saveFile(savePath + "haplotypeAmount-K" + K + ".txt", "" + sum);
+    }
 
-        sb.setLength(0);
-        for (byte[] read : sorted_map.keySet()) {
-            sb.append(((double) reads.get(read)) / amount).append("\t");
-            for (int r : read) {
-                sb.append(reverse(r));
-            }
-            sb.append("\n");
-        }
-        Utils.saveFile(savePath + "haplotypeDist-K" + K + ".txt", sb.toString());
-        sb.setLength(0);
-
-
-        for (byte[] read : reads.keySet()) {
-            sb.append(">").append(((double) reads.get(read)) / amount).append("\n");
-            for (int r : read) {
-                sb.append(reverse(r));
-            }
-            sb.append("\n");
-        }
-        Utils.saveFile(savePath + "haplotypeDistNoSort-K" + K + ".fasta", sb.toString());
-        sb.setLength(0);
-
-        for (byte[] read : sorted_map.keySet()) {
-            sb.append(">").append(((double) reads.get(read)) / amount).append("\n");
-            for (int r : read) {
-                sb.append(reverse(r));
-            }
-            sb.append("\n");
-        }
-        Utils.saveFile(savePath + "haplotypeDist-K" + K + ".fasta", sb.toString());
-        sb.setLength(0);
-        for (byte[] read : sorted_map.keySet()) {
-            sb.append(((double) reads.get(read)) / amount).append("\t");
-            try {
-                MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
-                digest.update(read);
-                String result = "";
-                byte[] b = digest.digest();
-                for (int i = 0; i < b.length; i++) {
-                    result +=
-                            Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
-                }
-                sb.append(result);
-                hexMap.put(result, ((double) reads.get(read)) / amount);
-            } catch (NoSuchAlgorithmException ex) {
-                Logger.getLogger(ModelSampling.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            sb.append("\n");
-        }
-        Utils.saveFile(savePath + "haplotypeDist-K" + K + ".hex", sb.toString());
-//        sb.setLength(0);
-//        int sum = 0;
-//        int hits = 0;
-//        for (int i = 0; i < amount; i++) {
-//            sb.append("#").append(i).append(":").append(this.recombPerObservation[i]).append("\n");
-//            if (this.recombPerObservation[i] > 0) {
-//                hits++;
-//            }
-//            sum += this.recombPerObservation[i];
-//        }
-//        sb.append("#sum:").append(sum).append("\n");
-//        sb.append("#p:").append((double) sum / amount / L).append("\n");
-//        sb.append("#recombinated observations:").append(hits).append("\n");
-//        Utils.saveFile(savePath + "simuRecombRate.txt", sb.toString());
+    public void save() {
+        Utils.saveFile(savePath + "quasispecies.fasta", sb.toString());
     }
 
     public byte[] single(int currentI) {
@@ -194,8 +126,6 @@ public final class ModelSampling extends Utils {
 
         for (int j = 0; j < L; j++) {
             if (j > 0) {
-//                if (Math.random() > (1.0 - (K - 1.0) * rho[j - 1])) {
-                //TODO: Test if that works with new rho approach
                 Map<Integer, Double> rhoMap = new HashMap<>();
                 for (int l = 0; l < K; l++) {
                     rhoMap.put(l, rho[j - 1][k][l]);
@@ -207,7 +137,6 @@ public final class ModelSampling extends Utils {
                     this.recombPerObservation[currentI] += 1;
                 }
                 oldk = k;
-//                }
             }
             if (muArray[j][k] == null) {
                 Map<Byte, Double> muMap = new HashMap<>();
@@ -222,15 +151,68 @@ public final class ModelSampling extends Utils {
         return read;
     }
 
-    public Map<byte[], Integer> getReads() {
-        return reads;
+    public Map<String, Integer> getReadsReversed() {
+        Map<String, Integer> m = new HashMap<>();
+        for (byte[] b : this.reads.keySet()) {
+            m.put(reverse(b), this.reads.get(b));
+        }
+        return m;
     }
 
     public Map<String, Double> getHexMap() {
         return hexMap;
     }
-}
 
+    public void printQuasispecies() {
+        int i = 0;
+        for (byte[] read : sorted_map.keySet()) {
+            System.out.println(reads.get(read) + "\t" + read);
+        }
+    }
+
+    public Map<byte[], Integer> getReads() {
+        return reads;
+    }
+
+    public static Map sortMapByValue(Map map) {
+
+
+
+        List listForSort = null;
+
+        Map sortedList = new LinkedHashMap();
+
+        listForSort = new LinkedList(map.entrySet());
+
+        Collections.sort(listForSort, new Comparator() {
+            public int compare(Object value1, Object value2) {
+
+                return ((Comparable) ((Map.Entry) (value2)).getValue()).compareTo(((Map.Entry) (value1)).getValue());
+
+            }
+        });
+
+        Iterator itret = listForSort.iterator();
+
+
+
+        while (itret.hasNext()) {
+
+            Map.Entry entry = (Map.Entry) itret.next();
+
+            sortedList.put(entry.getKey(), entry.getValue());
+
+        }
+
+        return sortedList;
+
+    }
+
+    public int getK() {
+        return K;
+    }
+    
+}
 class ValueComparator implements Comparator {
 
     Map base;

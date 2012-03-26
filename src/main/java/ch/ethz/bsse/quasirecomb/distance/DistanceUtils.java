@@ -47,7 +47,7 @@ public class DistanceUtils {
                 List<Pair<String, Double>> list = new LinkedList<>();
                 for (String ptrue : original.keySet()) {
                     double error = 0d;
-                    error = calcHamming(ptrue, ptest, (int) error, DELTA);
+                    error = calcHamming(ptrue, ptest);
                     if (error <= DELTA) {
                         list.add(Pair.with(ptrue, error));
                     }
@@ -84,14 +84,14 @@ public class DistanceUtils {
         return pairs;
     }
 
-    private static int calcHamming(String ptrue, String ptest, int error, int DELTA) {
+    public static int calcHamming(String ptrue, String ptest) {
+        int error = 0;
         char[] p1 = ptrue.toCharArray();
         char[] p2 = ptest.toCharArray();
         for (int i = 0; i < ptest.length(); i++) {
             if (p1[i] != p2[i]) {
                 error++;
             }
-
         }
         return error;
     }
@@ -128,6 +128,22 @@ public class DistanceUtils {
             result += frequency1 * (Math.log(frequency1 / frequency2) / Math.log(2));
         }
         System.out.println(sb);
+        return result;
+    }
+    
+    public static Double calculateKLD2(Map<String, Integer> P, Map<String, Integer> Q) {
+
+        double Psize = (double) P.values().size();
+        double Qsize = (double) Q.values().size();
+
+        double result = 0.0;
+        for (String sequence : P.keySet()) {
+            double fP = P.get(sequence) / Psize;
+            double fQ = Q.containsKey(sequence) ? Q.get(sequence) / Qsize : 0d;
+            fQ += fP;
+            fQ /= 2;
+            result += fP * (Math.log(fP / fQ) / Math.log(2));
+        }
         return result;
     }
 }

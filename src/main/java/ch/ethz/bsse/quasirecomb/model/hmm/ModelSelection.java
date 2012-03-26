@@ -1,6 +1,7 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Map;
 
@@ -50,6 +51,13 @@ public class ModelSelection {
                 this.pi = em.getPi_opt();
                 this.rho = em.getRho_opt();
             }
+            ModelSampling ms = new ModelSampling(L, n, k, em.getRho_opt(), em.getPi_opt(), em.getMu_opt(), Globals.savePath);
+            Map<byte[], Integer> reads = ms.getReads();
+            Double result = 0.0;
+//                for (byte base : map.keySet()) {
+//                    Double frequency = (double) map.get(base) / l;
+//                    result -= frequency * Math.log(frequency);
+//                }
         }
     }
 

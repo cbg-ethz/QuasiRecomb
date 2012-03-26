@@ -16,15 +16,19 @@ public class Globals {
     public static double ALPHA_Z = 0.001;
     public static double ALPHA_H = 0.01;
     
+    public static String[] HAPLOTYPE_ARRAY_EMPIRICAL;
+    public static boolean BOOTSTRAP = false;
+    public static boolean CROSSVALIDATION = false;
     public static boolean SAVE = true;
     public static String filePrefix = "";
     public static String savePath = "C:\\Users\\XLR\\Dropbox\\JData\\";
     public static double ESTIMATION_EPSILON = .0003;
     public static double SAMPLING_EPSILON = .0001;
     public static double FILTER_LLH = 1e-4;
+    public static double DELTA_LLH_HARDER = 1e-50;
     public static double DELTA_LLH = 1e-8;
     public static boolean MASK_RHO = false;
-    public static int STEPSIZE = 20;
+    public static int STEPSIZE = 50;
     public static final ForkJoinPool fjPool = new ForkJoinPool();
     public static boolean DEBUG = false;
     public static boolean SIMULATION = false;

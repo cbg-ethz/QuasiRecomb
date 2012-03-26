@@ -21,13 +21,11 @@ public class Random {
 //    public static double[][][] generatePriorRho(int Ldec, int K) {
 //        double[][][] rho = new double[Ldec][K][K];
 //        if (!Globals.rho0) {
-//            if (dirPhi == null) {
-//                dirPhi = new Dirichlet(K, Globals.BETA_Z);
-//            }
-//            double[] phi = dirPhi.nextDistribution();
 //            for (int j = 0; j < Ldec; j++) {
 //                for (int k = 0; k < K; k++) {
-//                    rho[j][k] = dirPhi.nextDistribution();
+//                    for (int l = 0; l < K; l++) {
+//                        rho[j][k][l] = 1d/K;
+//                    }
 //                }
 //            }
 //        } else {
@@ -71,6 +69,7 @@ public class Random {
         }
         return rho;
     }
+    
     private static Map<Integer, Dirichlet> piGen = new HashMap<>();
 
     public static double[] generateInitPi(int K) {
@@ -88,19 +87,19 @@ public class Random {
 
     public static double[] generateMuVector(int n) {
         double[] d = null;
-        if (n == 5) {
-            d = dir5.nextDistribution();
-        } else if (n == 4) {
-            d = dir4.nextDistribution();
-        } else if (n == 3) {
-            d = dir3.nextDistribution();
-        } else if (n == 2) {
-            d = dir2.nextDistribution();
-        }
-//        d = new double[n];
-//        for (int i = 0; i < n; i++) {
-//            d[i] = 1d / n;
+//        if (n == 5) {
+//            d = dir5.nextDistribution();
+//        } else if (n == 4) {
+//            d = dir4.nextDistribution();
+//        } else if (n == 3) {
+//            d = dir3.nextDistribution();
+//        } else if (n == 2) {
+//            d = dir2.nextDistribution();
 //        }
+        d = new double[n];
+        for (int i = 0; i < n; i++) {
+            d[i] = 1d / n;
+        }
         return d;
     }
 
