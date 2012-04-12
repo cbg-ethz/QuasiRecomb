@@ -144,8 +144,6 @@ public class JHMM {
             muStddev += Math.pow(d - muMean, 2);
         }
         muStddev /= L * K;
-        System.out.println("MU Entropy mean\t: " + muMean);
-        System.out.println("MU Entropy stddev\t:" + muStddev);
         this.N = N;
         this.L = L;
         this.K = K;
@@ -275,7 +273,7 @@ public class JHMM {
             for (int k = 0; k < K; k++) {
                 double sumV = 0d;
                 for (int v = 0; v < n; v++) {
-                    mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.BETA_Z);
+                    mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.ALPHA_H);
 //                    if (mu_[j][k][v] < 1e-20) {
 //                        mu_[j][k][v] = 0d;
 //                    }

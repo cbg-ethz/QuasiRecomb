@@ -17,7 +17,7 @@ public class Frequency<T> {
         double total = 0;
         
         for (Map.Entry<T, Double> e : frequency.entrySet()) {
-            if (e.getValue() > 1E-5) {
+            if (e.getValue() > 1E-6) {
                 total += e.getValue();
                 table.put(total, e.getKey());
             }

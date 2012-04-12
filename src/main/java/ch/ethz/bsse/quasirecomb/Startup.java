@@ -11,12 +11,15 @@ import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelEntropy;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.quasiviz.QuasiViz;
+import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.HashMap;
+import java.util.Map;
 import org.javatuples.Pair;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -36,6 +39,10 @@ public class Startup {
 
     @Option(name = "-i")
     private String input;
+    @Option(name = "--recombine")
+    private boolean recombine;
+    @Option(name = "-spots")
+    private String spots;
     @Option(name = "--sample", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
     private boolean sample;
     @Option(name = "-o", usage = "Path to the output directory (default: current directory)", metaVar = "PATH")
@@ -74,6 +81,8 @@ public class Startup {
     private double minLLH = Double.NEGATIVE_INFINITY;
     @Option(name = "-parallelRestarts")
     private boolean parallelRestarts;
+    @Option(name = "-singleCore")
+    private boolean singleCore;
     @Option(name = "-verbose")
     private boolean verbose;
     @Option(name = "-noRecomb")
@@ -82,13 +91,13 @@ public class Startup {
 //    private double alphah = 0.0001;
     private double alphah = 0.01;
     @Option(name = "-betah")
-    private double betah = 10;
+    private double betah = 2;
     @Option(name = "-alphaz")
 //    private double alphaz = 0.0015;
     private double alphaz = 0.01;
     @Option(name = "-betaz")
 //    private double betaz = 0.0025;
-    private double betaz = 0.01;
+    private double betaz = 0.005;
     @Option(name = "--filter")
     private boolean filter;
     @Option(name = "-c")
@@ -161,6 +170,18 @@ public class Startup {
                     ModelSampling simulation = new ModelSampling(input, output, SAMPLING_AMOUNT);
                     simulation.save();
                 }
+            } else if (this.recombine) {
+                if (this.spots != null) {
+                    String[] split = this.spots.split(",");
+                    int[] spots = new int[split.length];
+                    int i = 0;
+                    for (String s : split) {
+                        spots[i++] = Integer.parseInt(s);
+                    }
+                    Recombinator.recombine(input, spots, output);
+                } else {
+                    System.out.println("Please provide -spots, i.e. -spots 50,140,321");
+                }
             } else if (this.muentropy) {
                 new ModelEntropy(this.input);
             } else if (this.hamming) {
@@ -189,11 +210,16 @@ public class Startup {
                     }
                 }
             } else if (this.distance) {
-//                Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), FastaParser.parse(input));
-//                    System.out.println("\n#Phi distance:");
-//                    for (Pair p : phi) {
-//                        System.out.println(p.getValue0() + "\t" + p.getValue1());
-//                    }
+                Map<String, Double> quasiDouble = FastaParser.parseQuasispeciesFile(input);
+                Map<String, Integer> quasiInt = new HashMap<>();
+                for (String s : quasiDouble.keySet()) {
+                    quasiInt.put(s, (int) (quasiDouble.get(s).doubleValue() * 10000));
+                }
+                Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), quasiInt);
+                System.out.println("\n#Phi distance:");
+                for (Pair p : phi) {
+                    System.out.println(p.getValue0() + "\t" + p.getValue1());
+                }
             } else if (this.train) {
                 Globals.CROSSVALIDATION = this.crossvalidation;
                 Globals.BOOTSTRAP = this.bootstrap;
@@ -228,7 +254,7 @@ public class Startup {
                 Globals.BETA_Z = this.betaz;
                 Globals.BETA_H = this.betah;
                 Globals.MIN_LLH = this.minLLH;
-
+                Globals.PARALLEL_JHMM = !this.singleCore;
                 Globals.PARALLEL_RESTARTS = this.parallelRestarts;
                 Globals.ESTIMATION_EPSILON = this.e;
 //            Globals.SAMPLING_EPSILON = Globals.ESTIMATION_EPSILON;

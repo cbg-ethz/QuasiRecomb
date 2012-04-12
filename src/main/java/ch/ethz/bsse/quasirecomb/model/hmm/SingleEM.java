@@ -81,16 +81,16 @@ public class SingleEM {
             history.add(llh);
             oldllh = llh;
             llh = jhmm.getLoglikelihood();
-            if (((oldllh - llh) / llh) < 1e-5 || Globals.NO_BREAK_THRESHOLD) {
-                if (iterations % Globals.MAX_PRE_BREAK == 0 && iterations > 0) {
-                    System.out.println("BIAS CHECK! This: " + llh + "\tbias: " + (llh - (this.llh_opt * Globals.BIAS)) + "\topt:" + this.llh_opt);
-                    if ((llh - (this.llh_opt * Globals.BIAS)) < this.llh_opt) {
-                        System.out.print("pre break;\t");
-                        broken = true;
-                        break;
-                    }
-                }
-            }
+//            if (((oldllh - llh) / llh) < 1e-5 || Globals.NO_BREAK_THRESHOLD) {
+//                if (iterations % Globals.MAX_PRE_BREAK == 0 && iterations > 0) {
+//                    System.out.println("BIAS CHECK! This: " + llh + "\tbias: " + (llh - (this.llh_opt * Globals.BIAS)) + "\topt:" + this.llh_opt);
+//                    if ((llh - (this.llh_opt * Globals.BIAS)) < this.llh_opt) {
+//                        System.out.print("pre break;\t");
+//                        broken = true;
+//                        break;
+//                    }
+//                }
+//            }
 
             if (iterations > 500) {
 //                System.out.print("h: " + (history.get(iterations - 500) - llh) + "\t");

@@ -90,12 +90,17 @@
         <dependency>
             <groupId>org.biojava</groupId>
             <artifactId>biojava3-core</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.biojava</groupId>
             <artifactId>biojava3-alignment</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.biojava</groupId>
+            <artifactId>biojava3-sequencing</artifactId>
+            <version>3.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -107,6 +112,11 @@
             <artifactId>commons-io</artifactId>
             <version>1.3.1</version>
             <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>11.0.1</version>
         </dependency>
     </dependencies>
     <pluginRepositories>

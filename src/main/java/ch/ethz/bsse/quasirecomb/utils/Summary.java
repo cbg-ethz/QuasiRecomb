@@ -27,7 +27,7 @@ public class Summary extends Utils {
         sb.append("#MUE:").append(mue / (or.getK()*or.getL())).append("\n");
         double rhoe = 0d;
         double[][][] rho = or.getRho();
-        for (int j = 0; j < or.getL(); j++) {
+        for (int j = 0; j < or.getL()-1; j++) {
             for (int k = 0; k < or.getK(); k++) {
                 for (int l = 0; l < or.getK(); l++) {
                     rhoe -= rho[j][k][l] * Math.log(rho[j][k][l]) / Math.log(or.getK());

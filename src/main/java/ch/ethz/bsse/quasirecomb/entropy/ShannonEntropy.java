@@ -21,7 +21,7 @@ public class ShannonEntropy {
     public static void entropy(String input) {
 
         verbose = Globals.DEBUG;
-        String output = null;
+        String output;
         File file = new File(input);
         if (file.exists()) {
             Map<String, byte[]> far = parseFarFile(input);

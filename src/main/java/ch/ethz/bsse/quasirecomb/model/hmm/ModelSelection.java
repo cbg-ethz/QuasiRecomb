@@ -37,6 +37,13 @@ public class ModelSelection {
 
     private void start() {
         double optBIC = 0;
+        
+//        for (int k = 0; k < L; k++) {
+//            for (int i = 0; i < haplotypesArray.length; i++) {
+//                
+//            }
+//        }
+        
         for (int k = Kmin; k <= Kmax; k++) {
             if (!Globals.rho0force || k == 1) {
                 checkRho0(k);

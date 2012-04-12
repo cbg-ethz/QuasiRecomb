@@ -4,15 +4,10 @@ import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Sampling;
-import ch.ethz.bsse.quasirecomb.utils.Utils;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
-import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import java.util.*;
 import org.javatuples.Pair;
 
 /**
@@ -90,23 +85,22 @@ public class ArtificialExperimentalForwarder {
         for (Integer i : clusterReads.values()) {
             N += i;
         }
+        int kfold = 5;
         if (Globals.CROSSVALIDATION) {
-            N -= N / 10;
             String[] haps = Utils.parseFarFile(path);
-
-            double[][] dists = new double[20][10];
-            double[] KLdists = new double[10];
-//            double[] KLdistsR = new double[10];
-            double[][] distsR = new double[20][10];
+            List<String> hapsList = Arrays.asList(haps);
+            Collections.shuffle(hapsList);
+            haps = hapsList.toArray(new String[hapsList.size()]);
+            double[][] dists = new double[20][kfold];
             int Nstart = 0;
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < kfold; i++) {
                 System.out.println("+++++++");
                 System.out.println("+++++" + i);
                 System.out.println("+++++++");
-                String[] hapEmp = new String[N / 10];
+                String[] hapEmp = new String[N / kfold];
                 List<String> hapTestList = new LinkedList();
                 for (int j = 0; j < N; j++) {
-                    if (j >= Nstart && j < Nstart + N / 10) {
+                    if (j >= Nstart && j < Nstart + N / kfold) {
                         hapEmp[j - Nstart] = haps[j];
                     } else {
                         hapTestList.add(haps[j]);
@@ -114,7 +108,7 @@ public class ArtificialExperimentalForwarder {
                 }
                 String[] hapTest = hapTestList.toArray(new String[hapTestList.size()]);
 
-                ModelSampling ms = calc(Utils.clusterReads(Utils.splitReadsIntoByteArrays(hapTest)), Kmin, Kmax, N, L, n, haplotypesArray);
+                ModelSampling ms = calc(Utils.clusterReads(Utils.splitReadsIntoByteArrays(hapTest)), Kmin, Kmax, N-N/kfold, L, n, haplotypesArray);
                 Map<String, Integer> simulatedReads = ms.getReadsReversed();
                 Map<String, String> simulatedReadsString = new HashMap<>();
                 for (String s : simulatedReads.keySet()) {
@@ -135,28 +129,17 @@ public class ArtificialExperimentalForwarder {
                 for (Pair d : ds) {
                     dists[j++][i] = (double) d.getValue0();
                 }
-                ds = DistanceUtils.calculatePhi(simulatedReadsString, clusteredEmpiricalTest);
-                j = 0;
-                for (Pair d : ds) {
-                    distsR[j++][i] = (double) d.getValue0();
-                }
-                Nstart += N / 10;
-                KLdists[i] = Math.sqrt(DistanceUtils.calculateKLD2(clusteredEmpiricalTest, simulatedReads) + DistanceUtils.calculateKLD2(simulatedReads, clusteredEmpiricalTest));
+                Nstart += N / kfold;
             }
-            StringBuilder sb = new StringBuilder();
-            StringBuilder sbR = new StringBuilder();
-            sb.append("mean").append("\t").append("sd").append("\n");
-            sbR.append("mean").append("\t").append("sd").append("\n");
+            StringBuilder sbraw = new StringBuilder();
             for (int j = 0; j < 20; j++) {
-                Mean m = new Mean();
-                StandardDeviation sd = new StandardDeviation();
-                sb.append(m.evaluate(dists[j])).append("\t").append(sd.evaluate(dists[j])).append("\n");
-                sbR.append(m.evaluate(distsR[j])).append("\t").append(sd.evaluate(distsR[j])).append("\n");
+                for (int x = 0; x < dists[j].length; x++) {
+                    sbraw.append(dists[j][x]).append("\t");
+                }
+                sbraw.append("\n");
             }
 
-            Utils.saveFile(Globals.savePath + File.separator + "KL-" + Kmin + ".txt", "" + new Mean().evaluate(KLdists) + "\t" + new StandardDeviation().evaluate(KLdists) + "\n");
-            Utils.saveFile(Globals.savePath + File.separator + "crossvalidation-" + Kmin + ".txt", sb.toString());
-            Utils.saveFile(Globals.savePath + File.separator + "crossvalidationR-" + Kmin + ".txt", sbR.toString());
+            Utils.saveFile(Globals.savePath + File.separator + "crossvalidationraw-" + Kmin + ".txt", sbraw.toString());
         } else {
             Map<byte[], Integer> simulatedReads = calc(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray).getReads();
             if (Globals.DISTANCE && Globals.SIMULATION) {
@@ -200,26 +183,21 @@ public class ArtificialExperimentalForwarder {
             }
         }
         System.out.println("Unique: " + hapL.size());
-//        Utils.save(haplotypes, Globals.savePath + "reads.txt");
         Map<byte[], Integer> clusterReads = Utils.clusterReads(Utils.splitReadsIntoByteArrays(reads.toArray(new String[N])));
 
+        int kfold = 5;
         if (Globals.CROSSVALIDATION) {
-            N -= N / 10;
             String[] haps = Sampling.fromHaplotypesCross(path, N, L, Globals.SAMPLING_EPSILON, f, n, Globals.savePath);
-
-            double[][] dists = new double[20][10];
-            double[] KLdists = new double[10];
-//            double[] KLdistsR = new double[10];
-            double[][] distsR = new double[20][10];
+            double[][] dists = new double[20][kfold];
             int Nstart = 0;
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < kfold; i++) {
                 System.out.println("+++++++");
                 System.out.println("+++++" + i);
                 System.out.println("+++++++");
-                String[] hapEmp = new String[N / 10];
+                String[] hapEmp = new String[N / kfold];
                 List<String> hapTestList = new LinkedList();
                 for (int j = 0; j < N; j++) {
-                    if (j >= Nstart && j < Nstart + N / 10) {
+                    if (j >= Nstart && j < Nstart + N / kfold) {
                         hapEmp[j - Nstart] = haps[j];
                     } else {
                         hapTestList.add(haps[j]);
@@ -227,7 +205,7 @@ public class ArtificialExperimentalForwarder {
                 }
                 String[] hapTest = hapTestList.toArray(new String[hapTestList.size()]);
 
-                ModelSampling ms = calc(Utils.clusterReads(Utils.splitReadsIntoByteArrays(hapTest)), Kmin, Kmax, N, L, n, haplotypesArray);
+                ModelSampling ms = calc(Utils.clusterReads(Utils.splitReadsIntoByteArrays(hapTest)), Kmin, Kmax, N-N/kfold, L, n, haplotypesArray);
                 Map<String, Integer> simulatedReads = ms.getReadsReversed();
                 Map<String, String> simulatedReadsString = new HashMap<>();
                 for (String s : simulatedReads.keySet()) {
@@ -248,28 +226,17 @@ public class ArtificialExperimentalForwarder {
                 for (Pair d : ds) {
                     dists[j++][i] = (double) d.getValue0();
                 }
-                ds = DistanceUtils.calculatePhi(simulatedReadsString, clusteredEmpiricalTest);
-                j = 0;
-                for (Pair d : ds) {
-                    distsR[j++][i] = (double) d.getValue0();
-                }
-                Nstart += N / 10;
-                KLdists[i] = Math.sqrt(DistanceUtils.calculateKLD2(clusteredEmpiricalTest, simulatedReads) + DistanceUtils.calculateKLD2(simulatedReads, clusteredEmpiricalTest));
+                Nstart += N / kfold;
             }
-            StringBuilder sb = new StringBuilder();
-            StringBuilder sbR = new StringBuilder();
-            sb.append("mean").append("\t").append("sd").append("\n");
-            sbR.append("mean").append("\t").append("sd").append("\n");
+            StringBuilder sbraw = new StringBuilder();
             for (int j = 0; j < 20; j++) {
-                Mean m = new Mean();
-                StandardDeviation sd = new StandardDeviation();
-                sb.append(m.evaluate(dists[j])).append("\t").append(sd.evaluate(dists[j])).append("\n");
-                sbR.append(m.evaluate(distsR[j])).append("\t").append(sd.evaluate(distsR[j])).append("\n");
+                for (int x = 0; x < dists[j].length; x++) {
+                    sbraw.append(dists[j][x]).append("\t");
+                }
+                sbraw.append("\n");
             }
 
-            Utils.saveFile(Globals.savePath + File.separator + "KL-" + Kmin + ".txt", "" + new Mean().evaluate(KLdists) + "\t" + new StandardDeviation().evaluate(KLdists) + "\n");
-            Utils.saveFile(Globals.savePath + File.separator + "crossvalidation-" + Kmin + ".txt", sb.toString());
-            Utils.saveFile(Globals.savePath + File.separator + "crossvalidationR-" + Kmin + ".txt", sbR.toString());
+            Utils.saveFile(Globals.savePath + File.separator + "crossvalidationraw-" + Kmin + ".txt", sbraw.toString());
         } else {
             Map<byte[], Integer> simulatedReads = calc(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray).getReads();
             if (Globals.DISTANCE && Globals.SIMULATION) {
