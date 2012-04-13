@@ -124,26 +124,26 @@ public class JHMM {
     }
 
     private JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
-        double[] e = new double[L * K];
-        int i = 0;
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                for (int v = 0; v < n; v++) {
-                    e[i] -= mu[j][k][v] * Math.log(mu[j][k][v]) / Math.log(n);
-                }
-                i++;
-            }
-        }
-        double muMean = 0d;
-        for (double d : e) {
-            muMean += d;
-        }
-        muMean /= L * K;
-        double muStddev = 0d;
-        for (double d : e) {
-            muStddev += Math.pow(d - muMean, 2);
-        }
-        muStddev /= L * K;
+//        double[] e = new double[L * K];
+//        int i = 0;
+//        for (int j = 0; j < L; j++) {
+//            for (int k = 0; k < K; k++) {
+//                for (int v = 0; v < n; v++) {
+//                    e[i] -= mu[j][k][v] * Math.log(mu[j][k][v]) / Math.log(n);
+//                }
+//                i++;
+//            }
+//        }
+//        double muMean = 0d;
+//        for (double d : e) {
+//            muMean += d;
+//        }
+//        muMean /= L * K;
+//        double muStddev = 0d;
+//        for (double d : e) {
+//            muStddev += Math.pow(d - muMean, 2);
+//        }
+//        muStddev /= L * K;
         this.N = N;
         this.L = L;
         this.K = K;
@@ -265,6 +265,7 @@ public class JHMM {
                 }
             }
         }
+//        System.out.println("E\t: " + (System.currentTimeMillis() - time));
     }
 
     private double[][][] calcMu() {

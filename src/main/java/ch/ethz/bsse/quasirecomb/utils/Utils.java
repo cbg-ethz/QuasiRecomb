@@ -95,6 +95,15 @@ public class Utils extends FastaParser{
         }
         return Rs;
     }
+    public static byte[] splitQualityIntoByteArray(String quality) {
+        byte[] Rs = new byte[quality.length()];
+        char[] readSplit = quality.toCharArray();
+        int length = readSplit.length;
+        for (int i = 0; i < length; i++) {
+            Rs[i] = (byte) readSplit[i];
+        }
+        return Rs;
+    }
 
     public static Map<byte[], Integer> clusterReads(byte[][] reads) {
         Map<byte[], Integer> readsMap = new HashMap<>();

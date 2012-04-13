@@ -59,6 +59,8 @@ public class Startup {
     private boolean crossvalidation = false;
     @Option(name = "-b")
     private boolean bootstrap = false;
+    @Option(name = "-noRefine")
+    private boolean noRefine = false;
     @Option(name = "-K")
     private String K = "1:5";
     @Option(name = "-t")
@@ -221,6 +223,7 @@ public class Startup {
                     System.out.println(p.getValue0() + "\t" + p.getValue1());
                 }
             } else if (this.train) {
+                Globals.NO_REFINE = !this.noRefine;
                 Globals.CROSSVALIDATION = this.crossvalidation;
                 Globals.BOOTSTRAP = this.bootstrap;
                 int Kmin, Kmax;
