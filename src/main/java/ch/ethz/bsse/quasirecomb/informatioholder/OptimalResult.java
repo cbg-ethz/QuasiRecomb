@@ -20,10 +20,10 @@ public class OptimalResult implements Serializable {
     private double[] pi;
     private double[][][] mu;
     private double llh;
-    private double eps;
+    private double[] eps;
     private double BIC;
 
-    public OptimalResult(int N, int K, int L, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[][][] priorRho, double eps) {
+    public OptimalResult(int N, int K, int L, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[][][] priorRho, double[] eps) {
         this.N = N;
         this.K = K;
         this.L = L;
@@ -87,7 +87,7 @@ public class OptimalResult implements Serializable {
         return priorRho;
     }
 
-    public double getEps() {
+    public double[] getEps() {
         return eps;
     }
 }

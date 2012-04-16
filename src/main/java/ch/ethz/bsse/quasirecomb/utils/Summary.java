@@ -24,19 +24,25 @@ public class Summary extends Utils {
                 }
             }
         }
-        sb.append("#MUE:").append(mue / (or.getK()*or.getL())).append("\n");
+        sb.append("#MUE:").append(mue / (or.getK() * or.getL())).append("\n");
         double rhoe = 0d;
         double[][][] rho = or.getRho();
-        for (int j = 0; j < or.getL()-1; j++) {
+        for (int j = 0; j < or.getL() - 1; j++) {
             for (int k = 0; k < or.getK(); k++) {
                 for (int l = 0; l < or.getK(); l++) {
                     rhoe -= rho[j][k][l] * Math.log(rho[j][k][l]) / Math.log(or.getK());
                 }
             }
         }
-        sb.append("#RHOE:").append(mue / (or.getK()*or.getL())).append("\n");
-        sb.append("#PE:").append((mue-rhoe) / (or.getK()*or.getL())).append("\n");
-        sb.append("#EPS:").append(or.getEps()).append("\n");
+        sb.append("#RHOE:").append(mue / (or.getK() * or.getL())).append("\n");
+        sb.append("#PE:").append((mue - rhoe) / (or.getK() * or.getL())).append("\n");
+        sb.append("#EPS:").append("\n");
+        for (int j = 0; j < or.getL(); j++) {
+            sb.append("##j:").append(j).append("\t").append(or.getEps()[j]).append("\n");;
+
+        }
+        sb.append("\n");
+
         sb.append("#PI:\n");
         for (int k = 0; k < or.getK(); k++) {
             sb.append("##").append(or.getPi()[k]).append("\n");

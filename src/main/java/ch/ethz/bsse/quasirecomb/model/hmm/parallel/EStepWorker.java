@@ -20,15 +20,15 @@ public class EStepWorker extends RecursiveTask<List<ReadHMM>> {
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
-    private double eps;
-    private double antieps;
+    private double[] eps;
+    private double[] antieps;
     private int K;
     private int L;
     private int n;
     private int start;
     private int end;
 
-    public EStepWorker(JHMM jhmm, byte[][] reads, double[][][] rho, double[] pi, double[][][] mu, double eps, double antieps, int K, int L, int n, int start, int end) {
+    public EStepWorker(JHMM jhmm, byte[][] reads, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, int K, int L, int n, int start, int end) {
         this.jhmm = jhmm;
         this.reads = reads;
         this.rho = rho;

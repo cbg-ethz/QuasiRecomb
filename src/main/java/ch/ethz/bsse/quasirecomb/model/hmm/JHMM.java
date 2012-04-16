@@ -26,12 +26,14 @@ public class JHMM {
     private double[][][] priorRho;
     private double[] pi;
     private double[][][] mu;
-    private double eps;
-    private double antieps;
+    private double[] eps;
+    private double[] antieps;
     private double[][] nJK;
     private double[][][] nJKL;
     private double[][][] nJKV;
     private double[][] nVB;
+    private double[] neqPos;
+    private double[] nneqPos;
     private double[] nJeq;
     private double[] nJneq;
     private double neq;
@@ -60,19 +62,20 @@ public class JHMM {
     }
 
     public JHMM(OptimalResult or) {
-        this.N = or.getN();
-        this.L = or.getL();
-        this.K = or.getK();
-        this.n = or.getn();
-        this.clusterReads = or.getReads();
-        this.rho = or.getRho();
-        this.mu = or.getMu();
-        this.eps = Globals.ESTIMATION_EPSILON;
-        this.antieps = (1 - (n - 1) * Globals.ESTIMATION_EPSILON);
-        this.pi = or.getPi();
-        this.priorRho = or.getPriorRho();
-        this.start();
-        this.calculate();
+        throw new IllegalAccessError("JHMM");
+//        this.N = or.getN();
+//        this.L = or.getL();
+//        this.K = or.getK();
+//        this.n = or.getn();
+//        this.clusterReads = or.getReads();
+//        this.rho = or.getRho();
+//        this.mu = or.getMu();
+//        this.eps = Globals.ESTIMATION_EPSILON;
+//        this.antieps = (1 - (n - 1) * Globals.ESTIMATION_EPSILON);
+//        this.pi = or.getPi();
+//        this.priorRho = or.getPriorRho();
+//        this.start();
+//        this.calculate();
     }
 
     public JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double epsilon) {
@@ -99,8 +102,7 @@ public class JHMM {
         this.clusterReads = Utils.clusterReads(reads);
         this.rho = rho;
         this.mu = mu;
-        this.eps = eps;
-        this.antieps = antieps;
+        this.uniformEpsilon(eps, antieps);
         this.pi = pi;
         this.priorRho = rho;
         this.start();
@@ -115,8 +117,7 @@ public class JHMM {
         this.clusterReads = reads;
         this.rho = rho;
         this.mu = mu;
-        this.eps = eps;
-        this.antieps = antieps;
+        this.uniformEpsilon(eps, antieps);
         this.pi = pi;
         this.priorRho = priorRho;
         this.start();
@@ -124,26 +125,6 @@ public class JHMM {
     }
 
     private JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
-//        double[] e = new double[L * K];
-//        int i = 0;
-//        for (int j = 0; j < L; j++) {
-//            for (int k = 0; k < K; k++) {
-//                for (int v = 0; v < n; v++) {
-//                    e[i] -= mu[j][k][v] * Math.log(mu[j][k][v]) / Math.log(n);
-//                }
-//                i++;
-//            }
-//        }
-//        double muMean = 0d;
-//        for (double d : e) {
-//            muMean += d;
-//        }
-//        muMean /= L * K;
-//        double muStddev = 0d;
-//        for (double d : e) {
-//            muStddev += Math.pow(d - muMean, 2);
-//        }
-//        muStddev /= L * K;
         this.N = N;
         this.L = L;
         this.K = K;
@@ -151,12 +132,20 @@ public class JHMM {
         this.clusterReads = reads;
         this.rho = rho;
         this.mu = mu;
-        this.eps = eps;
-        this.antieps = antieps;
+        this.uniformEpsilon(eps, antieps);
         this.pi = pi;
         this.priorRho = rho;
         this.start();
         this.calculate();
+    }
+    
+    private void uniformEpsilon(double eps, double antieps) {
+        this.eps = new double[L];
+        this.antieps = new double[L];
+        for (int j = 0; j < L; j++) {
+            this.eps[j] = eps;
+            this.antieps[j] = antieps;
+        }
     }
 
     private void calculateLoglikelihood() {
@@ -228,6 +217,8 @@ public class JHMM {
         this.nVB = new double[n][n];
         this.nJeq = new double[L];
         this.nJneq = new double[L];
+        this.neqPos = new double[L];
+        this.nneqPos = new double[L];
         for (Iterator<ReadHMM> it = this.readHMMMap.keySet().iterator(); it.hasNext();) {
             ReadHMM r = it.next();
             int times = this.readHMMMap.get(r);
@@ -254,8 +245,10 @@ public class JHMM {
                             for (int k = 0; k < K; k++) {
                                 this.nVB[v][b] += r.gamma(j, k, v) * times;
                                 if (v == b) {
+                                    this.neqPos[j] += r.gamma(j, k, v) * times;
                                     this.neq += r.gamma(j, k, v) * times;
                                 } else {
+                                    this.nneqPos[j] += r.gamma(j, k, v) * times;
                                     this.nneq += r.gamma(j, k, v) * times;
                                 }
                             }
@@ -367,7 +360,9 @@ public class JHMM {
         this.mu_old = this.mu;
         this.mu = this.calcMu();
 //        System.out.println("M\t: " + (System.currentTimeMillis() - time));
-//        this.eps = (1d/(n-1d))*(this.nneq/((double)this.nneq+this.neq));
+        for (int j = 0; j < L; j++) {
+            this.eps[j] = 10* (1d/(n-1d))*(this.nneqPos[j] / (this.nneqPos[j] + this.neqPos[j]));
+        }
 //        System.out.println("#EPS: "+eps);
     }
     public double[][][] mu_old;
@@ -416,11 +411,11 @@ public class JHMM {
         return N;
     }
 
-    public double getAntieps() {
+    public double[] getAntieps() {
         return antieps;
     }
 
-    public double getEps() {
+    public double[] getEps() {
         return eps;
     }
 

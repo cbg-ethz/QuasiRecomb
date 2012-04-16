@@ -16,8 +16,8 @@ public class ReadHMM {
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
-    private double eps;
-    private double antieps;
+    private double[] eps;
+    private double[] antieps;
     private double[][][] ufJKV;
     private double[][] fJK;
     private double[][] bJK;
@@ -35,7 +35,7 @@ public class ReadHMM {
     private int end;
     private int length;
 
-    public ReadHMM(int L, int K, int n, byte[] read, double[][][] rho, double[] pi, double[][][] mu, double eps, double antieps) {
+    public ReadHMM(int L, int K, int n, byte[] read, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps) {
         this.L = L;
         this.K = K;
         this.n = n;
@@ -73,12 +73,14 @@ public class ReadHMM {
         }
     }
 
-    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double epsilon) {
+    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double[] epsilon) {
         this.rho = rho;
         this.pi = pi;
         this.mu = mu;
         this.eps = epsilon;
-        this.antieps = 1 - (n - 1) * epsilon;
+        for (int j = 0; j < L; j++) {
+            this.antieps[j] = 1 - (n - 1) * epsilon[j];
+        }
         this.calculate();
     }
 
@@ -133,7 +135,7 @@ public class ReadHMM {
             }
         }
     }
-                
+
     private void gammaXsi() {
         this.gJK = new double[length][K];
         this.gJKV = new double[length][K][n];
@@ -183,7 +185,7 @@ public class ReadHMM {
     }
 
     private double prRjHv(int j, int v) {
-        return (read[j] == v) ? antieps : eps;
+        return (read[j] == v) ? antieps[j] : eps[j];
     }
 
     final public double getC(int j) {
