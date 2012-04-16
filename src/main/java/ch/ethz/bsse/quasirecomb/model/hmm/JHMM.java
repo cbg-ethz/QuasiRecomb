@@ -230,42 +230,41 @@ public class JHMM {
         this.nJneq = new double[L];
         for (Iterator<ReadHMM> it = this.readHMMMap.keySet().iterator(); it.hasNext();) {
             ReadHMM r = it.next();
-            for (int x = 0; x < this.readHMMMap.get(r); x++) {
-                for (int j = 0; j < L; j++) {
-                    for (int k = 0; k < K; k++) {
-                        this.nJK[j][k] += r.gamma(j, k);
-                        if (j > 0) {
-                            for (int l = 0; l < K; l++) {
-                                this.nJKL[j][k][l] += r.xi(j, k, l);
-                                if (k == l) {
-                                    this.nJeq[j] += r.xi(j, k, l);
-                                } else {
-                                    this.nJneq[j] += r.xi(j, k, l);
-                                }
+            int times = this.readHMMMap.get(r);
+            for (int j = 0; j < L; j++) {
+                for (int k = 0; k < K; k++) {
+                    this.nJK[j][k] += r.gamma(j, k) * times;
+                    if (j > 0) {
+                        for (int l = 0; l < K; l++) {
+                            this.nJKL[j][k][l] += r.xi(j, k, l) * times;
+                            if (k == l) {
+                                this.nJeq[j] += r.xi(j, k, l) * times;
+                            } else {
+                                this.nJneq[j] += r.xi(j, k, l) * times;
                             }
-                        }
-                        for (int v = 0; v < n; v++) {
-                            this.nJKV[j][k][v] += r.gamma(j, k, v);
                         }
                     }
                     for (int v = 0; v < n; v++) {
-                        for (int b = 0; b < n; b++) {
-                            if (r.getRead()[j] == b) {
-                                for (int k = 0; k < K; k++) {
-                                    this.nVB[v][b] += r.gamma(j, k, v);
-                                    if (v == b) {
-                                        this.neq += r.gamma(j, k, v);
-                                    } else {
-                                        this.nneq += r.gamma(j, k, v);
-                                    }
+                        this.nJKV[j][k][v] += r.gamma(j, k, v) * times;
+                    }
+                }
+                for (int v = 0; v < n; v++) {
+                    for (int b = 0; b < n; b++) {
+                        if (r.getRead()[j] == b) {
+                            for (int k = 0; k < K; k++) {
+                                this.nVB[v][b] += r.gamma(j, k, v) * times;
+                                if (v == b) {
+                                    this.neq += r.gamma(j, k, v) * times;
+                                } else {
+                                    this.nneq += r.gamma(j, k, v) * times;
                                 }
                             }
                         }
                     }
                 }
+//        System.out.println("E\t: " + (System.currentTimeMillis() - time));
             }
         }
-//        System.out.println("E\t: " + (System.currentTimeMillis() - time));
     }
 
     private double[][][] calcMu() {
@@ -275,14 +274,17 @@ public class JHMM {
                 double sumV = 0d;
                 for (int v = 0; v < n; v++) {
                     mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.ALPHA_H);
-//                    if (mu_[j][k][v] < 1e-20) {
-//                        mu_[j][k][v] = 0d;
-//                    }
-                    sumV += mu_[j][k][v];
+                    sumV += this.getnJKV(j, k, v);
                 }
+                sumV = this.rho_f(sumV + n * Globals.ALPHA_H);
+                double divisor = 0d;
                 if (sumV != 0) {
                     for (int v = 0; v < n; v++) {
                         mu_[j][k][v] /= sumV;
+                        divisor += mu_[j][k][v];
+                    }
+                    for (int v = 0; v < n; v++) {
+                        mu_[j][k][v] /= divisor;
                     }
                 } else {
                     System.out.println("mu");
@@ -307,10 +309,6 @@ public class JHMM {
                 }
                 sum = this.rho_f(sum + K * Globals.ALPHA_Z);
 
-//                for (int l = 0; l < K; l++) {
-//                    divisor += this.getnJKL(j, k, l);
-//                }
-//                divisor = this.rho_f(divisor + Globals.PRIOR_ALPHA);
                 for (int l = 0; l < K; l++) {
                     rho_[j - 1][k][l] /= sum;
                     divisor += rho_[j - 1][k][l];
@@ -318,20 +316,6 @@ public class JHMM {
                 for (int l = 0; l < K; l++) {
                     rho_[j - 1][k][l] /= divisor;
                 }
-//                double current = rho_[j - 1][k][0];
-//                boolean uniform = true;
-//                for (int l = 1; l < K; l++) {
-//                    if (current != rho_[j - 1][k][l]) {
-//                        uniform = false;
-//                        break;
-//                    }
-//                }
-//                Utils.appendFile(Globals.savePath + "/problem", "x");
-//                if (uniform) {
-//                    for (int l = 0; l < K; l++) {
-//                        rho_[j - 1][k][l] = l == k ? 1 : 0;
-//                    }
-//                }
             }
         }
         return rho_;

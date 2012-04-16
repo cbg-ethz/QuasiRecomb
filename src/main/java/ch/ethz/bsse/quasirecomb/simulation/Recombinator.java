@@ -24,7 +24,7 @@ import java.util.Set;
 public class Recombinator {
 
     public static void main(String[] args) {
-        recombine("/Users/XLR/Dropbox/QuasiRecomb/src/main/resources/haplotypes/generators_4.fasta", new int[]{186}, "");
+        recombine("/Users/XLR/Dropbox/QuasiRecomb/src/main/resources/haplotypes/generators_5.fasta", new int[]{186}, "");
     }
 
     public static void recombine(String path, int[] spots, String output) {

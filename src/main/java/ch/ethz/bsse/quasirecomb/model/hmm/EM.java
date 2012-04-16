@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +72,7 @@ public class EM extends Utils {
 
     private void blackbox() {
         List<OptimalResult> ors;
-        double maxLLH = Double.NEGATIVE_INFINITY;
+//        double maxLLH = Double.NEGATIVE_INFINITY;
 //        boolean givenMinLLH = !Double.isInfinite(Globals.MIN_LLH);
 //        if (!givenMinLLH) {
 //            if (Globals.PARALLEL_RESTARTS) {
@@ -90,7 +91,9 @@ public class EM extends Utils {
 //        } else {
 //            Globals.maxMAX_LLH(Globals.MIN_LLH);
 //        }
-        System.out.println("--------------------");
+//        System.out.println("--------------------");
+        Globals.LOG = new StringBuilder();
+        
         if (Globals.PARALLEL_RESTARTS) {
             ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, haplotypesArray, Globals.DELTA_LLH, 0, Globals.REPEATS));
         } else {
@@ -101,19 +104,20 @@ public class EM extends Utils {
             }
         }
         Globals.PARALLEL_JHMM = true;
-        double maxBIC = Double.NEGATIVE_INFINITY;
+        double maxLLH = Double.NEGATIVE_INFINITY;
         for (OptimalResult tmp : ors) {
-            if (tmp.getBIC() > maxBIC) {
-                maxBIC = tmp.getBIC();
+            if (tmp != null && tmp.getLlh() >= maxLLH) {
+                maxLLH = tmp.getLlh();
                 or = tmp;
             }
         }
-        if (!Globals.NO_REFINE) {
-            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);
-            this.or = bestEM.getOptimalResult();
-        }
+//        if (!Globals.NO_REFINE) {
+//            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);
+//            this.or = bestEM.getOptimalResult();
+//        }
         this.saveEM();
-        System.out.println(new Summary().print(or));
+        Globals.log("\n"+new Summary().print(or));
+        Utils.saveFile(Globals.savePath+"log_K"+K, Globals.LOG.toString());
     }
 
     private void saveEM() {

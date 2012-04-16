@@ -67,8 +67,7 @@ public class ReadHMM {
     private void calculate() {
         this.forward();
         this.backward();
-        this.gamma();
-        this.xsi();
+        this.gammaXsi();
         if (Globals.TEST) {
             this.calculateUnscaled();
         }
@@ -134,30 +133,26 @@ public class ReadHMM {
             }
         }
     }
-
-    private void gamma() {
+                
+    private void gammaXsi() {
         this.gJK = new double[length][K];
         this.gJKV = new double[length][K][n];
+        this.xJKL = new double[length][K][K];
         for (int j = 0; j < length; j++) {
             for (int k = 0; k < K; k++) {
                 this.gJK[j][k] = this.fJK[j][k] * this.bJK[j][k] * c[j];
                 for (int v = 0; v < n; v++) {
                     this.gJKV[j][k][v] = this.fJKV[j][k][v] * this.bJK[j][k] * c[j];
                 }
-            }
-        }
-    }
-
-    private void xsi() {
-        this.xJKL = new double[length][K][K];
-        for (int j = 1; j < length; j++) {
-            for (int k = 0; k < K; k++) {
-                for (int l = 0; l < K; l++) {
-                    double marginalV = 0d;
-                    for (int v = 0; v < n; v++) {
-                        marginalV += prRjHv(j, v) * mu[begin + j][l][v];
+                this.gJK[j][k] = this.fJK[j][k] * c[j] * this.bJK[j][k];
+                if (j > 0) {
+                    for (int l = 0; l < K; l++) {
+                        double marginalV = 0d;
+                        for (int v = 0; v < n; v++) {
+                            marginalV += prRjHv(j, v) * mu[begin + j][l][v];
+                        }
+                        this.xJKL[j][k][l] = this.fJK[j - 1][k] * marginalV * rho[begin + j - 1][k][l] * this.bJK[j][l];
                     }
-                    this.xJKL[j][k][l] = this.fJK[j - 1][k] * marginalV * rho[begin + j - 1][k][l] * this.bJK[j][l];
                 }
             }
         }
@@ -178,9 +173,9 @@ public class ReadHMM {
     }
 
     final public double xi(int j, int k, int l) {
-//        if (j < 1) {
-//            throw new IllegalStateException("J >= 1?");
-//        }
+        if (j < 1) {
+            throw new IllegalStateException("J >= 1?");
+        }
         if (j >= begin && j - begin < length) {
             return this.xJKL[j - begin][k][l];
         }

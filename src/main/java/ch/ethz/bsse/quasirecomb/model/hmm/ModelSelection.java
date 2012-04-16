@@ -38,12 +38,7 @@ public class ModelSelection {
     private void start() {
         double optBIC = 0;
         
-//        for (int k = 0; k < L; k++) {
-//            for (int i = 0; i < haplotypesArray.length; i++) {
-//                
-//            }
-//        }
-        
+        System.out.println("Model training ("+Globals.REPEATS+" iterations) (K "+Kmin+"-"+Kmax+"):");
         for (int k = Kmin; k <= Kmax; k++) {
             if (!Globals.rho0force || k == 1) {
                 checkRho0(k);
@@ -58,13 +53,9 @@ public class ModelSelection {
                 this.pi = em.getPi_opt();
                 this.rho = em.getRho_opt();
             }
-            ModelSampling ms = new ModelSampling(L, n, k, em.getRho_opt(), em.getPi_opt(), em.getMu_opt(), Globals.savePath);
-            Map<byte[], Integer> reads = ms.getReads();
-            Double result = 0.0;
-//                for (byte base : map.keySet()) {
-//                    Double frequency = (double) map.get(base) / l;
-//                    result -= frequency * Math.log(frequency);
-//                }
+            System.out.println("");
+            Globals.PERCENTAGE = 0;
+//            ModelSampling ms = new ModelSampling(L, n, k, em.getRho_opt(), em.getPi_opt(), em.getMu_opt(), Globals.savePath);
         }
     }
 

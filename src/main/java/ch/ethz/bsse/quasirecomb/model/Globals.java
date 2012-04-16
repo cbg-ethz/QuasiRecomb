@@ -4,9 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
-/** 
+/**
  * Information holder for all necessary given and inferred parameters.
- * 
+ *
  * @author Armin Töpfer (armin.toepfer@bsse.ethz.ch)
  */
 public class Globals {
@@ -15,7 +15,6 @@ public class Globals {
     public static double BETA_H = 2;
     public static double ALPHA_Z = 0.001;
     public static double ALPHA_H = 0.01;
-    
     public static String[] HAPLOTYPE_ARRAY_EMPIRICAL;
     public static boolean BOOTSTRAP = false;
     public static boolean CROSSVALIDATION = false;
@@ -50,8 +49,24 @@ public class Globals {
     public static boolean NO_REFINE = false;
     public static boolean NO_BREAK_THRESHOLD = false;
     public static double MIN_LLH = Double.NEGATIVE_INFINITY;
-    public static double BIAS = Double.NEGATIVE_INFINITY;
+    public static double BIAS = 0.1;
     private static double MAX_LLH = Double.NEGATIVE_INFINITY;
+    public static StringBuilder LOG = new StringBuilder();
+    private static boolean PRINT = true;
+
+    public static void log(Object o) {
+        if (PRINT) {
+            System.out.print(o);
+        } else {
+            LOG.append(o);
+        }
+    }
+    public static int PERCENTAGE = 0;
+
+    public static void printPercentage(int K) {
+        PERCENTAGE += 100 / Globals.REPEATS;
+        System.out.print("\r\tK " + K + ":\t" + PERCENTAGE + "%");
+    }
 
     public static synchronized double getMAX_LLH() {
         return MAX_LLH;

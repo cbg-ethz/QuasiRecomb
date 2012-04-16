@@ -39,9 +39,13 @@ public class ArtificialExperimentalForwarder {
     }
 
     private static ModelSampling calc(Map<byte[], Integer> clusterReads, int Kmin, int Kmax, int N, int L, int n, byte[][] haplotypesArray) {
-        Utils.saveClusteredReads(clusterReads);
+//        Utils.saveClusteredReads(clusterReads);
         ModelSelection ms = new ModelSelection(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray);
-        return new ModelSampling(L, n, ms.getBestK(), ms.getRho(), ms.getPi(), ms.getMu(), Globals.savePath);
+        if (Globals.SIMULATION || Globals.CROSSVALIDATION) {
+            return new ModelSampling(L, n, ms.getBestK(), ms.getRho(), ms.getPi(), ms.getMu(), Globals.savePath);
+        } else {
+            return null;
+        }
     }
 
     private static int countChars(byte[][] bbb) {
@@ -108,7 +112,7 @@ public class ArtificialExperimentalForwarder {
                 }
                 String[] hapTest = hapTestList.toArray(new String[hapTestList.size()]);
 
-                ModelSampling ms = calc(Utils.clusterReads(Utils.splitReadsIntoByteArrays(hapTest)), Kmin, Kmax, N-N/kfold, L, n, haplotypesArray);
+                ModelSampling ms = calc(Utils.clusterReads(Utils.splitReadsIntoByteArrays(hapTest)), Kmin, Kmax, N - N / kfold, L, n, haplotypesArray);
                 Map<String, Integer> simulatedReads = ms.getReadsReversed();
                 Map<String, String> simulatedReadsString = new HashMap<>();
                 for (String s : simulatedReads.keySet()) {
@@ -141,8 +145,8 @@ public class ArtificialExperimentalForwarder {
 
             Utils.saveFile(Globals.savePath + File.separator + "crossvalidationraw-" + Kmin + ".txt", sbraw.toString());
         } else {
-            Map<byte[], Integer> simulatedReads = calc(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray).getReads();
             if (Globals.DISTANCE && Globals.SIMULATION) {
+                Map<byte[], Integer> simulatedReads = calc(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray).getReads();
                 Map<String, Integer> PHtrue = Utils.reverse(clusterReads);
                 Map<String, String> PHoriginal = new HashMap<>();
                 for (String key : PHtrue.keySet()) {
@@ -160,6 +164,8 @@ public class ArtificialExperimentalForwarder {
                 } else {
                     Utils.saveFile(Globals.savePath + File.separator + "distance-phat.txt", "PHat\n" + sb.toString());
                 }
+            } else {
+                calc(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray);
             }
         }
     }
@@ -205,7 +211,7 @@ public class ArtificialExperimentalForwarder {
                 }
                 String[] hapTest = hapTestList.toArray(new String[hapTestList.size()]);
 
-                ModelSampling ms = calc(Utils.clusterReads(Utils.splitReadsIntoByteArrays(hapTest)), Kmin, Kmax, N-N/kfold, L, n, haplotypesArray);
+                ModelSampling ms = calc(Utils.clusterReads(Utils.splitReadsIntoByteArrays(hapTest)), Kmin, Kmax, N - N / kfold, L, n, haplotypesArray);
                 Map<String, Integer> simulatedReads = ms.getReadsReversed();
                 Map<String, String> simulatedReadsString = new HashMap<>();
                 for (String s : simulatedReads.keySet()) {
