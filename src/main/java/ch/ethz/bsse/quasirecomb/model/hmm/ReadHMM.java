@@ -16,8 +16,8 @@ public class ReadHMM {
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
-    private double[] eps;
-    private double[] antieps;
+    private double[][] eps;
+    private double[][] antieps;
     private double[][][] ufJKV;
     private double[][] fJK;
     private double[][] bJK;
@@ -35,7 +35,7 @@ public class ReadHMM {
     private int end;
     private int length;
 
-    public ReadHMM(int L, int K, int n, byte[] read, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps) {
+    public ReadHMM(int L, int K, int n, byte[] read, double[][][] rho, double[] pi, double[][][] mu, double[][] eps, double[][] antieps) {
         this.L = L;
         this.K = K;
         this.n = n;
@@ -73,13 +73,41 @@ public class ReadHMM {
         }
     }
 
-    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double[] epsilon) {
+    public boolean checkConsistency() {
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                if (Double.isNaN(this.fJK[j][k])) {
+                    return true;
+                }
+                for (int v = 0; v < n; v++) {
+                    if (Double.isNaN(this.fJKV[j][k][v])) {
+                        return true;
+                    }
+                }
+            }
+            if (Double.isNaN(this.c[j])) {
+                return true;
+            }
+        }
+        for (int j = 0; j < L - 1; j++) {
+            for (int k = 0; k < K; k++) {
+                if (Double.isNaN(this.bJK[j][k])) {
+                    return true;
+                }
+            }
+        }
+        return true;
+    }
+
+    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double[][] epsilon) {
         this.rho = rho;
         this.pi = pi;
         this.mu = mu;
         this.eps = epsilon;
         for (int j = 0; j < L; j++) {
-            this.antieps[j] = 1 - (n - 1) * epsilon[j];
+            for (int k = 0; k < K; k++) {
+                this.antieps[j][k] = 1 - epsilon[j][k];
+            }
         }
         this.calculate();
     }
@@ -91,7 +119,7 @@ public class ReadHMM {
         for (int j = 0; j < length; j++) {
             for (int k = 0; k < K; k++) {
                 for (int v = 0; v < n; v++) {
-                    fJKV[j][k][v] = prRjHv(begin + j, v) * mu[begin + j][k][v];
+                    fJKV[j][k][v] = prRjHv(begin + j, v, k) * mu[begin + j][k][v];
                     if (j == 0) {
                         fJKV[j][k][v] *= pi[k];
                     } else {
@@ -102,6 +130,9 @@ public class ReadHMM {
                         fJKV[j][k][v] *= sumL;
                     }
                     c[j] += fJKV[j][k][v];
+                    if (fJKV[j][k][v] < 0) {
+                        System.out.println("");
+                    }
                 }
             }
 
@@ -124,7 +155,7 @@ public class ReadHMM {
                     for (int l = 0; l < K; l++) {
                         double sumV = 0d;
                         for (int v = 0; v < n; v++) {
-                            sumV += prRjHv(begin + j + 1, v) * mu[begin + j + 1][l][v];
+                            sumV += prRjHv(begin + j + 1, v, k) * mu[begin + j + 1][l][v];
                         }
                         bJK[j][k] += sumV * rho[begin + j][k][l] * bJK[j + 1][l];
                     }
@@ -151,7 +182,7 @@ public class ReadHMM {
                     for (int l = 0; l < K; l++) {
                         double marginalV = 0d;
                         for (int v = 0; v < n; v++) {
-                            marginalV += prRjHv(j, v) * mu[begin + j][l][v];
+                            marginalV += prRjHv(j, v, k) * mu[begin + j][l][v];
                         }
                         this.xJKL[j][k][l] = this.fJK[j - 1][k] * marginalV * rho[begin + j - 1][k][l] * this.bJK[j][l];
                     }
@@ -184,8 +215,8 @@ public class ReadHMM {
         return 0;
     }
 
-    private double prRjHv(int j, int v) {
-        return (read[j] == v) ? antieps[j] : eps[j];
+    private double prRjHv(int j, int v, int k) {
+        return (read[j] == v) ? antieps[j][k] : eps[j][k];
     }
 
     final public double getC(int j) {
@@ -210,7 +241,7 @@ public class ReadHMM {
                     for (int l = 0; l < K; l++) {
                         double sumV = 0d;
                         for (int v = 0; v < n; v++) {
-                            sumV += prRjHv(j + 1, v) * mu[j + 1][l][v];
+                            sumV += prRjHv(j + 1, v, k) * mu[j + 1][l][v];
                         }
                         ubJK[j][k] += sumV * rho[j][l][k] * ubJK[j + 1][l];
                     }
@@ -222,7 +253,7 @@ public class ReadHMM {
         for (int l = 0; l < K; l++) {
             double sumV = 0d;
             for (int v = 0; v < n; v++) {
-                sumV += prRjHv(j, v) * mu[j][l][v];
+                sumV += prRjHv(j, v, l) * mu[j][l][v];
             }
             sum += sumV * pi[l] * ubJK[j][l];
         }
@@ -235,7 +266,7 @@ public class ReadHMM {
         for (int jj = 0; jj < L; jj++) {
             for (int k = 0; k < K; k++) {
                 for (int v = 0; v < n; v++) {
-                    ufJKV[jj][k][v] = prRjHv(jj, v) * mu[jj][k][v];
+                    ufJKV[jj][k][v] = prRjHv(jj, v, k) * mu[jj][k][v];
                     if (jj == 0) {
                         ufJKV[jj][k][v] *= pi[k];
                     } else {
@@ -277,7 +308,7 @@ public class ReadHMM {
                 for (int l = 0; l < K; l++) {
                     double marginalV = 0d;
                     for (int v = 0; v < n; v++) {
-                        marginalV += prRjHv(jj, v) * mu[jj][l][v];
+                        marginalV += prRjHv(jj, v, k) * mu[jj][l][v];
                     }
                     this.uxJKL[jj][k][l] = this.ufJK[jj - 1][k] * marginalV * rho[j][k][l] * this.ubJK[jj][l];
                     sumXsi += this.uxJKL[jj][k][l];

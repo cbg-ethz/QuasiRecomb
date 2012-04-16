@@ -106,12 +106,48 @@ public class SingleEM {
                 if ((oldllh - llh) / llh == -1) {
                     Globals.log("0\t");
                 } else {
-                    Globals.log((oldllh - llh) / llh + "\t");
+                    Globals.log((oldllh - llh) / llh + "\t" + Math.abs((oldllh - llh) / llh) + "\t" + this.delta + "\t");
                 }
                 Globals.log(llh + "\n");
             }
+            if (Double.isNaN(llh)) {
+                System.out.println("");
+                
+                for (ReadHMM r : jhmm.getReadHMMMap().keySet()) {
+                    r.checkConsistency();
+                }
+                
+                for (int k = 0; k < K; k++) {
+                    if (Double.isNaN(jhmm.getPi()[k])) {
+                        System.out.println("");
+                    }
+                }
+                for (int j = 0; j < L; j++) {
+                    for (int k = 0; k < K; k++) {
+                        if (Double.isNaN(jhmm.getEps()[j][k])) {
+                            System.out.println("");
+                        }
+                        for (int v = 0; v < n; v++) {
+                            if (Double.isNaN(jhmm.getMu()[j][k][v])) {
+                                System.out.println("");
+                            }
+                        }
+                    }
+                }
+                for (int j = 0; j < L - 1; j++) {
+                    for (int k = 0; k < K; k++) {
+                        for (int l = 0; l < K; l++) {
+                            if (Double.isNaN(jhmm.getRho()[j][k][l])) {
+                                System.out.println("");
+                            }
+                        }
+                    }
+                }
+                System.out.println("");
+            }
             jhmm.restart();
             iterations++;
+
         } while (Math.abs((oldllh - llh) / llh) > this.delta);
         if (!broken) {
             Globals.log("\t\t");

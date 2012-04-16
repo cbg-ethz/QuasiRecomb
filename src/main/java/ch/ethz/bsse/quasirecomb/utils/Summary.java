@@ -1,6 +1,7 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ public class Summary extends Utils {
         sb.append("#PE:").append((mue - rhoe) / (or.getK() * or.getL())).append("\n");
         sb.append("#EPS:").append("\n");
         for (int j = 0; j < or.getL(); j++) {
-            sb.append("##j:").append(j).append("\t").append(or.getEps()[j]).append("\n");;
+            sb.append("##j:").append(j).append("\t").append(Arrays.toString(or.getEps()[j])).append("\n");;
 
         }
         sb.append("\n");

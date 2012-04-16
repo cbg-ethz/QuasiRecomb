@@ -10,7 +10,7 @@ import java.util.concurrent.RecursiveTask;
  */
 public class ReadHMMWorkerRecalc extends RecursiveTask<Boolean> {
 
-    private double[] eps;
+    private double[][] eps;
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
@@ -18,7 +18,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<Boolean> {
     private int end;
     private ReadHMM[] readHMMArray;
 
-    public ReadHMMWorkerRecalc(ReadHMM[] readHMMArray, double[][][] rho, double[] pi, double[][][] mu, double[] eps, int start, int end) {
+    public ReadHMMWorkerRecalc(ReadHMM[] readHMMArray, double[][][] rho, double[] pi, double[][][] mu, double[][] eps, int start, int end) {
         this.readHMMArray = readHMMArray;
         this.rho = rho;
         this.pi = pi;

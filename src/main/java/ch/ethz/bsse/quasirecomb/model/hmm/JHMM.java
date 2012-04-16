@@ -26,14 +26,14 @@ public class JHMM {
     private double[][][] priorRho;
     private double[] pi;
     private double[][][] mu;
-    private double[] eps;
-    private double[] antieps;
+    private double[][] eps;
+    private double[][] antieps;
     private double[][] nJK;
     private double[][][] nJKL;
     private double[][][] nJKV;
     private double[][] nVB;
-    private double[] neqPos;
-    private double[] nneqPos;
+    private double[][] neqPos;
+    private double[][] nneqPos;
     private double[] nJeq;
     private double[] nJneq;
     private double neq;
@@ -80,7 +80,7 @@ public class JHMM {
 
     public JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
-                (1 - (n - 1) * epsilon),
+                (1 - epsilon),
                 Random.generateInitRho(L - 1, K),
                 Random.generateInitPi(K),
                 Random.generateMuInit(L, K, n));
@@ -88,7 +88,7 @@ public class JHMM {
 
     public JHMM(byte[][] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
-                (1 - (n - 1) * epsilon),
+                (1 - epsilon),
                 Random.generateInitRho(L - 1, K),
                 Random.generateInitPi(K),
                 Random.generateMuInit(L, K, n));
@@ -138,13 +138,16 @@ public class JHMM {
         this.start();
         this.calculate();
     }
-    
+
     private void uniformEpsilon(double eps, double antieps) {
-        this.eps = new double[L];
-        this.antieps = new double[L];
+        this.eps = new double[L][K];
+        this.antieps = new double[L][K];
         for (int j = 0; j < L; j++) {
-            this.eps[j] = eps;
-            this.antieps[j] = antieps;
+            for (int k = 0; k < K; k++) {
+
+                this.eps[j][k] = eps;
+                this.antieps[j][k] = antieps;
+            }
         }
     }
 
@@ -154,6 +157,9 @@ public class JHMM {
         for (ReadHMM r : this.readHMMMap.keySet()) {
             for (int j = 0; j < L; j++) {
                 this.loglikelihood += Math.log(r.getC(j)) * this.readHMMMap.get(r);
+                if (Double.isNaN(this.loglikelihood)) {
+                    System.out.println("");
+                }
             }
         }
         this.likelihood = 0d;
@@ -217,8 +223,8 @@ public class JHMM {
         this.nVB = new double[n][n];
         this.nJeq = new double[L];
         this.nJneq = new double[L];
-        this.neqPos = new double[L];
-        this.nneqPos = new double[L];
+        this.neqPos = new double[L][K];
+        this.nneqPos = new double[L][K];
         for (Iterator<ReadHMM> it = this.readHMMMap.keySet().iterator(); it.hasNext();) {
             ReadHMM r = it.next();
             int times = this.readHMMMap.get(r);
@@ -245,10 +251,10 @@ public class JHMM {
                             for (int k = 0; k < K; k++) {
                                 this.nVB[v][b] += r.gamma(j, k, v) * times;
                                 if (v == b) {
-                                    this.neqPos[j] += r.gamma(j, k, v) * times;
+                                    this.neqPos[j][k] += r.gamma(j, k, v) * times;
                                     this.neq += r.gamma(j, k, v) * times;
                                 } else {
-                                    this.nneqPos[j] += r.gamma(j, k, v) * times;
+                                    this.nneqPos[j][k] += r.gamma(j, k, v) * times;
                                     this.nneq += r.gamma(j, k, v) * times;
                                 }
                             }
@@ -318,8 +324,24 @@ public class JHMM {
         if (upsilon == 0d) {
             return 0d;
         }
-//        System.out.println("#"+upsilon);
-        return Math.exp(rho_phi(upsilon));
+        double result = Math.exp(rho_phi(upsilon));
+        if (Double.isNaN(result)) {
+            System.out.println("===============");
+            System.out.println(upsilon);
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.out.println("===============");
+            System.exit(9);
+        }
+        return result;
     }
 
     private double rho_phi(double upsilon) {
@@ -361,7 +383,9 @@ public class JHMM {
         this.mu = this.calcMu();
 //        System.out.println("M\t: " + (System.currentTimeMillis() - time));
         for (int j = 0; j < L; j++) {
-            this.eps[j] = 10* (1d/(n-1d))*(this.nneqPos[j] / (this.nneqPos[j] + this.neqPos[j]));
+            for (int k = 0; k < K; k++) {
+                this.eps[j][k] = (this.nneqPos[j][k] / (this.nneqPos[j][k] + this.neqPos[j][k]));
+            }
         }
 //        System.out.println("#EPS: "+eps);
     }
@@ -411,11 +435,11 @@ public class JHMM {
         return N;
     }
 
-    public double[] getAntieps() {
+    public double[][] getAntieps() {
         return antieps;
     }
 
-    public double[] getEps() {
+    public double[][] getEps() {
         return eps;
     }
 
