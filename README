@@ -46,3 +46,6 @@ population of quasispecies.
  cd QuasiRecomb
  mvn clean package
  java -jar QuasiRecomb/target/QuasiRecomb*full.jar --help
+
+#LICENSE:
+ GNU GPLv3 http://www.gnu.org/licenses/gpl-3.0
