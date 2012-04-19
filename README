@@ -10,8 +10,8 @@ probability tables over the sequence alphabet to explain the diversity
 that can be found in the population at each site. Recombination events
 are indicated by a change of state, allowing a single observed read to
 originate from multiple sequences. We present an implementation of the
-EM algorithm to find maximum likelihood estimates of the model
-parameters and a method to estimate the  distribution of viral strains
+EM algorithm to find maximum a posteriori estimates of the model
+parameters and a method to estimate the distribution of viral strains
 in the quasispecies. The model is validated on simulated data, showing
 the advantage of explicitly taking the recombination process into
 account, and tested by applying to reads obtained from experimental 
@@ -22,17 +22,27 @@ This java command line application is a toolbox, offering all necessary
 steps to analyse Next Generation Sequencing (NGS) data and infer the
 population of quasispecies.
 
-#PREREQUISITES:
+#PREREQUISITES TO RUN:
  - JDK 7 (http://jdk7.java.net/)
- - Maven 3 (http://maven.apache.org/)
+ - Get latest version: https://github.com/armintoepfer/QuasiRecomb/downloads
 
-#INSTALL:
-cd QuasiRecomb
-mvn clean package
+#RUN:
+ java -jar QuasiRecomb.jar --train -i alignedReads.fasta
+ The reconstructed quasispecies.fasta will be saved in the working directory.
 
 #USE / SHOW HELP:
-java -jar target/QuasiRecomb*one-jar.jar
+ java -jar QuasiRecomb.jar
 
 #CONTACT:
-Armin Töpfer
-http://www.bsse.ethz.ch/cbg/people/toepfera
+ Armin Töpfer
+ armin.toepfer (at) gmail.com
+ http://www.bsse.ethz.ch/cbg/people/toepfera
+
+
+#PREREQUISITES COMPILE (only for dev):
+ - Maven 3 (http://maven.apache.org/)
+
+#INSTALL (only for dev):
+ cd QuasiRecomb
+ mvn clean package
+ java -jar QuasiRecomb/target/QuasiRecomb*full.jar --help

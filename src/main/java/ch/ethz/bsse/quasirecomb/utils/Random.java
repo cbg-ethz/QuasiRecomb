@@ -2,7 +2,6 @@ package ch.ethz.bsse.quasirecomb.utils;
 
 import cc.mallet.types.Dirichlet;
 import ch.ethz.bsse.quasirecomb.model.Globals;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 

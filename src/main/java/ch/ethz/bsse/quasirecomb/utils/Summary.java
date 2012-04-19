@@ -39,8 +39,7 @@ public class Summary extends Utils {
         sb.append("#PE:").append((mue - rhoe) / (or.getK() * or.getL())).append("\n");
         sb.append("#EPS:").append("\n");
         for (int j = 0; j < or.getL(); j++) {
-            sb.append("##j:").append(j).append("\t").append(Arrays.toString(or.getEps()[j])).append("\n");;
-
+            sb.append("##j:").append(j).append("\t").append(or.getEps()[j]).append("\t").append(Arrays.toString(or.getNneqPosCount()[j])).append("\n");
         }
         sb.append("\n");
 
@@ -94,7 +93,7 @@ public class Summary extends Utils {
                     break;
                 }
             }
-            if (flat) {
+//            if (flat) {
                 sb.append("##j:").append(j).append("\t");
                 for (byte[] b : or.getHaplotypesArray()) {
                     sb.append(reverse((int) b[j]));
@@ -121,7 +120,7 @@ public class Summary extends Utils {
                     sb.append("]\t");
                 }
                 sb.append("\n");
-            }
+//            }
         }
         return sb.toString();
     }

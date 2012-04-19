@@ -10,7 +10,7 @@ import java.util.Map;
  *
  * @author Armin Töpfer (armin.toepfer@bsse.ethz.ch)
  */
-public class Utils extends FastaParser{
+public class Utils extends FastaParser {
 
     public static String SAVEPATH = "";
 
@@ -95,6 +95,7 @@ public class Utils extends FastaParser{
         }
         return Rs;
     }
+
     public static byte[] splitQualityIntoByteArray(String quality) {
         byte[] Rs = new byte[quality.length()];
         char[] readSplit = quality.toCharArray();
@@ -159,6 +160,7 @@ public class Utils extends FastaParser{
         }
         return sb.toString();
     }
+
     public static String reverse(byte[] bArray) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bArray) {
@@ -166,6 +168,7 @@ public class Utils extends FastaParser{
         }
         return sb.toString();
     }
+
     public static String reverse(byte i) {
         switch (i) {
             case 0:
@@ -195,10 +198,8 @@ public class Utils extends FastaParser{
             case 4:
                 return "-";
         }
-        throw new IllegalAccessError(""+i);
+        throw new IllegalAccessError("" + i);
     }
-
-    
 
     public static void save(Map<String, Integer> map, String path) {
         StringBuilder sb = new StringBuilder();
@@ -208,5 +209,27 @@ public class Utils extends FastaParser{
             }
         }
         saveFile(path, sb.toString());
+    }
+
+    public static void error() {
+        System.out.println("    .o oOOOOOOOo                                            OOOo");
+        System.out.println("    Ob.OOOOOOOo  OOOo.      oOOo.                      .adOOOOOOO");
+        System.out.println("    OboO\"\"\"\"\"\"\"\"\"\"\"\".OOo. .oOOOOOo.    OOOo.oOOOOOo..\"\"\"\"\"\"\"\"\"'OO");
+        System.out.println("    OOP.oOOOOOOOOOOO \"POOOOOOOOOOOo.   `\"OOOOOOOOOP,OOOOOOOOOOOB'");
+        System.out.println("    `O'OOOO'     `OOOOo\"OOOOOOOOOOO` .adOOOOOOOOO\"oOOO'    `OOOOo");
+        System.out.println("    .OOOO'            `OOOOOOOOOOOOOOOOOOOOOOOOOO'            `OO");
+        System.out.println("    OOOOO                 '\"OOOOOOOOOOOOOOOO\"`                oOO");
+        System.out.println("   oOOOOOba.                .adOOOOOOOOOOba               .adOOOOo.");
+        System.out.println("  oOOOOOOOOOOOOOba.    .adOOOOOOOOOO@^OOOOOOOba.     .adOOOOOOOOOOOO");
+        System.out.println(" OOOOOOOOOOOOOOOOO.OOOOOOOOOOOOOO\"`  '\"OOOOOOOOOOOOO.OOOOOOOOOOOOOO");
+        System.out.println(" \"OOOO\"       \"YOoOOOOMOIONODOO\"`  .   '\"OOROAOPOEOOOoOY\"     \"OOO\"");
+        System.out.println("    Y           'OOOOOOOOOOOOOO: .oOOo. :OOOOOOOOOOO?'         :`");
+        System.out.println("    :            .oO%OOOOOOOOOOo.OOOOOO.oOOOOOOOOOOOO?         .");
+        System.out.println("    .            oOOP\"%OOOOOOOOoOOOOOOO?oOOOOO?OOOO\"OOo");
+        System.out.println("                 '%o  OOOO\"%OOOO%\"%OOOOO\"OOOOOO\"OOO':");
+        System.out.println("                      `$\"  `OOOO' `O\"Y ' `OOOO'  o             .");
+        System.out.println("    .                  .     OP\"          : o     .");
+        System.out.println("                              :");
+        System.out.println("                              .");
     }
 }

@@ -52,13 +52,17 @@ public class Globals {
     public static double BIAS = 0.1;
     private static double MAX_LLH = Double.NEGATIVE_INFINITY;
     public static StringBuilder LOG = new StringBuilder();
-    private static boolean PRINT = true;
+    public static boolean LOG_BIC = false;
+    public static boolean LOGGING = false;
+    private static boolean PRINT = false;
 
     public static void log(Object o) {
         if (PRINT) {
             System.out.print(o);
         } else {
-            LOG.append(o);
+            if (LOGGING) {
+                LOG.append(o);
+            }
         }
     }
     public static int PERCENTAGE = 0;

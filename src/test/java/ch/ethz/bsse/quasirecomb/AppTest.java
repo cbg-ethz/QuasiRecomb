@@ -1,12 +1,8 @@
 package ch.ethz.bsse.quasirecomb;
 
-import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
-import com.google.common.collect.Sets;
-import java.util.HashMap;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import java.util.Map;
 
 /**
  * Unit test for simple App.

@@ -164,10 +164,7 @@ public final class ModelSampling extends Utils {
     }
 
     public void printQuasispecies() {
-        int i = 0;
-        for (byte[] read : sorted_map.keySet()) {
-            System.out.println(reads.get(read) + "\t" + read);
-        }
+        System.out.println(sb.toString());
     }
 
     public Map<byte[], Integer> getReads() {

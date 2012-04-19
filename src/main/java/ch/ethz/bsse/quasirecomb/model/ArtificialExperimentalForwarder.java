@@ -244,8 +244,8 @@ public class ArtificialExperimentalForwarder {
 
             Utils.saveFile(Globals.savePath + File.separator + "crossvalidationraw-" + Kmin + ".txt", sbraw.toString());
         } else {
-            Map<byte[], Integer> simulatedReads = calc(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray).getReads();
             if (Globals.DISTANCE && Globals.SIMULATION) {
+                Map<byte[], Integer> simulatedReads = calc(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray).getReads();
                 Map<String, String> PHoriginal = new HashMap<>();
                 for (String key : haplotypes.keySet()) {
                     PHoriginal.put(key, haplotypes.get(key).toString());
@@ -261,6 +261,8 @@ public class ArtificialExperimentalForwarder {
                 } else {
                     Utils.saveFile(Globals.savePath + File.separator + "distance-phat.txt", "PHat\n" + sb.toString());
                 }
+            } else {
+                calc(clusterReads, Kmin, Kmax, N, L, n, haplotypesArray);
             }
         }
     }

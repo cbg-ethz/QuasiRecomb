@@ -42,7 +42,7 @@ public class FastaParser {
                 }
                 readList.add(sb.toString());
             }
-            readList.add(sb.toString());
+//            readList.add(sb.toString());
         } catch (Exception e) {
             System.err.println("Error Far: " + e.getMessage());
         }

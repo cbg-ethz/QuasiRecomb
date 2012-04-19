@@ -124,9 +124,6 @@ public class SingleEM {
                 }
                 for (int j = 0; j < L; j++) {
                     for (int k = 0; k < K; k++) {
-                        if (Double.isNaN(jhmm.getEps()[j][k])) {
-                            System.out.println("");
-                        }
                         for (int v = 0; v < n; v++) {
                             if (Double.isNaN(jhmm.getMu()[j][k][v])) {
                                 System.out.println("");
@@ -208,7 +205,7 @@ public class SingleEM {
 
         BIC_current -= (freeParameters / 2d) * Math.log(N);
 
-        Utils.appendFile(Globals.savePath + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
+        if (Globals.LOG_BIC) Utils.appendFile(Globals.savePath + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
 
         double[][][] mu_tmp = new double[L][K][n];
         for (int j = 0; j < L; j++) {
@@ -222,7 +219,8 @@ public class SingleEM {
                 jhmm.getPi().length),
                 mu_tmp,
                 llh,
-                BIC_current, jhmm.getPrior_rho(), jhmm.getEps());
+                BIC_current, jhmm.getPrior_rho(), jhmm.getEps(),
+                jhmm.getNneqPosCount());
         if (llh >= llh_opt) {
             Globals.maxMAX_LLH(llh);
         }

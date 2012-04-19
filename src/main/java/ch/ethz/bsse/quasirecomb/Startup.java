@@ -53,6 +53,8 @@ public class Startup {
     private boolean train;
     @Option(name = "--summary")
     private boolean summary;
+    @Option(name = "-log")
+    private boolean log;
 //    @Option(name = "-noSample", usage = "Do not infer haplotypes from best model")
 //    private boolean noSample;
     @Option(name = "-c10")
@@ -146,7 +148,6 @@ public class Startup {
         CmdLineParser parser = new CmdLineParser(this);
 
         parser.setUsageWidth(80);
-
         try {
             parser.parseArgument(args);
             if (output == null) {
@@ -156,6 +157,7 @@ public class Startup {
                 new File(this.output).mkdirs();
             }
             Globals.DEBUG = this.verbose;
+            Globals.LOGGING = this.log;
 
             if (this.sample) {
                 if (input.contains("#")) {
@@ -251,7 +253,7 @@ public class Startup {
                         System.exit(0);
                     }
                 }
-
+                
                 Globals.ALPHA_Z = this.alphaz;
                 Globals.ALPHA_H = this.alphah;
                 Globals.BETA_Z = this.betaz;

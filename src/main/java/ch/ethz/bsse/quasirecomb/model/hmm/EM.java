@@ -5,11 +5,11 @@ import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.RestartWorker;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -93,7 +93,7 @@ public class EM extends Utils {
 //        }
 //        System.out.println("--------------------");
         Globals.LOG = new StringBuilder();
-        
+
         if (Globals.PARALLEL_RESTARTS) {
             ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, haplotypesArray, Globals.DELTA_LLH, 0, Globals.REPEATS));
         } else {
@@ -111,36 +111,28 @@ public class EM extends Utils {
                 or = tmp;
             }
         }
+        System.out.println("\tBIC: " + (int) or.getBIC());
 //        if (!Globals.NO_REFINE) {
 //            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);
 //            this.or = bestEM.getOptimalResult();
 //        }
-        this.saveEM();
-        Globals.log("\n"+new Summary().print(or));
-        Utils.saveFile(Globals.savePath+"log_K"+K, Globals.LOG.toString());
-    }
-
-    private void saveEM() {
-        this.saveBestEM(false);
-    }
-
-    public void saveBestEM(boolean bestK) {
-        if (Globals.DEBUG) {
-            System.out.println("BIC:" + or.getBIC());
-        }
-        sb.setLength(0);
-        sb.append(new Summary().print(or));
-        try {
-            String s = Globals.savePath + "optimumJavaK" + (bestK ? "" : K);
-            FileOutputStream fos = new FileOutputStream(s);
-            try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
-                out.writeObject(or);
-            }
-        } catch (IOException ex) {
-            System.out.println("Optimum Java saving\n" + ex.getMessage());
+//        this.saveEM();
+        Globals.log("\n" + new Summary().print(or));
+        if (Globals.LOGGING) {
+            Utils.saveFile(Globals.savePath + "log_K" + K, Globals.LOG.toString());
         }
     }
 
+//    private void saveEM() {
+//        this.saveBestEM(false);
+//    }
+//    public void saveBestEM(boolean bestK) {
+//        if (Globals.DEBUG) {
+//            System.out.println("BIC:" + or.getBIC());
+//        }
+//        sb.setLength(0);
+//        
+//    }
     /**
      * Returns the StringBuilder with the information of the best result.
      *
@@ -184,5 +176,9 @@ public class EM extends Utils {
      */
     public double[][][] getRho_opt() {
         return or.getRho();
+    }
+
+    public OptimalResult getOr() {
+        return or;
     }
 }

@@ -1,8 +1,14 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
+import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
+import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Map;
 
 /**
@@ -39,24 +45,46 @@ public class ModelSelection {
         double optBIC = 0;
         
         System.out.println("Model training ("+Globals.REPEATS+" iterations) (K "+Kmin+"-"+Kmax+"):");
+        OptimalResult or = null;
         for (int k = Kmin; k <= Kmax; k++) {
             if (!Globals.rho0force || k == 1) {
                 checkRho0(k);
             }
             EM em = new EM(this.N, this.L, k, this.n, this.clusterReads, this.haplotypesArray);
-            Utils.saveFile(Globals.savePath + "K" + k + "-result.txt", em.getSb().toString());
-            if (em.getBIC_opt() > optBIC || optBIC == 0) {
-                optBIC = em.getBIC_opt();
+            
+            if (em.getOr().getBIC() > optBIC || optBIC == 0) {
+                or = em.getOr();
+                optBIC = em.getOr().getBIC();
                 this.bestK = k;
-                em.saveBestEM(true);
                 this.mu = em.getMu_opt();
                 this.pi = em.getPi_opt();
                 this.rho = em.getRho_opt();
             }
-            System.out.println("");
+//            System.out.println("");
             Globals.PERCENTAGE = 0;
 //            ModelSampling ms = new ModelSampling(L, n, k, em.getRho_opt(), em.getPi_opt(), em.getMu_opt(), Globals.savePath);
         }
+        System.out.println("\nBest model: " + or.getK());
+        
+        //save optimumJava
+        StringBuilder sb = new StringBuilder();
+        sb.append(new Summary().print(or));
+        if (!new File(Globals.savePath+"support").exists()) {
+            new File(Globals.savePath+"support").mkdirs();
+        }
+        Utils.saveFile(Globals.savePath + "support"+File.separator+"K" + or.getK() + "-result.txt", sb.toString());
+        try {
+            String s = Globals.savePath + "support"+File.separator+"optimumJava";// + (bestK ? "" : K);
+            FileOutputStream fos = new FileOutputStream(s);
+            try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
+                out.writeObject(or);
+            }
+        } catch (IOException ex) {
+            System.out.println("Optimum Java saving\n" + ex.getMessage());
+        }
+        ModelSampling modelSampling = new ModelSampling(L, n, or.getK(), or.getRho(), or.getPi(), or.getMu(), Globals.savePath);
+        modelSampling.save();
+        System.out.println("Quasispecies saved: "+Globals.savePath+"quasispecies.fasta");
     }
 
     private static void checkRho0(int K) {

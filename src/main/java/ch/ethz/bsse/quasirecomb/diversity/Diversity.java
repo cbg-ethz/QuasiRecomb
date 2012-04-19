@@ -4,7 +4,6 @@ import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.math3.stat.inference.MannWhitneyUTest;
 
 /**
  *

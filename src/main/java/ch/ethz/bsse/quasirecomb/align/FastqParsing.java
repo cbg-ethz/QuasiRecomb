@@ -4,14 +4,14 @@
  */
 package ch.ethz.bsse.quasirecomb.align;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.biojava3.sequencing.io.fastq.Fastq;
-import org.biojava3.sequencing.io.fastq.FastqReader;
-import org.biojava3.sequencing.io.fastq.SangerFastqReader;
+//import java.io.File;
+//import java.io.IOException;
+//import java.util.Iterator;
+//import java.util.logging.Level;
+//import java.util.logging.Logger;
+//import org.biojava3.sequencing.io.fastq.Fastq;
+//import org.biojava3.sequencing.io.fastq.FastqReader;
+//import org.biojava3.sequencing.io.fastq.SangerFastqReader;
 
 /**
  *
@@ -21,22 +21,22 @@ public class FastqParsing {
 
     public static void main(String[] args) {
 
-        FastqReader reader = new SangerFastqReader();
-        try {
-            Iterable<Fastq> read = reader.read(new File("/Users/XLR/Dropbox/SRR069887.fastq"));
-            Iterator<Fastq> iterator = read.iterator();
-            while (iterator.hasNext()) {
-                Fastq next = iterator.next();
-                for (int i = 0; i < next.getSequence().length(); i++) {
-                    System.out.println(i
-                            +"\t"+next.getVariant().errorProbability(next.getQuality().charAt(i))
-                            +"\t"+next.getVariant().qualityScore(next.getQuality().charAt(i)));
-                }
-                System.out.println("");
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(FastqParsing.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        FastqReader reader = new SangerFastqReader();
+//        try {
+//            Iterable<Fastq> read = reader.read(new File("/Users/XLR/Dropbox/SRR069887.fastq"));
+//            Iterator<Fastq> iterator = read.iterator();
+//            while (iterator.hasNext()) {
+//                Fastq next = iterator.next();
+//                for (int i = 0; i < next.getSequence().length(); i++) {
+//                    System.out.println(i
+//                            +"\t"+next.getVariant().errorProbability(next.getQuality().charAt(i))
+//                            +"\t"+next.getVariant().qualityScore(next.getQuality().charAt(i)));
+//                }
+//                System.out.println("");
+//            }
+//        } catch (IOException ex) {
+//            Logger.getLogger(FastqParsing.class.getName()).log(Level.SEVERE, null, ex);
+//        }
 
 
 

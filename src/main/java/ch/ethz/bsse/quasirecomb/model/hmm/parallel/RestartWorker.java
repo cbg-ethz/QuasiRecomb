@@ -43,13 +43,13 @@ public class RestartWorker extends RecursiveTask<List<OptimalResult>> {
     protected List<OptimalResult> compute() {
         if (end - start <= Globals.PARALLEL_RESTARTS_UPPER_BOUND || !Globals.PARALLEL_RESTARTS) {
             final List<OptimalResult> list = new ArrayList<>();
-            System.out.println("+"+start+":"+end);
+            Globals.log("+"+start+":"+end);
             for (int i = start; i < end; i++) {
-                System.out.println("\tx:"+i);
+                Globals.log("\tx:"+i);
                 final SingleEM singleEm = new SingleEM(N, K, L, n, reads, haplotypesArray, delta);
                 list.add(singleEm.getOptimalResult());
             }
-            System.out.println("-"+start+":"+end);
+            Globals.log("-"+start+":"+end);
             return list;
         } else {
             final int mid = start + (end - start) / 2;
