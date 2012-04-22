@@ -28,6 +28,9 @@ steps to infer a viral quasispecies from Next Generation Sequencing (NGS) data.
 #USE / SHOW HELP:
  java -jar QuasiRecomb.jar
 
+#USE wider range of generators
+ java -jar QuasiRecomb.jar --train -i alignedReads.fasta -K 1:7
+
 #CONTACT:
  Armin Töpfer
  armin.toepfer (at) gmail.com
