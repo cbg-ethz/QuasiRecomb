@@ -5,7 +5,7 @@
 
     <groupId>ch.ethz.bsse.</groupId>
     <artifactId>QuasiRecomb</artifactId>
-    <version>0.1</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
   
     <name>QuasiRecomb</name>
