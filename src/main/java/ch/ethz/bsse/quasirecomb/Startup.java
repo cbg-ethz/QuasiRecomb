@@ -49,6 +49,8 @@ public class Startup {
 
     @Option(name = "-i")
     private String input;
+    @Option(name = "--subset")
+    private boolean subset;
     @Option(name = "--recombine")
     private boolean recombine;
     @Option(name = "-spots")
@@ -85,10 +87,14 @@ public class Startup {
     private int chunk = 20;
     @Option(name = "-maxsim")
     private int maxsim = 1;
+    @Option(name = "-samplingNumber")
+    private int samplingNumber = 10000;
     @Option(name = "-f")
     private String f;
     @Option(name = "-e")
-    private double e = 0.0003;
+    private double e = .001;
+    @Option(name = "-ee")
+    private double ee = .001;
     @Option(name = "-d")
     private double d = 1e-8;
     @Option(name = "-min")
@@ -97,6 +103,8 @@ public class Startup {
     private boolean parallelRestarts;
     @Option(name = "-singleCore")
     private boolean singleCore;
+    @Option(name = "-trainEpsilon")
+    private boolean trainEpsilon;
     @Option(name = "-verbose")
     private boolean verbose;
     @Option(name = "-noRecomb")
@@ -168,6 +176,7 @@ public class Startup {
             }
             Globals.DEBUG = this.verbose;
             Globals.LOGGING = this.log;
+            Globals.SAMPLING_NUMBER = this.samplingNumber;
 
             if (this.sample) {
                 if (input.contains("#")) {
@@ -176,14 +185,16 @@ public class Startup {
 
                     for (int i = Integer.parseInt(split[0]); i <= Integer.parseInt(split[1]); i++) {
                         System.out.println("Sampling " + splitBracket[0] + i);
-                        ModelSampling simulation = new ModelSampling(splitBracket[0] + i, output, SAMPLING_AMOUNT);
+                        ModelSampling simulation = new ModelSampling(splitBracket[0] + i, output);
                         simulation.save();
                     }
                 } else {
                     System.out.println("Sampling " + input);
-                    ModelSampling simulation = new ModelSampling(input, output, SAMPLING_AMOUNT);
+                    ModelSampling simulation = new ModelSampling(input, output);
                     simulation.save();
                 }
+            } else if (this.subset) {
+                System.out.println(this.input);
             } else if (this.recombine) {
                 if (this.spots != null) {
                     String[] split = this.spots.split(",");
@@ -214,7 +225,7 @@ public class Startup {
                 Summary s = new Summary();
                 System.out.println(s.print(or));
                 if (this.haplotypes != null) {
-                    ModelSampling ms = new ModelSampling(input, "", SAMPLING_AMOUNT);
+                    ModelSampling ms = new ModelSampling(input, "");
                     System.out.println("\n#Quasispecies:");
                     ms.printQuasispecies();
                     Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), ms.getReadsReversed());
@@ -264,6 +275,7 @@ public class Startup {
                     }
                 }
 
+                Globals.TRAIN_EPSILON = this.trainEpsilon;
                 Globals.ALPHA_Z = this.alphaz;
                 Globals.ALPHA_H = this.alphah;
                 Globals.BETA_Z = this.betaz;
@@ -272,7 +284,7 @@ public class Startup {
                 Globals.PARALLEL_JHMM = !this.singleCore;
                 Globals.PARALLEL_RESTARTS = this.parallelRestarts;
                 Globals.ESTIMATION_EPSILON = this.e;
-//            Globals.SAMPLING_EPSILON = Globals.ESTIMATION_EPSILON;
+                Globals.SAMPLING_EPSILON = this.ee;
                 Globals.DELTA_LLH = this.d;
                 Globals.REPEATS = this.t;
                 Globals.DEBUG = this.verbose;

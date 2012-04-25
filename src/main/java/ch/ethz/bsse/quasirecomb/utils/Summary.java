@@ -93,12 +93,12 @@ public class Summary extends Utils {
                     break;
                 }
             }
-//            if (flat) {
+            if (flat) {
                 sb.append("##j:").append(j).append("\t");
-                for (byte[] b : or.getHaplotypesArray()) {
-                    sb.append(reverse((int) b[j]));
-                }
-                sb.append("|");
+//                for (byte[] b : or.getHaplotypesArray()) {
+//                    sb.append(reverse((int) b[j]));
+//                }
+//                sb.append("|");
                 for (int k = 0; k < or.getK(); k++) {
                     double max = Double.MIN_VALUE;
                     Map<Double, Integer> m = new HashMap<>();
@@ -120,7 +120,7 @@ public class Summary extends Utils {
                     sb.append("]\t");
                 }
                 sb.append("\n");
-//            }
+            }
         }
         return sb.toString();
     }

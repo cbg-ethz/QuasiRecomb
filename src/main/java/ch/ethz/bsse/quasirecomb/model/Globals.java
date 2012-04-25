@@ -28,6 +28,7 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class Globals {
 
+    public static boolean TRAIN_EPSILON = false;
     public static double BETA_Z = 0.01;
     public static double BETA_H = 2;
     public static double ALPHA_Z = 0.001;
@@ -39,7 +40,7 @@ public class Globals {
     public static String filePrefix = "";
     public static String savePath = "C:\\Users\\XLR\\Dropbox\\JData\\";
     public static double ESTIMATION_EPSILON = .0003;
-    public static double SAMPLING_EPSILON = .0001;
+    public static double SAMPLING_EPSILON = .001;
     public static double FILTER_LLH = 1e-4;
     public static double DELTA_LLH_HARDER = 1e-50;
     public static double DELTA_LLH = 1e-8;
@@ -71,7 +72,8 @@ public class Globals {
     public static StringBuilder LOG = new StringBuilder();
     public static boolean LOG_BIC = false;
     public static boolean LOGGING = false;
-    private static boolean PRINT = false;
+    private static boolean PRINT = true;
+    public static int SAMPLING_NUMBER = 10000;
 
     public static void log(Object o) {
         if (PRINT) {

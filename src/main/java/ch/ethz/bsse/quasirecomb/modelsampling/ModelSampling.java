@@ -18,6 +18,7 @@
 package ch.ethz.bsse.quasirecomb.modelsampling;
 
 import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -42,7 +43,7 @@ public final class ModelSampling extends Utils {
     private Frequency<Integer>[][] rhoArray;
     private Frequency<Byte>[][] muArray;
     private Map<byte[], Integer> reads;
-    private int amount = 10000;
+    private int amount = Globals.SAMPLING_NUMBER;
     private int[] recombPerObservation;
     private Map<String, Double> hexMap = new HashMap<>();
     private StringBuilder sb = new StringBuilder();
@@ -62,7 +63,7 @@ public final class ModelSampling extends Utils {
         this.start();
     }
 
-    public ModelSampling(String string, String path, int amount) {
+    public ModelSampling(String string, String path) {
         OptimalResult or = null;
 
         try {
@@ -83,7 +84,6 @@ public final class ModelSampling extends Utils {
         this.H = or.getMu();
         this.rhoArray = new Frequency[L - 1][K];
         this.muArray = new Frequency[L][K];
-        this.amount = amount;
         this.recombPerObservation = new int[amount];
         this.start();
     }

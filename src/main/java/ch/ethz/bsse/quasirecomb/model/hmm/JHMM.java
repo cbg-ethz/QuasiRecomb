@@ -269,16 +269,18 @@ public class JHMM {
                         if (r.getRead()[j] == b) {
                             for (int k = 0; k < K; k++) {
                                 this.nVB[v][b] += r.gamma(j, k, v) * times;
-                                if (v == b) {
-                                    this.neqPos[j] += r.gamma(j, k, v) * times;
-                                    this.neq += r.gamma(j, k, v) * times;
-                                } else {
-                                    if (r.gamma(j, k, v) * times > 0) {
-                                        this.nneqPosCount[j][v] = true;
-                                    }
+//                                if (v == b) {
+//                                    this.neqPos[j] += r.gamma(j, k, v) * times;
+//                                    this.neq += r.gamma(j, k, v) * times;
+//                                } else {
+//                                    if (r.gamma(j, k, v) * times > 0) {
+//                                        this.nneqPosCount[j][v] = true;
+//                                    }
+                                if (v != b) {
                                     this.nneqPos[j] += r.gamma(j, k, v) * times;
-                                    this.nneq += r.gamma(j, k, v) * times;
                                 }
+//                                    this.nneq += r.gamma(j, k, v) * times;
+//                                }
                             }
                         }
                     }
@@ -401,8 +403,17 @@ public class JHMM {
                         sum++;
                     }
                 }
-                
-//                this.eps[j] = (this.nneqPos[j] / (this.nneqPos[j] + this.neqPos[j])) / (n-1d);
+
+            }
+//            for (int v = 0; v < n; v++) {
+//                for (int b = 0; b < n; b++) {
+//                    if (v != b) {
+//                        this.eps[j] += this.nVB[v][b];
+//                    }
+//                }
+//            }
+            if (Globals.TRAIN_EPSILON) {
+                this.eps[j] = this.nneqPos[j] / (N * (n - 1d));
             }
         }
 //        System.out.println("#EPS: "+eps);
