@@ -7,9 +7,23 @@
     <artifactId>QuasiRecomb</artifactId>
     <version>0.1.1</version>
     <packaging>jar</packaging>
-  
+    <url>http://www.cbg.ethz.ch/software/quasirecomb</url>
     <name>QuasiRecomb</name>
-    <url>http://bsse.ethz.ch/cbg/</url>
+    
+    <developers>
+        <developer>
+            <id>toepfera</id>
+            <name>Armin Töpfer</name>
+            <email>armin.toepfer@gmail.com</email>
+        </developer>
+    </developers>
+    
+     <scm>
+        <connection>scm:git:[fetch=]git://github.com/armintoepfer/QuasiRecomb.git</connection>
+        <developerConnection>scm:git:[fetch=]git://github.com/armintoepfer/QuasiRecomb.git</developerConnection>
+        <url>https://github.com/armintoepfer/QuasiRecomb</url>
+    </scm>
+    
     <build>
         <plugins>
             <plugin>
@@ -24,7 +38,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>2.5-SNAPSHOT</version>
                 <configuration>
                     <excludes>
                         <exclude>**/haplotypes/*</exclude>
@@ -33,6 +47,12 @@
                         <manifest>
                             <mainClass>ch.ethz.bsse.quasirecomb.Startup</mainClass>
                         </manifest>
+                        <manifestEntries>
+                            <mode>development</mode>
+                            
+                            <url>${project.url}</url>
+                            <author>value</author>
+                        </manifestEntries>
                     </archive>
                 </configuration>
             </plugin>
@@ -88,7 +108,7 @@
             <version>1.2</version>
             <type>jar</type>
         </dependency>
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>org.biojava</groupId>
             <artifactId>biojava3-core</artifactId>
             <version>3.0.3</version>
@@ -108,7 +128,7 @@
             <artifactId>commons-math</artifactId>
             <version>3.0-SNAPSHOT</version>
         </dependency>
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>1.3.1</version>
