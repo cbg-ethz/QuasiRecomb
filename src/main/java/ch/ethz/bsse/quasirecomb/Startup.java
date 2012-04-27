@@ -47,28 +47,20 @@ import org.kohsuke.args4j.Option;
  */
 public class Startup {
 
+    //GENERAL
     @Option(name = "-i")
     private String input;
-    @Option(name = "--subset")
-    private boolean subset;
-    @Option(name = "--recombine")
-    private boolean recombine;
-    @Option(name = "-spots")
-    private String spots;
-    @Option(name = "--sample", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
-    private boolean sample;
+    @Option(name = "-print")
+    private boolean print;
     @Option(name = "-o", usage = "Path to the output directory (default: current directory)", metaVar = "PATH")
     private String output;
-    @Option(name = "--muentropy")
-    private boolean muentropy;
-    @Option(name = "--train", usage = "Train model for given multiple alignment")
-    private boolean train;
-    @Option(name = "--summary")
-    private boolean summary;
     @Option(name = "-log")
     private boolean log;
-//    @Option(name = "-noSample", usage = "Do not infer haplotypes from best model")
-//    private boolean noSample;
+    @Option(name = "-verbose")
+    private boolean verbose;
+    //TRAIN
+    @Option(name = "--train", usage = "Train model for given multiple alignment")
+    private boolean train;
     @Option(name = "-c10")
     private boolean crossvalidation = false;
     @Option(name = "-b")
@@ -76,11 +68,11 @@ public class Startup {
     @Option(name = "-noRefine")
     private boolean noRefine = false;
     @Option(name = "-K")
-    private String K = "1:5";
+    private String K = "0";
+    @Option(name = "-m")
+    private int m = 5;
     @Option(name = "-t")
     private int t = 50;
-    @Option(name = "-a")
-    private double a = 0.01;
     @Option(name = "-N")
     private int N = 2000;
     @Option(name = "-chunk")
@@ -103,31 +95,37 @@ public class Startup {
     private boolean parallelRestarts;
     @Option(name = "-singleCore")
     private boolean singleCore;
-    @Option(name = "-trainEpsilon")
-    private boolean trainEpsilon;
-    @Option(name = "-verbose")
-    private boolean verbose;
+    @Option(name = "-fixEpsilon")
+    private boolean fixEpsilon;
     @Option(name = "-noRecomb")
     private boolean noRecomb;
     @Option(name = "-alphah")
-//    private double alphah = 0.0001;
     private double alphah = 0.01;
     @Option(name = "-betah")
     private double betah = 2;
     @Option(name = "-alphaz")
-//    private double alphaz = 0.0015;
     private double alphaz = 0.01;
     @Option(name = "-betaz")
-//    private double betaz = 0.0025;
     private double betaz = 0.005;
+    //subset
+    @Option(name = "--subset")
+    private boolean subset;
+    @Option(name = "--recombine")
+    private boolean recombine;
+    @Option(name = "-spots")
+    private String spots;
+    @Option(name = "--sample", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
+    private boolean sample;
+    @Option(name = "--muentropy")
+    private boolean muentropy;
+    @Option(name = "--summary")
+    private boolean summary;
     @Option(name = "--filter")
     private boolean filter;
     @Option(name = "-c")
     private double gapc = 0.01;
     @Option(name = "--viz")
     private boolean viz;
-    @Option(name = "-exec")
-    private String exec;
     @Option(name = "--cut")
     private boolean cut;
     @Option(name = "-begin")
@@ -156,7 +154,6 @@ public class Startup {
     private String bfile;
     @Option(name = "-h")
     private String haplotypes;
-    private int SAMPLING_AMOUNT = 10000;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -177,6 +174,7 @@ public class Startup {
             Globals.DEBUG = this.verbose;
             Globals.LOGGING = this.log;
             Globals.SAMPLING_NUMBER = this.samplingNumber;
+            Globals.PRINT = this.print;
 
             if (this.sample) {
                 if (input.contains("#")) {
@@ -275,7 +273,7 @@ public class Startup {
                     }
                 }
 
-                Globals.TRAIN_EPSILON = this.trainEpsilon;
+                Globals.FIX_EPSILON = this.fixEpsilon;
                 Globals.ALPHA_Z = this.alphaz;
                 Globals.ALPHA_H = this.alphah;
                 Globals.BETA_Z = this.betaz;
@@ -286,10 +284,9 @@ public class Startup {
                 Globals.ESTIMATION_EPSILON = this.e;
                 Globals.SAMPLING_EPSILON = this.ee;
                 Globals.DELTA_LLH = this.d;
-                Globals.REPEATS = this.t;
+                Globals.REPEATS = this.m;
+                Globals.DESIRED_REPEATS = this.t;
                 Globals.DEBUG = this.verbose;
-//            Globals.SIMULATION = config.getBoolean("Simulation");
-//            Globals.DISTANCE = config.getBoolean("Distance");
                 Globals.PARALLEL_RESTARTS_UPPER_BOUND = maxsim;
                 Globals.STEPSIZE = chunk;
                 Globals.savePath = output + File.separator;
@@ -363,14 +360,18 @@ public class Startup {
             System.err.println("  --train");
             System.err.println("  -i INPUT\t\t: Multiple fasta file");
             System.err.println("");
-            System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID (default: 1:5)");
-            System.err.println("  -t INT\t\t: The number of EM restarts to find optimum (default: 50)");
+            System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
+                    + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached.");
+            System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
+            System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
             System.err.println("  -e DOUBLE\t\t: Error rate of the sequencing machine (default: 0.0001)");
 //            System.err.println("  -min DOUBLE\t\t: Minimal likelihood which has to be reached after 50 iterations");
             System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
 //            System.err.println("  -f DOUBLE,DOUBLE,...\t: The distribution of the original haplotypes\n"
 //                    + "\t\t\t  Comma seperated format, i.e. 0.8,0.1,0.1\n"
 //                    + "\t\t\t  If not specified, the input is treated as experimental dataset");
+            System.err.println("  -fixEpsilon\t: Do not train epsilon, in combination with -e");
+            System.err.println("  -noRecomb\t: Do not allow recombination");
             System.err.println("  -parallelRestarts\t: Parallelize the EM restarts, use this only on machines with 10+ cores!");
             System.err.println("");
             System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar --train -i input.fasta");

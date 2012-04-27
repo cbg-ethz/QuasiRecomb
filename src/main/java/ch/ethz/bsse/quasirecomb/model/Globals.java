@@ -28,7 +28,7 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class Globals {
 
-    public static boolean TRAIN_EPSILON = false;
+    public static boolean FIX_EPSILON = false;
     public static double BETA_Z = 0.01;
     public static double BETA_H = 2;
     public static double ALPHA_Z = 0.001;
@@ -54,6 +54,7 @@ public class Globals {
     public static boolean rho0 = false;
     public static int RUNS = 20;
     public static int REPEATS = 10;
+    public static int DESIRED_REPEATS = 50;
     public static boolean rho0force = false;
     public static boolean TEST = false;
     public static int N;
@@ -72,7 +73,7 @@ public class Globals {
     public static StringBuilder LOG = new StringBuilder();
     public static boolean LOG_BIC = false;
     public static boolean LOGGING = false;
-    private static boolean PRINT = true;
+    public static boolean PRINT = true;
     public static int SAMPLING_NUMBER = 10000;
 
     public static void log(Object o) {
@@ -84,11 +85,11 @@ public class Globals {
             }
         }
     }
-    public static int PERCENTAGE = 0;
+    public static double PERCENTAGE = 0;
 
     public static void printPercentage(int K) {
-        PERCENTAGE += 100 / Globals.REPEATS;
-        System.out.print("\r\tK " + K + ":\t" + PERCENTAGE + "%");
+        PERCENTAGE += 100d / Globals.REPEATS;
+        System.out.print("\r\tK " + K + ":\t" + Math.round(PERCENTAGE*1000)/1000 + "%");
     }
 
     public static synchronized double getMAX_LLH() {

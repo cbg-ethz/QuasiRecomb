@@ -235,8 +235,7 @@ public class SingleEM {
                 jhmm.getPi().length),
                 mu_tmp,
                 llh,
-                BIC_current, jhmm.getPrior_rho(), jhmm.getEps(),
-                jhmm.getNneqPosCount());
+                BIC_current, jhmm.getPrior_rho(), jhmm.getEps());
         if (llh >= llh_opt) {
             Globals.maxMAX_LLH(llh);
         }

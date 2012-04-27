@@ -30,7 +30,7 @@ import java.util.Map;
 
 /**
  * Selects the best model among the specified range of generators.
- * 
+ *
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class ModelSelection {
@@ -60,38 +60,71 @@ public class ModelSelection {
 
     private void start() {
         double optBIC = 0;
-        
-        System.out.println("Model training ("+Globals.REPEATS+" iterations) (K "+Kmin+"-"+Kmax+"):");
+
+//        Globals.REPEATS = 5;
+        System.out.println("Model selection (" + Globals.REPEATS + " iterations):");
         OptimalResult or = null;
-        for (int k = Kmin; k <= Kmax; k++) {
-            if (!Globals.rho0force || k == 1) {
-                checkRho0(k);
+        if (Kmin == 0) {
+            for (int k = 1;; k++) {
+                if (!Globals.rho0force || k == 1) {
+                    checkRho0(k);
+                }
+                EM em = new EM(this.N, this.L, k, this.n, this.clusterReads, this.haplotypesArray);
+
+                if (em.getOr().getBIC() > optBIC || optBIC == 0) {
+                    or = em.getOr();
+                    optBIC = em.getOr().getBIC();
+                    this.bestK = k;
+                    this.mu = em.getMu_opt();
+                    this.pi = em.getPi_opt();
+                    this.rho = em.getRho_opt();
+                } else {
+                    break;
+                }
+                Globals.PERCENTAGE = 0;
             }
-            EM em = new EM(this.N, this.L, k, this.n, this.clusterReads, this.haplotypesArray);
-            
-            if (em.getOr().getBIC() > optBIC || optBIC == 0) {
-                or = em.getOr();
-                optBIC = em.getOr().getBIC();
-                this.bestK = k;
-                this.mu = em.getMu_opt();
-                this.pi = em.getPi_opt();
-                this.rho = em.getRho_opt();
+        } else if (Kmin != Kmax) {
+            for (int k = Kmin; k <= Kmax; k++) {
+                if (!Globals.rho0force || k == 1) {
+                    checkRho0(k);
+                }
+                EM em = new EM(this.N, this.L, k, this.n, this.clusterReads, this.haplotypesArray);
+
+                if (em.getOr().getBIC() > optBIC || optBIC == 0) {
+                    or = em.getOr();
+                    optBIC = em.getOr().getBIC();
+                    this.bestK = k;
+                    this.mu = em.getMu_opt();
+                    this.pi = em.getPi_opt();
+                    this.rho = em.getRho_opt();
+                } else {
+                    break;
+                }
+                Globals.PERCENTAGE = 0;
             }
-//            System.out.println("");
-            Globals.PERCENTAGE = 0;
-//            ModelSampling ms = new ModelSampling(L, n, k, em.getRho_opt(), em.getPi_opt(), em.getMu_opt(), Globals.savePath);
+        } else {
+            bestK = Kmin;
         }
-        System.out.println("\nBest model: " + or.getK());
-        
+        System.out.println("\nBest model: " + bestK);
+        Globals.REPEATS = Globals.DESIRED_REPEATS;
+        Globals.PERCENTAGE = 0;
+        System.out.println("Model training (" + Globals.REPEATS + " iterations):");
+        EM em = new EM(this.N, this.L, bestK, this.n, this.clusterReads, this.haplotypesArray);
+        if (em.getOr().getBIC() > optBIC || optBIC == 0) {
+            or = em.getOr();
+            this.mu = em.getMu_opt();
+            this.pi = em.getPi_opt();
+            this.rho = em.getRho_opt();
+        }
         //save optimumJava
         StringBuilder sb = new StringBuilder();
         sb.append(new Summary().print(or));
-        if (!new File(Globals.savePath+"support").exists()) {
-            new File(Globals.savePath+"support").mkdirs();
+        if (!new File(Globals.savePath + "support").exists()) {
+            new File(Globals.savePath + "support").mkdirs();
         }
-        Utils.saveFile(Globals.savePath + "support"+File.separator+"K" + or.getK() + "-result.txt", sb.toString());
+        Utils.saveFile(Globals.savePath + "support" + File.separator + "K" + or.getK() + "-result.txt", sb.toString());
         try {
-            String s = Globals.savePath + "support"+File.separator+"optimumJava";// + (bestK ? "" : K);
+            String s = Globals.savePath + "support" + File.separator + "optimumJava";// + (bestK ? "" : K);
             FileOutputStream fos = new FileOutputStream(s);
             try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
                 out.writeObject(or);
@@ -101,7 +134,7 @@ public class ModelSelection {
         }
         ModelSampling modelSampling = new ModelSampling(L, n, or.getK(), or.getRho(), or.getPi(), or.getMu(), Globals.savePath);
         modelSampling.save();
-        System.out.println("Quasispecies saved: "+Globals.savePath+"quasispecies.fasta");
+        System.out.println("Quasispecies saved: " + Globals.savePath + "quasispecies.fasta");
     }
 
     private static void checkRho0(int K) {

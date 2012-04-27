@@ -51,7 +51,6 @@ public class JHMM {
     private double[][] nVB;
     private double[] neqPos;
     private double[] nneqPos;
-    private boolean[][] nneqPosCount;
     private double[] nJeq;
     private double[] nJneq;
     private double neq;
@@ -62,6 +61,7 @@ public class JHMM {
     private Map<ReadHMM, Integer> readHMMMap;
     private int mapSize;
     private Map<byte[], Integer> clusterReads;
+    private int restart = 0;
 
     public JHMM(String[] reads, int K, int n) {
         this(Utils.splitReadsIntoByteArrays(reads), K, n, Globals.ESTIMATION_EPSILON);
@@ -127,21 +127,6 @@ public class JHMM {
         this.calculate();
     }
 
-    private JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu, double[][][] priorRho) {
-        this.N = N;
-        this.L = L;
-        this.K = K;
-        this.n = n;
-        this.clusterReads = reads;
-        this.rho = rho;
-        this.mu = mu;
-        this.uniformEpsilon(eps, antieps);
-        this.pi = pi;
-        this.priorRho = priorRho;
-        this.start();
-        this.calculate();
-    }
-
     private JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
         this.N = N;
         this.L = L;
@@ -170,27 +155,12 @@ public class JHMM {
     }
 
     private void calculateLoglikelihood() {
-//        long time = System.currentTimeMillis();
         this.loglikelihood = 0d;
         for (ReadHMM r : this.readHMMMap.keySet()) {
             for (int j = 0; j < L; j++) {
                 this.loglikelihood += Math.log(r.getC(j)) * this.readHMMMap.get(r);
-                if (Double.isNaN(this.loglikelihood)) {
-                    System.out.println("");
-                }
             }
         }
-        this.likelihood = 0d;
-        for (ReadHMM r : this.readHMMMap.keySet()) {
-            for (int i = 0; i < this.readHMMMap.get(r); i++) {
-                double llh = 1d;
-                for (int j = 0; j < L; j++) {
-                    llh *= r.getC(j);
-                }
-                this.likelihood += llh;
-            }
-        }
-//        System.out.println("L\t: " + (System.currentTimeMillis() - time));
     }
 
     private void start() {
@@ -215,6 +185,7 @@ public class JHMM {
     }
 
     public void restart() {
+        this.restart++;
 //        long time = System.currentTimeMillis();
         if (Globals.PARALLEL_JHMM) {
             Globals.fjPool.invoke(new ReadHMMWorkerRecalc(this.readHMMMap.keySet().toArray(new ReadHMM[this.readHMMMap.keySet().size()]), rho, pi, mu, eps, 0, mapSize));
@@ -243,7 +214,6 @@ public class JHMM {
         this.nJneq = new double[L];
         this.neqPos = new double[L];
         this.nneqPos = new double[L];
-        this.nneqPosCount = new boolean[L][n];
         for (Iterator<ReadHMM> it = this.readHMMMap.keySet().iterator(); it.hasNext();) {
             ReadHMM r = it.next();
             int times = this.readHMMMap.get(r);
@@ -265,24 +235,14 @@ public class JHMM {
                     }
                 }
                 for (int v = 0; v < n; v++) {
-                    for (int b = 0; b < n; b++) {
-                        if (r.getRead()[j] == b) {
-                            for (int k = 0; k < K; k++) {
-                                this.nVB[v][b] += r.gamma(j, k, v) * times;
-//                                if (v == b) {
-//                                    this.neqPos[j] += r.gamma(j, k, v) * times;
-//                                    this.neq += r.gamma(j, k, v) * times;
-//                                } else {
-//                                    if (r.gamma(j, k, v) * times > 0) {
-//                                        this.nneqPosCount[j][v] = true;
-//                                    }
-                                if (v != b) {
-                                    this.nneqPos[j] += r.gamma(j, k, v) * times;
-                                }
-//                                    this.nneq += r.gamma(j, k, v) * times;
-//                                }
-                            }
+                    byte b = r.getRead()[j];
+                    for (int k = 0; k < K; k++) {
+                        if (v != b) {
+                            this.nneqPos[j] += r.gamma(j, k, v) * times;
+                        } else {
+                            this.neqPos[j] += r.gamma(j, k, v) * times;
                         }
+
                     }
                 }
 //        System.out.println("E\t: " + (System.currentTimeMillis() - time));
@@ -387,36 +347,17 @@ public class JHMM {
     }
 
     private void mStep() {
-//        long time = System.currentTimeMillis();
         if (!Globals.rho0) {
             this.rho = this.calcRho();
         }
         this.pi = this.calcPi();
         this.mu_old = this.mu;
         this.mu = this.calcMu();
-//        System.out.println("M\t: " + (System.currentTimeMillis() - time));
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                int sum = 0;
-                for (int v = 0; v < n; v++) {
-                    if (this.nneqPosCount[j][v]) {
-                        sum++;
-                    }
-                }
-
-            }
-//            for (int v = 0; v < n; v++) {
-//                for (int b = 0; b < n; b++) {
-//                    if (v != b) {
-//                        this.eps[j] += this.nVB[v][b];
-//                    }
-//                }
-//            }
-            if (Globals.TRAIN_EPSILON) {
-                this.eps[j] = this.nneqPos[j] / (N * (n - 1d));
+        if (!Globals.FIX_EPSILON) {
+            for (int j = 0; j < L; j++) {
+                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
             }
         }
-//        System.out.println("#EPS: "+eps);
     }
     public double[][][] mu_old;
 
@@ -506,9 +447,5 @@ public class JHMM {
 
     public double[][][] getPrior_rho() {
         return priorRho;
-    }
-
-    public boolean[][] getNneqPosCount() {
-        return nneqPosCount;
     }
 }

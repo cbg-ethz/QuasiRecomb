@@ -85,26 +85,6 @@ public class EM extends Utils {
 
     private void blackbox() {
         List<OptimalResult> ors;
-//        double maxLLH = Double.NEGATIVE_INFINITY;
-//        boolean givenMinLLH = !Double.isInfinite(Globals.MIN_LLH);
-//        if (!givenMinLLH) {
-//            if (Globals.PARALLEL_RESTARTS) {
-//                ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, haplotypesArray, Globals.FILTER_LLH, 0, 1));
-//            } else {
-//                ors = new LinkedList<>();
-//                for (int i = 0; i < 1; i++) {
-//                    ors.add(new SingleEM(N, K, L, n, reads, haplotypesArray, Globals.FILTER_LLH).getOptimalResult());
-//                }
-//            }
-//
-//            for (OptimalResult tmp : ors) {
-//                maxLLH = Math.max(maxLLH, tmp.getLlh());
-//            }
-//            Globals.maxMAX_LLH(maxLLH);
-//        } else {
-//            Globals.maxMAX_LLH(Globals.MIN_LLH);
-//        }
-//        System.out.println("--------------------");
         Globals.LOG = new StringBuilder();
 
         if (Globals.PARALLEL_RESTARTS) {
@@ -116,6 +96,7 @@ public class EM extends Utils {
                 ors.add(sem.getOptimalResult());
             }
         }
+        
         Globals.PARALLEL_JHMM = true;
         double maxLLH = Double.NEGATIVE_INFINITY;
         for (OptimalResult tmp : ors) {
@@ -136,16 +117,6 @@ public class EM extends Utils {
         }
     }
 
-//    private void saveEM() {
-//        this.saveBestEM(false);
-//    }
-//    public void saveBestEM(boolean bestK) {
-//        if (Globals.DEBUG) {
-//            System.out.println("BIC:" + or.getBIC());
-//        }
-//        sb.setLength(0);
-//        
-//    }
     /**
      * Returns the StringBuilder with the information of the best result.
      *

@@ -39,7 +39,7 @@ public class Summary extends Utils {
         sb.append("#PE:").append((mue - rhoe) / (or.getK() * or.getL())).append("\n");
         sb.append("#EPS:").append("\n");
         for (int j = 0; j < or.getL(); j++) {
-            sb.append("##j:").append(j).append("\t").append(or.getEps()[j]).append("\t").append(Arrays.toString(or.getNneqPosCount()[j])).append("\n");
+            sb.append("##j:").append(j).append("\t").append(or.getEps()[j]).append("\n");
         }
         sb.append("\n");
 
@@ -108,18 +108,20 @@ public class Summary extends Utils {
                     }
                     sb.append(reverse(m.get(max))).append("-");
                 }
+                    double entropy = 0d;
                 for (int k = 0; k < or.getK(); k++) {
                     sb.append("[");
                     for (int v = 0; v < or.getn(); v++) {
+                        if (or.getMu()[j][k][v] > 0)
+                        entropy -= or.getMu()[j][k][v]*Math.log(or.getMu()[j][k][v]) ;
                         sb.append(shorten(or.getMu()[j][k][v]));
                         if (v + 1 < or.getn()) {
                             sb.append(", ");
                         }
-
                     }
                     sb.append("]\t");
                 }
-                sb.append("\n");
+                sb.append(entropy+"\n");
             }
         }
         return sb.toString();
