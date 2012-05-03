@@ -128,11 +128,11 @@ public class SingleEM {
             }
             if (Double.isNaN(llh)) {
                 System.out.println("");
-                
+
                 for (ReadHMM r : jhmm.getReadHMMMap().keySet()) {
                     r.checkConsistency();
                 }
-                
+
                 for (int k = 0; k < K; k++) {
                     if (Double.isNaN(jhmm.getPi()[k])) {
                         System.out.println("");
@@ -195,20 +195,39 @@ public class SingleEM {
         double[][][] rho = jhmm.getRho();
         double[][][] mu = jhmm.getMu();
         double[] pi = jhmm.getPi();
+        double[] eps = jhmm.getEps();
         for (int j = 0; j < rho.length; j++) {
             for (int k = 0; k < rho[j].length; k++) {
-                for (int l = 0; l < rho[j][k].length; l++) {
-                    if (rho[j][k][l] > ERROR) {
-                        freeParameters++;
+                boolean different = false;
+                for (int l = 1; l < rho[j][k].length; l++) {
+                    if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
+                        different = true;
+                        break;
+                    }
+                }
+                if (different) {
+                    for (int l = 0; l < rho[j][k].length; l++) {
+                        if (rho[j][k][l] > ERROR) {
+                            freeParameters++;
+                        }
                     }
                 }
             }
         }
-        for (int i = 0; i < mu.length; i++) {
-            for (int j = 0; j < mu[i].length; j++) {
-                for (int k = 0; k < mu[i][j].length; k++) {
-                    if (mu[i][j][k] > ERROR) {
-                        freeParameters++;
+        for (int j = 0; j < mu.length; j++) {
+            for (int k = 0; k < mu[j].length; k++) {
+                boolean different = false;
+                for (int v = 1; v < mu[j][k].length; v++) {
+                    if (Math.abs(mu[j][k][v - 1] - mu[j][k][v]) > ERROR) {
+                        different = true;
+                        break;
+                    }
+                }
+                if (different) {
+                    for (int v = 0; v < mu[j][k].length; v++) {
+                        if (mu[j][k][v] > ERROR) {
+                            freeParameters++;
+                        }
                     }
                 }
             }
@@ -218,10 +237,17 @@ public class SingleEM {
                 freeParameters++;
             }
         }
+        for (int j = 0; j < eps.length; j++) {
+            if (eps[j] > ERROR) {
+                freeParameters++;
+            }
+        }
 
         BIC_current -= (freeParameters / 2d) * Math.log(N);
 
-        if (Globals.LOG_BIC) Utils.appendFile(Globals.savePath + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
+        if (Globals.LOG_BIC) {
+            Utils.appendFile(Globals.savePath + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
+        }
 
         double[][][] mu_tmp = new double[L][K][n];
         for (int j = 0; j < L; j++) {
