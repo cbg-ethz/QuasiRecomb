@@ -34,6 +34,7 @@ public class Globals {
     public static double ALPHA_Z = 0.001;
     public static double ALPHA_H = 0.01;
     public static String[] HAPLOTYPE_ARRAY_EMPIRICAL;
+    public static boolean GLOBAL = false;
     public static boolean BOOTSTRAP = false;
     public static boolean CROSSVALIDATION = false;
     public static boolean SAVE = true;

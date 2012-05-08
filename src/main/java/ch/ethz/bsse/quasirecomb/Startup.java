@@ -67,6 +67,8 @@ public class Startup {
     private boolean bootstrap = false;
     @Option(name = "-noRefine")
     private boolean noRefine = false;
+    @Option(name = "-global")
+    private boolean global = false;
     @Option(name = "-K")
     private String K = "0";
     @Option(name = "-m")
@@ -107,6 +109,8 @@ public class Startup {
     private double alphaz = 0.01;
     @Option(name = "-betaz")
     private double betaz = 0.005;
+    @Option(name = "-logBic")
+    private boolean logBIC;
     //subset
     @Option(name = "--subset")
     private boolean subset;
@@ -173,6 +177,7 @@ public class Startup {
             }
             Globals.DEBUG = this.verbose;
             Globals.LOGGING = this.log;
+            Globals.LOG_BIC = this.logBIC;
             Globals.SAMPLING_NUMBER = this.samplingNumber;
             Globals.PRINT = this.print;
 
@@ -244,6 +249,7 @@ public class Startup {
                     System.out.println(p.getValue0() + "\t" + p.getValue1());
                 }
             } else if (this.train) {
+                Globals.GLOBAL = this.global;
                 Globals.NO_REFINE = this.noRefine;
                 Globals.CROSSVALIDATION = this.crossvalidation;
                 Globals.BOOTSTRAP = this.bootstrap;
@@ -268,6 +274,10 @@ public class Startup {
                         sum += fArray[i - 1];
                     }
                     if (sum != 1d && Math.abs(sum) - 1d > 1e-6) {
+                        System.err.println("Frequencies do not add up to 1, instead to " + sum);
+                        System.exit(0);
+                    }
+                    if (sum != 1d && Math.abs(sum - 1d) > 1e-6) {
                         System.err.println("Frequencies do not add up to 1, instead to " + sum);
                         System.exit(0);
                     }

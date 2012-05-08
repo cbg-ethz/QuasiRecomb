@@ -60,7 +60,9 @@ public class ModelSelection {
 
     private void start() {
         double optBIC = 0;
-
+        if (!new File(Globals.savePath + "support").exists()) {
+            new File(Globals.savePath + "support").mkdirs();
+        }
 //        Globals.REPEATS = 5;
         System.out.println("Model selection (" + Globals.REPEATS + " iterations):");
         OptimalResult or = null;
@@ -70,7 +72,11 @@ public class ModelSelection {
                     checkRho0(k);
                 }
                 EM em = new EM(this.N, this.L, k, this.n, this.clusterReads, this.haplotypesArray);
-
+                if (Globals.LOG_BIC) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(new Summary().print(em.getOr()));
+                    Utils.saveFile(Globals.savePath + "support" + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
+                }
                 if (em.getOr().getBIC() > optBIC || optBIC == 0) {
                     or = em.getOr();
                     optBIC = em.getOr().getBIC();
@@ -89,7 +95,11 @@ public class ModelSelection {
                     checkRho0(k);
                 }
                 EM em = new EM(this.N, this.L, k, this.n, this.clusterReads, this.haplotypesArray);
-
+                if (Globals.LOG_BIC) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(new Summary().print(em.getOr()));
+                    Utils.saveFile(Globals.savePath + "support" + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
+                }
                 if (em.getOr().getBIC() > optBIC || optBIC == 0) {
                     or = em.getOr();
                     optBIC = em.getOr().getBIC();
@@ -97,8 +107,6 @@ public class ModelSelection {
                     this.mu = em.getMu_opt();
                     this.pi = em.getPi_opt();
                     this.rho = em.getRho_opt();
-                } else {
-                    break;
                 }
                 Globals.PERCENTAGE = 0;
             }
@@ -119,9 +127,7 @@ public class ModelSelection {
         //save optimumJava
         StringBuilder sb = new StringBuilder();
         sb.append(new Summary().print(or));
-        if (!new File(Globals.savePath + "support").exists()) {
-            new File(Globals.savePath + "support").mkdirs();
-        }
+
         Utils.saveFile(Globals.savePath + "support" + File.separator + "K" + or.getK() + "-result.txt", sb.toString());
         try {
             String s = Globals.savePath + "support" + File.separator + "optimumJava";// + (bestK ? "" : K);

@@ -63,12 +63,12 @@ public class Sampling {
             int start = random.nextInt((int) (L * 0.9));
             int length = 0;
             do {
-                length = random.nextInt(100);
+                length = random.nextInt(20);
                 if (start + length > L) {
                     length = L - start;
                     break;
                 }
-            } while (length < 50);
+            } while (length < 10);
             for (int j = start; j < start + length; j++) {
                 //error
                 Map<Character, Double> baseMap = new HashMap<>();

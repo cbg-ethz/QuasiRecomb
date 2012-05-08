@@ -194,8 +194,11 @@ public class ArtificialExperimentalForwarder {
 
     private static void singleSub(String path, int N, int L, double[] f, int n, int Kmin, int Kmax, byte[][] haplotypesArray) {
         Map<String, Integer> haplotypes;
-
-        haplotypes = Sampling.fromHaplotypes(path, N, L, Globals.SAMPLING_EPSILON, f, n, Globals.savePath);
+        if (Globals.GLOBAL) {
+            haplotypes = Sampling.fromHaplotypesGlobal(path, N, L, Globals.SAMPLING_EPSILON, f, n, Globals.savePath);
+        } else {
+            haplotypes = Sampling.fromHaplotypes(path, N, L, Globals.SAMPLING_EPSILON, f, n, Globals.savePath);
+        }
 
         List<String> reads = new LinkedList<>();
         List<String> hapL = new LinkedList<>();
