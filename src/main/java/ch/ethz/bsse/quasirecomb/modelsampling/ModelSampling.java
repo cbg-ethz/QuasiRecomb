@@ -62,6 +62,20 @@ public final class ModelSampling extends Utils {
         this.recombPerObservation = new int[amount];
         this.start();
     }
+    
+    public ModelSampling(OptimalResult or) {
+        this.K = or.getK();
+        this.L = or.getL();
+        this.n = or.getn();
+        this.rho = or.getRho();
+        this.reads = or.getReads();
+        this.pi = or.getPi();
+        this.H = or.getMu();
+        this.rhoArray = new Frequency[L - 1][K];
+        this.muArray = new Frequency[L][K];
+        this.recombPerObservation = new int[amount];
+        this.start();
+    }
 
     public ModelSampling(String string, String path) {
         OptimalResult or = null;

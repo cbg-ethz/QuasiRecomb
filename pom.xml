@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ch.ethz.bsse.</groupId>
+    <groupId>ch.ethz.bsse</groupId>
     <artifactId>QuasiRecomb</artifactId>
     <version>0.1.2</version>
     <packaging>jar</packaging>
@@ -96,6 +96,11 @@
             <groupId>args4j</groupId>
             <artifactId>args4j</artifactId>
             <version>2.0.16</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.ethz.bsse</groupId>
+            <artifactId>QuasiPrior</artifactId>
+            <version>0.1</version>
         </dependency>
         <dependency>
             <groupId>cc.mallet</groupId>

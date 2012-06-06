@@ -97,7 +97,17 @@ public class ArtificialExperimentalForwarder {
 
         Map<byte[], Integer> clusterReads = Utils.clusterReads(haplotypesArray);
 
-        expSub(path, clusterReads, Kmin, Kmax, haplotypesArray[0].length, countChars(haplotypesArray), haplotypesArray);
+        int n = countChars(haplotypesArray);
+        if (!Globals.ALPHA_H_USER) {
+            Globals.ALPHA_H = new double[haplotypesArray[0].length][n];
+            for (int j = 0; j < haplotypesArray[0].length; j++) {
+                for (int v = 0; v < n; v++) {
+                    Globals.ALPHA_H[j][v] = Globals.ALPHAH;
+                }
+            }
+        }
+
+        expSub(path, clusterReads, Kmin, Kmax, haplotypesArray[0].length, n, haplotypesArray);
     }
 
     private static void expSub(String path, Map<byte[], Integer> clusterReads, int Kmin, int Kmax, int L, int n, byte[][] haplotypesArray) {
@@ -189,7 +199,16 @@ public class ArtificialExperimentalForwarder {
 
     private static void singleDataset(String path, double[] f, int Kmin, int Kmax, int N) {
         byte[][] haplotypesArray = Utils.parseInput(path);
-        singleSub(path, N, haplotypesArray[0].length, f, countChars(haplotypesArray), Kmin, Kmax, haplotypesArray);
+        int n = countChars(haplotypesArray);
+        if (!Globals.ALPHA_H_USER) {
+            Globals.ALPHA_H = new double[haplotypesArray[0].length][n];
+            for (int j = 0; j < haplotypesArray[0].length; j++) {
+                for (int v = 0; v < n; v++) {
+                    Globals.ALPHA_H[j][v] = Globals.ALPHAH;
+                }
+            }
+        }
+        singleSub(path, N, haplotypesArray[0].length, f, n, Kmin, Kmax, haplotypesArray);
     }
 
     private static void singleSub(String path, int N, int L, double[] f, int n, int Kmin, int Kmax, byte[][] haplotypesArray) {

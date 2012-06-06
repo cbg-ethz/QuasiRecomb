@@ -25,6 +25,7 @@ import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 /**
  * Responsible for the start of the repeats within the EM algorithm.
@@ -43,6 +44,7 @@ public class EM extends Utils {
     private Map<byte[], Integer> reads;
     private byte[][] haplotypesArray;
     private OptimalResult or;
+    private List<OptimalResult> ors;
 
     protected EM(int N, int L, int K, int n, String[] reads, byte[][] haplotypesArray) {
         this(K, N, L, n, Utils.clusterReads(Utils.splitReadsIntoByteArrays(reads)), haplotypesArray);
@@ -84,7 +86,6 @@ public class EM extends Utils {
     }
 
     private void blackbox() {
-        List<OptimalResult> ors;
         Globals.LOG = new StringBuilder();
 
         if (Globals.PARALLEL_RESTARTS) {
@@ -96,15 +97,18 @@ public class EM extends Utils {
                 ors.add(sem.getOptimalResult());
             }
         }
-        
+
         Globals.PARALLEL_JHMM = true;
         double maxLLH = Double.NEGATIVE_INFINITY;
+        StringBuilder restarts = new StringBuilder();
         for (OptimalResult tmp : ors) {
+            restarts.append(tmp.getRestarts()).append("\n");
             if (tmp != null && tmp.getLlh() >= maxLLH) {
                 maxLLH = tmp.getLlh();
                 or = tmp;
             }
         }
+
         System.out.println("\tBIC: " + (int) or.getBIC());
 //        if (!Globals.NO_REFINE) {
 //            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);
@@ -114,6 +118,7 @@ public class EM extends Utils {
         Globals.log("\n" + new Summary().print(or));
         if (Globals.LOGGING) {
             Utils.saveFile(Globals.savePath + "log_K" + K, Globals.LOG.toString());
+            Utils.saveFile(Globals.savePath + "restarts_K" + K, restarts.toString());
         }
     }
 
@@ -151,6 +156,10 @@ public class EM extends Utils {
      */
     public double[] getPi_opt() {
         return or.getPi();
+    }
+
+    public List<OptimalResult> getOrs() {
+        return ors;
     }
 
     /**

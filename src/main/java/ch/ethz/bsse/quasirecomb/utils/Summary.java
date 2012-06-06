@@ -17,29 +17,29 @@ public class Summary extends Utils {
         sb.append("#loglikelihood:").append(or.getLlh()).append("\n");
         sb.append("#BIC:").append(or.getBIC()).append("\n");
         double[][][] mu = or.getMu();
-        double mue = 0d;
-        for (int j = 0; j < or.getL(); j++) {
-            for (int k = 0; k < or.getK(); k++) {
-                for (int v = 0; v < or.getn(); v++) {
-                    mue -= mu[j][k][v] * Math.log(mu[j][k][v]) / Math.log(or.getn());
-                }
-            }
-        }
-        sb.append("#MUE:").append(mue / (or.getK() * or.getL())).append("\n");
-        double rhoe = 0d;
+//        double mue = 0d;
+//        for (int j = 0; j < or.getL(); j++) {
+//            for (int k = 0; k < or.getK(); k++) {
+//                for (int v = 0; v < or.getn(); v++) {
+//                    mue -= mu[j][k][v] * Math.log(mu[j][k][v]) / Math.log(or.getn());
+//                }
+//            }
+//        }
+//        sb.append("#MUE:").append(mue / (or.getK() * or.getL())).append("\n");
+//        double rhoe = 0d;
         double[][][] rho = or.getRho();
-        for (int j = 0; j < or.getL() - 1; j++) {
-            for (int k = 0; k < or.getK(); k++) {
-                for (int l = 0; l < or.getK(); l++) {
-                    rhoe -= rho[j][k][l] * Math.log(rho[j][k][l]) / Math.log(or.getK());
-                }
-            }
-        }
-        sb.append("#RHOE:").append(mue / (or.getK() * or.getL())).append("\n");
-        sb.append("#PE:").append((mue - rhoe) / (or.getK() * or.getL())).append("\n");
-        sb.append("#EPS:").append("\n");
+//        for (int j = 0; j < or.getL() - 1; j++) {
+//            for (int k = 0; k < or.getK(); k++) {
+//                for (int l = 0; l < or.getK(); l++) {
+//                    rhoe -= rho[j][k][l] * Math.log(rho[j][k][l]) / Math.log(or.getK());
+//                }
+//            }
+//        }
+//        sb.append("#RHOE:").append(mue / (or.getK() * or.getL())).append("\n");
+//        sb.append("#PE:").append((mue - rhoe) / (or.getK() * or.getL())).append("\n");
+        sb.append("\n#EPS:").append("\n");
         for (int j = 0; j < or.getL(); j++) {
-            sb.append("##j:").append(j).append("\t").append(or.getEps()[j]).append("\n");
+            sb.append("##j:").append(j).append("\t").append(shorten(or.getEps()[j])).append("\n");
         }
         sb.append("\n");
 
@@ -121,7 +121,8 @@ public class Summary extends Utils {
                     }
                     sb.append("]\t");
                 }
-                sb.append(entropy+"\n");
+//                sb.append(entropy+"\n");
+                sb.append("\n");
             }
         }
         return sb.toString();
@@ -136,7 +137,7 @@ public class Summary extends Utils {
         } else {
             String t = "" + value;
             String r;
-            if (t.length() > 5) {
+            if (t.length() > 7) {
                 r = t.substring(0, 7);
                 if (t.contains("E")) {
                     r = r.substring(0, 4);

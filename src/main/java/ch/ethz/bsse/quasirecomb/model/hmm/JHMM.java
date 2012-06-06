@@ -255,11 +255,13 @@ public class JHMM {
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
                 double sumV = 0d;
+                double sumP = 0d;
                 for (int v = 0; v < n; v++) {
-                    mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.ALPHA_H);
+                    mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.ALPHA_H[j][v]);
                     sumV += this.getnJKV(j, k, v);
+                    sumP += Globals.ALPHA_H[j][v];
                 }
-                sumV = this.rho_f(sumV + n * Globals.ALPHA_H);
+                sumV = this.rho_f(sumV + sumP);
                 double divisor = 0d;
                 if (sumV != 0) {
                     for (int v = 0; v < n; v++) {
@@ -447,5 +449,9 @@ public class JHMM {
 
     public double[][][] getPrior_rho() {
         return priorRho;
+    }
+
+    public int getRestart() {
+        return restart;
     }
 }

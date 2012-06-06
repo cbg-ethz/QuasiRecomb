@@ -38,8 +38,9 @@ public class OptimalResult implements Serializable {
     private double llh;
     private double[] eps;
     private double BIC;
+    private int restarts;
 
-    public OptimalResult(int N, int K, int L, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[][][] priorRho, double[] eps) {
+    public OptimalResult(int N, int K, int L, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[][][] priorRho, double[] eps, int restarts) {
         this.N = N;
         this.K = K;
         this.L = L;
@@ -53,6 +54,7 @@ public class OptimalResult implements Serializable {
         this.BIC = BIC;
         this.priorRho = priorRho;
         this.eps = eps;
+        this.restarts = restarts;
     }
 
     public int getK() {
@@ -105,5 +107,9 @@ public class OptimalResult implements Serializable {
 
     public double[] getEps() {
         return eps;
+    }
+
+    public int getRestarts() {
+        return restarts;
     }
 }

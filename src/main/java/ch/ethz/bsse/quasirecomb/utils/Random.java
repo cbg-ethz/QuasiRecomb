@@ -38,7 +38,6 @@ public class Random {
 //        }
 //        return rho;
 //    }
-
     public static double[][][] generateInitRho(int Ldec, int K) {
         double[][][] rho = new double[Ldec][K][K];
         if (!Globals.rho0) {
@@ -68,20 +67,19 @@ public class Random {
         }
         return rho;
     }
-    
     private static Map<Integer, Dirichlet> piGen = new HashMap<>();
 
     public static double[] generateInitPi(int K) {
-        if (!piGen.containsKey(K)) {
-            double[] d = new double[K];
-            for (int k = 1; k <= K; k++) {
-//            d[k - 1] = 1d / K;
-                d[k - 1] = 2d;
-            }
-            piGen.put(K, new Dirichlet(d));
+//        if (!piGen.containsKey(K)) {
+        double[] d = new double[K];
+        for (int k = 1; k <= K; k++) {
+            d[k - 1] = 1d / K;
+//            d[k - 1] = 2d;
         }
-        return piGen.get(K).nextDistribution();
-//        return d;
+//            piGen.put(K, new Dirichlet(d));
+//        }
+//        return piGen.get(K).nextDistribution();
+        return d;
     }
 
     public static double[] generateMuVector(int n) {
@@ -104,11 +102,35 @@ public class Random {
 
     public static double[][][] generateMuInit(int L, int K, int n) {
         double[][][] eArray = new double[L][K][n];
+//        if (Globals.ALPHA_H_USER) {
+//            for (int j = 0; j < L; j++) {
+//                double[] vd = new double[n];
+//                for (int v = 0; v < n; v++) {
+//                    if (Globals.ALPHA_H[j][v] == 0d) {
+//                        vd[v] = 0.01;
+//                    } else {
+//                        vd[v] = Globals.ALPHA_H[j][v];
+//                    }
+//                }
+//                try {
+//                Dirichlet d = new Dirichlet(vd);
+//                for (int k = 0; k < K; k++) {
+//                    eArray[j][k] = d.nextDistribution();
+//                }
+//                } catch (java.lang.IllegalArgumentException e) {
+//                    System.out.println(Globals.ALPHA_H[j]);
+//                    System.out.println(e);
+//                    System.exit(0);
+//                }
+//            }
+//        } else {
+
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
                 eArray[j][k] = Random.generateMuVector(n);
             }
         }
+//        }
         return eArray;
     }
 }

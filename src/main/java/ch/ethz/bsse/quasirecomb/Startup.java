@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb;
 
+import ch.ethz.bsse.quasiprior.Prior;
 import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.diversity.Diversity;
 import ch.ethz.bsse.quasirecomb.diversity.PairwiseEntropyComparison;
@@ -27,15 +28,19 @@ import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelEntropy;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
+import ch.ethz.bsse.quasirecomb.modelsampling.OptimaModelSampling;
 import ch.ethz.bsse.quasirecomb.quasiviz.QuasiViz;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.javatuples.Pair;
 import org.kohsuke.args4j.CmdLineException;
@@ -103,10 +108,13 @@ public class Startup {
     private boolean noRecomb;
     @Option(name = "-alphah")
     private double alphah = 0.01;
+    @Option(name = "-alpha1")
+    private String alpha1;
     @Option(name = "-betah")
     private double betah = 2;
     @Option(name = "-alphaz")
     private double alphaz = 0.01;
+//    private double alphaz = 0.07;
     @Option(name = "-betaz")
     private double betaz = 0.005;
     @Option(name = "-logBic")
@@ -120,6 +128,8 @@ public class Startup {
     private String spots;
     @Option(name = "--sample", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
     private boolean sample;
+    @Option(name = "--sampleS", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
+    private boolean sampleS;
     @Option(name = "--muentropy")
     private boolean muentropy;
     @Option(name = "--summary")
@@ -181,21 +191,48 @@ public class Startup {
             Globals.SAMPLING_NUMBER = this.samplingNumber;
             Globals.PRINT = this.print;
 
-            if (this.sample) {
-                if (input.contains("#")) {
-                    String[] splitBracket = input.split("#");
-                    String[] split = splitBracket[1].split("-");
+            if (this.sampleS) {
+                ModelSampling simulation = new ModelSampling(input, output);
+                simulation.save();
+            } else if (this.sample) {
+                System.out.println("Sampling " + input);
+                OptimaModelSampling oms = new OptimaModelSampling(input, output);
 
-                    for (int i = Integer.parseInt(split[0]); i <= Integer.parseInt(split[1]); i++) {
-                        System.out.println("Sampling " + splitBracket[0] + i);
-                        ModelSampling simulation = new ModelSampling(splitBracket[0] + i, output);
-                        simulation.save();
-                    }
-                } else {
-                    System.out.println("Sampling " + input);
-                    ModelSampling simulation = new ModelSampling(input, output);
-                    simulation.save();
-                }
+//                List<Map<byte[], Integer>> reads = new ArrayList<>();
+//                Map<byte[], Integer> uniqueReads = new HashMap<>();
+//                for (int i = 0; i < 100; i++) {
+//                    ModelSampling simulation = new ModelSampling(input, output);
+//                    reads.add(simulation.getReads());
+//                    if (uniqueReads.isEmpty()) {
+//                        uniqueReads.putAll(simulation.getReads());
+//                    } else {
+//                        Map<byte[], Integer> reads_tmp = simulation.getReads();
+//                        for (byte[] b : reads_tmp.keySet()) {
+//                            if (uniqueReads.containsKey(b)) {
+//                                uniqueReads.put(b, uniqueReads.get(b) + reads_tmp.get(b));
+//                            } else {
+//                                uniqueReads.remove(b);
+//                            }
+//                        }
+//                    }
+//                }
+//                int amount = 0;
+//                for(Integer x : uniqueReads.values()) {
+//                    amount += x;
+//                }
+//                StringBuilder sb = new StringBuilder();
+//                int i = 0;
+//                Map sortMapByValue = ModelSampling.sortMapByValue(uniqueReads);
+//                for (Object o : sortMapByValue.keySet()) {
+//                    byte[] read = (byte[]) o;
+//                    sb.append(">read").append(i++).append("_").append(((double) uniqueReads.get(read)) / amount).append("\n");
+//                    for (int r : read) {
+//                        sb.append(Utils.reverse(r));
+//                    }
+//                    sb.append("\n");
+//                }
+//                Utils.saveFile(output + "quasispecies.fasta", sb.toString());
+//                simulation.save();
             } else if (this.subset) {
                 System.out.println(this.input);
             } else if (this.recombine) {
@@ -233,8 +270,13 @@ public class Startup {
                     ms.printQuasispecies();
                     Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), ms.getReadsReversed());
                     System.out.println("\n#Phi distance:");
+                    System.out.println("q\tphi");
+                    int i = 0;
                     for (Pair p : phi) {
-                        System.out.println(p.getValue0() + "\t" + p.getValue1());
+                        System.out.println(i++ + "\t" + p.getValue0());
+                        if (((double) p.getValue0()) == 1d) {
+                            break;
+                        }
                     }
                 }
             } else if (this.distance) {
@@ -244,9 +286,13 @@ public class Startup {
                     quasiInt.put(s, (int) (quasiDouble.get(s).doubleValue() * 10000));
                 }
                 Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), quasiInt);
-                System.out.println("\n#Phi distance:");
+                System.out.println("q\tphi");
+                int i = 0;
                 for (Pair p : phi) {
-                    System.out.println(p.getValue0() + "\t" + p.getValue1());
+                    System.out.println(i++ + "\t" + p.getValue0());
+                    if (((double) p.getValue0()) == 1d) {
+                        break;
+                    }
                 }
             } else if (this.train) {
                 Globals.GLOBAL = this.global;
@@ -285,7 +331,11 @@ public class Startup {
 
                 Globals.FIX_EPSILON = this.fixEpsilon;
                 Globals.ALPHA_Z = this.alphaz;
-                Globals.ALPHA_H = this.alphah;
+                if (this.alpha1 != null) {
+                    Globals.ALPHA_H = new Prior(this.alpha1).getNormalized();
+                    Globals.ALPHA_H_USER = true;
+                }
+                Globals.ALPHAH = this.alphah;
                 Globals.BETA_Z = this.betaz;
                 Globals.BETA_H = this.betah;
                 Globals.MIN_LLH = this.minLLH;

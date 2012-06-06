@@ -146,7 +146,7 @@ public class ReadHMM {
                     }
                     c[j] += fJKV[j][k][v];
                     if (fJKV[j][k][v] < 0) {
-                        System.out.println("");
+                        System.out.println("fjkv");
                     }
                 }
             }

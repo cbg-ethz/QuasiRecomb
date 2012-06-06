@@ -18,6 +18,7 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResultsList;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
@@ -118,7 +119,7 @@ public class ModelSelection {
         Globals.PERCENTAGE = 0;
         System.out.println("Model training (" + Globals.REPEATS + " iterations):");
         EM em = new EM(this.N, this.L, bestK, this.n, this.clusterReads, this.haplotypesArray);
-        if (em.getOr().getBIC() > optBIC || optBIC == 0) {
+        if (em.getOr().getLlh() > optBIC || optBIC == 0) {
             or = em.getOr();
             this.mu = em.getMu_opt();
             this.pi = em.getPi_opt();
@@ -138,6 +139,18 @@ public class ModelSelection {
         } catch (IOException ex) {
             System.out.println("Optimum Java saving\n" + ex.getMessage());
         }
+        
+        //save optimaList
+        try {
+            String s = Globals.savePath + "support" + File.separator + "optimaList";// + (bestK ? "" : K);
+            FileOutputStream fos = new FileOutputStream(s);
+            try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
+                out.writeObject(new OptimalResultsList(em.getOrs()));
+            }
+        } catch (IOException ex) {
+            System.out.println("OptimaList saving\n" + ex.getMessage());
+        }
+        
         ModelSampling modelSampling = new ModelSampling(L, n, or.getK(), or.getRho(), or.getPi(), or.getMu(), Globals.savePath);
         modelSampling.save();
         System.out.println("Quasispecies saved: " + Globals.savePath + "quasispecies.fasta");

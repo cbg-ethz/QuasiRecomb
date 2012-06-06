@@ -127,7 +127,7 @@ public class SingleEM {
                 Globals.log(llh + "\n");
             }
             if (Double.isNaN(llh)) {
-                System.out.println("");
+                System.out.println("llh NaN");
 
                 for (ReadHMM r : jhmm.getReadHMMMap().keySet()) {
                     r.checkConsistency();
@@ -135,14 +135,14 @@ public class SingleEM {
 
                 for (int k = 0; k < K; k++) {
                     if (Double.isNaN(jhmm.getPi()[k])) {
-                        System.out.println("");
+                        System.out.println("pi");
                     }
                 }
                 for (int j = 0; j < L; j++) {
                     for (int k = 0; k < K; k++) {
                         for (int v = 0; v < n; v++) {
                             if (Double.isNaN(jhmm.getMu()[j][k][v])) {
-                                System.out.println("");
+                                System.out.println("mu");
                             }
                         }
                     }
@@ -151,12 +151,11 @@ public class SingleEM {
                     for (int k = 0; k < K; k++) {
                         for (int l = 0; l < K; l++) {
                             if (Double.isNaN(jhmm.getRho()[j][k][l])) {
-                                System.out.println("");
+                                System.out.println("rho");
                             }
                         }
                     }
                 }
-                System.out.println("");
             }
             jhmm.restart();
             iterations++;
@@ -261,7 +260,7 @@ public class SingleEM {
                 jhmm.getPi().length),
                 mu_tmp,
                 llh,
-                BIC_current, jhmm.getPrior_rho(), jhmm.getEps());
+                BIC_current, jhmm.getPrior_rho(), jhmm.getEps(), jhmm.getRestart());
         if (llh >= llh_opt) {
             Globals.maxMAX_LLH(llh);
         }
