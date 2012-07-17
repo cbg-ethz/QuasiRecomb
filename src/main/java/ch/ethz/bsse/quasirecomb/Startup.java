@@ -17,16 +17,13 @@
  */
 package ch.ethz.bsse.quasirecomb;
 
-import ch.ethz.bsse.quasiprior.Prior;
 import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
-import ch.ethz.bsse.quasirecomb.utils.Cutter;
 import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
 import ch.ethz.bsse.quasirecomb.model.Globals;
-import ch.ethz.bsse.quasirecomb.modelsampling.ModelEntropy;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
-import ch.ethz.bsse.quasirecomb.quasiviz.QuasiViz;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
+import ch.ethz.bsse.quasirecomb.utils.Cutter;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import java.io.File;
@@ -59,8 +56,6 @@ public class Startup {
     //TRAIN
     @Option(name = "--train", usage = "Train model for given multiple alignment")
     private boolean train;
-    @Option(name = "-noRefine")
-    private boolean noRefine = false;
     @Option(name = "-K")
     private String K = "0";
     @Option(name = "-m")
@@ -205,7 +200,6 @@ public class Startup {
                     }
                 }
             } else if (this.train) {
-                Globals.NO_REFINE = this.noRefine;
                 int Kmin, Kmax;
                 if (K.contains(":")) {
                     Kmin = Integer.parseInt(K.split(":")[0]);
@@ -214,31 +208,10 @@ public class Startup {
                     Kmin = Integer.parseInt(K);
                     Kmax = Integer.parseInt(K);
                 }
-                double fArray[] = null;
-                boolean exp = true;
-                if (f != null) {
-                    exp = false;
-                    String[] split = f.split(",");
-                    fArray = new double[split.length];
-                    int i = 0;
-                    double sum = 0d;
-                    for (String s : split) {
-                        fArray[i++] = Double.parseDouble(s);
-                        sum += fArray[i - 1];
-                    }
-                    if (sum != 1d && Math.abs(sum) - 1d > 1e-6) {
-                        System.err.println("Frequencies do not add up to 1, instead to " + sum);
-                        System.exit(0);
-                    }
-                    if (sum != 1d && Math.abs(sum - 1d) > 1e-6) {
-                        System.err.println("Frequencies do not add up to 1, instead to " + sum);
-                        System.exit(0);
-                    }
-                }
 
                 Globals.FIX_EPSILON = this.fixEpsilon;
                 Globals.ALPHA_Z = this.alphaz;
-                Globals.ALPHAH = this.alphah;
+                Globals.ALPHA_H = this.alphah;
                 Globals.BETA_Z = this.betaz;
                 Globals.BETA_H = this.betah;
                 Globals.PARALLEL_JHMM = !this.singleCore;
@@ -255,7 +228,7 @@ public class Startup {
                     Globals.rho0 = true;
                     Globals.rho0force = true;
                 }
-                ArtificialExperimentalForwarder.forward(exp, this.input, Kmin, Kmax, fArray, N);
+                ArtificialExperimentalForwarder.forward(this.input, Kmin, Kmax, N);
             } else if (cut) {
                 Cutter.cut(input, output, begin, end);
             } else {

@@ -33,8 +33,7 @@ public class Globals {
     public static double BETA_H = 2;
     public static double ALPHA_Z = 0.001;
     public static boolean ALPHA_H_USER = false;
-    public static double[][] ALPHA_H;
-    public static double ALPHAH = 0.01;
+    public static double ALPHA_H;
     public static String[] HAPLOTYPE_ARRAY_EMPIRICAL;
     public static boolean GLOBAL = false;
     public static boolean BOOTSTRAP = false;

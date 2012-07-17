@@ -257,9 +257,9 @@ public class JHMM {
                 double sumV = 0d;
                 double sumP = 0d;
                 for (int v = 0; v < n; v++) {
-                    mu_[j][k][v] = this.f(this.getnJKV(j, k, v) + Globals.ALPHA_H[j][v]);
+                    mu_[j][k][v] = this.f(this.getnJKV(j, k, v) + Globals.ALPHA_H);
                     sumV += this.getnJKV(j, k, v);
-                    sumP += Globals.ALPHA_H[j][v];
+                    sumP += Globals.ALPHA_H;
                 }
                 sumV = this.f(sumV + sumP);
                 double divisor = 0d;
