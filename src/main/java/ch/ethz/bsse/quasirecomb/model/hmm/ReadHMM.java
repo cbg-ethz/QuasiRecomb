@@ -36,18 +36,12 @@ public class ReadHMM {
     private double[][][] mu;
     private double[] eps;
     private double[] antieps;
-    private double[][][] ufJKV;
     private double[][] fJK;
     private double[][] bJK;
     private double[] c;
     private double[][] gJK;
-    private double[][] ugJK;
     private double[][][] gJKV;
     private double[][][] xJKL;
-    private double[][][] uxJKL;
-    private double[][] ubJK;
-    private double[][][] ugJKV;
-    private double[][] ufJK;
     private double[][][] fJKV;
     private int begin;
     private int end;
@@ -74,9 +68,6 @@ public class ReadHMM {
         this.forward();
         this.backward();
         this.gammaXsi();
-        if (Globals.TEST) {
-            this.calculateUnscaled();
-        }
     }
 
     public boolean checkConsistency() {
@@ -232,98 +223,6 @@ public class ReadHMM {
 
     final public byte[] getSequence() {
         return read.getSequence();
-    }
-
-    private void calculateUnscaled() {
-        // backward
-        this.ubJK = new double[L][K];
-        for (int j = L - 1; j >= 0; j--) {
-            for (int k = 0; k < K; k++) {
-                if (j == L - 1) {
-                    ubJK[j][k] = 1d;
-                } else {
-                    for (int l = 0; l < K; l++) {
-                        double sumV = 0d;
-                        for (int v = 0; v < n; v++) {
-                            sumV += prRjHv(j + 1, v, k) * mu[j + 1][l][v];
-                        }
-                        ubJK[j][k] += sumV * rho[j][l][k] * ubJK[j + 1][l];
-                    }
-                }
-            }
-        }
-        int j = 0;
-        double sum = 0d;
-        for (int l = 0; l < K; l++) {
-            double sumV = 0d;
-            for (int v = 0; v < n; v++) {
-                sumV += prRjHv(j, v, l) * mu[j][l][v];
-            }
-            sum += sumV * pi[l] * ubJK[j][l];
-        }
-//        this.backLLH = sum;
-
-
-        // forward
-        this.ufJKV = new double[L][K][n];
-        this.ufJK = new double[L][K];
-        for (int jj = 0; jj < L; jj++) {
-            for (int k = 0; k < K; k++) {
-                for (int v = 0; v < n; v++) {
-                    ufJKV[jj][k][v] = prRjHv(jj, v, k) * mu[jj][k][v];
-                    if (jj == 0) {
-                        ufJKV[jj][k][v] *= pi[k];
-                    } else {
-                        double usumL = 0d;
-                        for (int l = 0; l < K; l++) {
-                            usumL += ufJK[jj - 1][l] * rho[jj - 1][k][l];
-                        }
-                        ufJKV[jj][k][v] *= usumL;
-                    }
-                    ufJK[jj][k] += ufJKV[jj][k][v];
-                }
-            }
-        }
-
-        // gamma
-        this.ugJKV = new double[L][K][n];
-        this.ugJK = new double[L][K];
-        for (int jj = 0; jj < L; jj++) {
-            double sumGamma = 0d;
-            for (int k = 0; k < K; k++) {
-                this.ugJK[jj][k] = this.ufJK[jj][k] * this.ubJK[jj][k];
-                for (int v = 0; v < n; v++) {
-                    ugJKV[jj][k][v] = this.ufJKV[jj][k][v] * this.ubJK[jj][k];
-                    sumGamma += ugJKV[jj][k][v];
-                }
-
-            }
-            for (int k = 0; k < K; k++) {
-                for (int v = 0; v < n; v++) {
-                    ugJKV[jj][k][v] /= sumGamma;
-                }
-            }
-        }
-        // xsi
-        this.uxJKL = new double[L][K][K];
-        for (int jj = 1; jj < L; jj++) {
-            double sumXsi = 0;
-            for (int k = 0; k < K; k++) {
-                for (int l = 0; l < K; l++) {
-                    double marginalV = 0d;
-                    for (int v = 0; v < n; v++) {
-                        marginalV += prRjHv(jj, v, k) * mu[jj][l][v];
-                    }
-                    this.uxJKL[jj][k][l] = this.ufJK[jj - 1][k] * marginalV * rho[j][k][l] * this.ubJK[jj][l];
-                    sumXsi += this.uxJKL[jj][k][l];
-                }
-            }
-            for (int k = 0; k < K; k++) {
-                for (int l = 0; l < K; l++) {
-                    this.uxJKL[jj][k][l] /= sumXsi;
-                }
-            }
-        }
     }
 
     public int getCount() {
