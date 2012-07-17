@@ -24,7 +24,7 @@ import java.util.concurrent.RecursiveTask;
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class ReadHMMWorkerRecalc extends RecursiveTask<Void> {
+public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
 
     private double[] eps;
     private double[] antieps;
@@ -34,32 +34,84 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<Void> {
     private int start;
     private int end;
     private ReadHMM[] readHMMArray;
+    private int K;
+    private int L;
+    private int n;
 
-    public ReadHMMWorkerRecalc(ReadHMM[] readHMMArray, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, int start, int end) {
+    public ReadHMMWorkerRecalc(int K, int L, int n, ReadHMM[] readHMMArray, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, int start, int end) {
         this.readHMMArray = readHMMArray;
         this.rho = rho;
         this.pi = pi;
         this.mu = mu;
         this.eps = eps;
+        this.antieps = antieps;
         this.start = start;
         this.end = end;
-        this.antieps = antieps;
+        this.K = K;
+        this.L = L;
+        this.n = n;
     }
 
     @Override
-    protected Void compute() {
+    protected EInfo compute() {
         if (end - start < Globals.STEPSIZE) {
+            EInfo einfo = new EInfo(K, L, n);
             for (int i = start; i < end; i++) {
-                this.readHMMArray[i].recalc(rho, pi, mu, eps, antieps);
+                ReadHMM r = this.readHMMArray[i];
+                r.recalc(rho, pi, mu, eps, antieps);
+                int offset = r.getBegin();
+                int times = r.getCount();
+                //CONTINUE
+                for (int j = 0; j < r.getLength(); j++) {
+                    int jGlobal = offset + j;
+                    einfo.coverage[jGlobal] += times;
+                    for (int k = 0; k < K; k++) {
+                        if (j == 0) {
+                            einfo.nJK[0][k] += r.gamma(j, k) * times;
+                        } else {
+                            for (int l = 0; l < K; l++) {
+                                einfo.nJKL[jGlobal][k][l] += r.xi(j, k, l) * times;
+                                if (Double.isNaN(einfo.nJKL[jGlobal][k][l])) {
+                                    System.out.println("J1");
+                                    System.exit(9);
+                                }
+                                if (k == l) {
+                                    einfo.nJeq[jGlobal] += r.xi(j, k, l) * times;
+                                } else {
+                                    einfo.nJneq[jGlobal] += r.xi(j, k, l) * times;
+                                }
+                            }
+                        }
+                        for (int v = 0; v < n; v++) {
+                            einfo.nJKV[jGlobal][k][v] += r.gamma(j, k, v) * times;
+                            if (Double.isNaN(einfo.nJKV[jGlobal][k][v])) {
+                                System.out.println("J nJKV");
+                                System.exit(9);
+                            }
+                        }
+                    }
+                    for (int v = 0; v < n; v++) {
+                        byte b = r.getSequence()[j];
+                        for (int k = 0; k < K; k++) {
+                            if (v != b) {
+                                einfo.nneqPos[jGlobal] += r.gamma(j, k, v) * times;
+                            } else {
+                                einfo.neqPos[jGlobal] += r.gamma(j, k, v) * times;
+                            }
+
+                        }
+                    }
+                }
             }
+            return einfo;
         } else {
             final int mid = start + (end - start) / 2;
-            ReadHMMWorkerRecalc left = new ReadHMMWorkerRecalc(readHMMArray, rho, pi, mu, eps, antieps, start, mid);
-            ReadHMMWorkerRecalc right = new ReadHMMWorkerRecalc(readHMMArray, rho, pi, mu, eps, antieps, mid, end);
+            ReadHMMWorkerRecalc left = new ReadHMMWorkerRecalc(K, L, n, readHMMArray, rho, pi, mu, eps, antieps, start, mid);
+            ReadHMMWorkerRecalc right = new ReadHMMWorkerRecalc(K, L, n, readHMMArray, rho, pi, mu, eps, antieps, mid, end);
             left.fork();
-            right.compute();
-            left.join();
+            EInfo einfo = right.compute();
+            einfo.add(left.join());
+            return einfo;
         }
-        return null;
     }
 }

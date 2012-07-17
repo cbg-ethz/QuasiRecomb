@@ -57,6 +57,8 @@ public class ArtificialExperimentalForwarder {
             }
         }
         int L = ALIGNMENT_END-ALIGNMENT_BEGIN;
+        Globals.ALIGNMENT_BEGIN = ALIGNMENT_BEGIN;
+        Globals.ALIGNMENT_END = ALIGNMENT_END;
         int n = countChars(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, N, L, n);
     }

@@ -28,6 +28,8 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class Globals {
 
+    public static int ALIGNMENT_BEGIN;
+    public static int ALIGNMENT_END;
     public static boolean FLAT_EPSILON_PRIOR;
     public static double BETA_Z;
     public static double ALPHA_Z;
@@ -67,7 +69,7 @@ public class Globals {
 
     public static void printPercentage(int K) {
         PERCENTAGE += 100d / Globals.REPEATS;
-        System.out.print("\r\tK " + K + ":\t" + Math.round(PERCENTAGE*1000)/1000 + "%");
+        System.out.print("\r\tK " + K + ":\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%");
     }
 
     public static synchronized double getMAX_LLH() {

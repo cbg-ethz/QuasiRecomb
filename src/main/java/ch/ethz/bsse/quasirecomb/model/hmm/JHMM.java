@@ -19,10 +19,13 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.model.hmm.parallel.EInfo;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorker;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.util.List;
+import org.javatuples.Pair;
 
 /**
  * Offers a HMM with the E and M step.
@@ -58,6 +61,7 @@ public class JHMM {
     private ReadHMM[] readHMMArray;
     private int restart = 0;
     private int readCount;
+    private int coverage[];
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
@@ -77,6 +81,15 @@ public class JHMM {
         this.mu = mu;
         this.pi = pi;
 
+        this.nJK = new double[L][K];
+        this.nJKL = new double[L][K][K];
+        this.nJKV = new double[L][K][n];
+        this.nVB = new double[n][n];
+        this.nJeq = new double[L];
+        this.nJneq = new double[L];
+        this.neqPos = new double[L];
+        this.nneqPos = new double[L];
+        this.coverage = new int[L];
         this.eps = new double[L];
         this.antieps = new double[L];
         for (int j = 0; j < L; j++) {
@@ -87,7 +100,6 @@ public class JHMM {
         }
 
         this.start();
-        this.calculate();
     }
 
     private void calculateLoglikelihood() {
@@ -100,82 +112,42 @@ public class JHMM {
     }
 
     private void start() {
-        long time = System.currentTimeMillis();
         readHMMArray = new ReadHMM[reads.length];
         this.readCount = this.reads.length;
         if (Globals.PARALLEL_JHMM) {
-            readHMMArray = Globals.fjPool.invoke(new ReadHMMWorker(this, reads, rho, pi, mu, eps, antieps, K, L, n, 0, this.readCount)).toArray(new ReadHMM[this.readCount]);
-        } else {
-            for (int i = 0; i < reads.length; i++) {
-                readHMMArray[i] = new ReadHMM(L, K, n, reads[i], rho, pi, mu, eps, antieps);
-            }
+            Globals.PARALLEL_RESTARTS_UPPER_BOUND = Integer.MAX_VALUE;
         }
-        System.out.println("R\t: " + (System.currentTimeMillis() - time));
+        Pair<List<ReadHMM>, EInfo> invoke = Globals.fjPool.invoke(new ReadHMMWorker(this, reads, rho, pi, mu, eps, antieps, K, L, n, 0, this.readCount));
+        this.readHMMArray = invoke.getValue0().toArray(new ReadHMM[this.readCount]);
+        calculate(invoke.getValue1());
     }
 
     public void restart() {
         this.restart++;
-        long time = System.currentTimeMillis();
-        if (Globals.PARALLEL_JHMM) {
-            Globals.fjPool.invoke(new ReadHMMWorkerRecalc(this.readHMMArray, rho, pi, mu, eps, antieps, 0, this.readCount));
-        } else {
-            for (ReadHMM r : this.readHMMArray) {
-                r.recalc(rho, pi, mu, eps, antieps);
-            }
-        }
-        System.out.println("R\t: " + (System.currentTimeMillis() - time));
-        this.calculate();
+        EInfo invoke = Globals.fjPool.invoke(new ReadHMMWorkerRecalc(K, L, n, this.readHMMArray, rho, pi, mu, eps, antieps, 0, this.readCount));
+        this.calculate(invoke);
     }
 
-    private void calculate() {
-        this.eStep();
+    private void calculate(EInfo e) {
+        this.eStep(e);
         this.calculateLoglikelihood();
         this.mStep();
     }
 
-    private void eStep() {
-        long time = System.currentTimeMillis();
-        this.nJK = new double[L][K];
-        this.nJKL = new double[L][K][K];
-        this.nJKV = new double[L][K][n];
-        this.nVB = new double[n][n];
-        this.nJeq = new double[L];
-        this.nJneq = new double[L];
-        this.neqPos = new double[L];
-        this.nneqPos = new double[L];
-        for (ReadHMM r : this.readHMMArray) {
-            int times = r.getCount();
-            for (int j = 0; j < L; j++) {
-                for (int k = 0; k < K; k++) {
-                    this.nJK[j][k] += r.gamma(j, k) * times;
-                    if (j > 0) {
-                        for (int l = 0; l < K; l++) {
-                            this.nJKL[j][k][l] += r.xi(j, k, l) * times;
-                            if (k == l) {
-                                this.nJeq[j] += r.xi(j, k, l) * times;
-                            } else {
-                                this.nJneq[j] += r.xi(j, k, l) * times;
-                            }
-                        }
-                    }
-                    for (int v = 0; v < n; v++) {
-                        this.nJKV[j][k][v] += r.gamma(j, k, v) * times;
-                    }
-                }
-                for (int v = 0; v < n; v++) {
-                    byte b = r.getSequence()[j];
-                    for (int k = 0; k < K; k++) {
-                        if (v != b) {
-                            this.nneqPos[j] += r.gamma(j, k, v) * times;
-                        } else {
-                            this.neqPos[j] += r.gamma(j, k, v) * times;
-                        }
-
-                    }
-                }
+    private void eStep(EInfo e) {
+        System.arraycopy(e.nJeq, 0, this.nJeq, 0, L);
+        System.arraycopy(e.nJeq, 0, this.nJeq, 0, L);
+        System.arraycopy(e.nJneq, 0, this.nJneq, 0, L);
+        System.arraycopy(e.neqPos, 0, this.neqPos, 0, L);
+        System.arraycopy(e.nneqPos, 0, this.nneqPos, 0, L);
+        System.arraycopy(e.coverage, 0, this.coverage, 0, L);
+        for (int j = 0; j < L; j++) {
+            System.arraycopy(e.nJK[j], 0, this.nJK[j], 0, K);
+            for (int k = 0; k < K; k++) {
+                System.arraycopy(e.nJKL[j][k], 0, this.nJKL[j][k], 0, K);
+                System.arraycopy(e.nJKV[j][k], 0, this.nJKV[j][k], 0, n);
             }
         }
-        System.out.println("E\t: " + (System.currentTimeMillis() - time));
     }
 
     private void calcMu() {
@@ -250,13 +222,7 @@ public class JHMM {
         if (upsilon == 0d) {
             return 0d;
         }
-        double result = Math.exp(rho_phi(upsilon));
-        if (Double.isNaN(result)) {
-            Utils.error();
-            System.out.println("XXX:" + upsilon);
-            System.exit(9);
-        }
-        return result;
+        return Math.exp(rho_phi(upsilon));
     }
 
     private double rho_phi(double upsilon) {
@@ -293,8 +259,6 @@ public class JHMM {
         }
         this.calcPi();
         this.calcMu();
-
-
 
         double ew = 0d;
         int nonzero = 0;
