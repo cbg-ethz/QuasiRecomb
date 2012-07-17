@@ -175,7 +175,7 @@ public class SingleEM {
         BIC_current -= (freeParameters / 2d) * Math.log(N);
 
         if (Globals.LOG_BIC) {
-            Utils.appendFile(Globals.savePath + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
+            Utils.appendFile(Globals.SAVEPATH + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
         }
 
         double[][][] mu_tmp = new double[L][K][n];

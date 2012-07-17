@@ -219,8 +219,8 @@ public class Startup {
                 Globals.REPEATS = this.m;
                 Globals.DESIRED_REPEATS = this.t;
                 Globals.DEBUG = this.verbose;
-                Globals.savePath = output + File.separator;
-                new File(Globals.savePath).mkdirs();
+                Globals.SAVEPATH = output + File.separator;
+                new File(Globals.SAVEPATH).mkdirs();
                 Globals.NO_RECOMB = this.noRecomb;
                 ArtificialExperimentalForwarder.forward(this.input, Kmin, Kmax, N);
             } else if (cut) {

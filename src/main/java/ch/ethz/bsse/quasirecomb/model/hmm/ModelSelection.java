@@ -56,8 +56,8 @@ public class ModelSelection {
 
     private void start(Read[] reads) {
         double optBIC = 0;
-        if (!new File(Globals.savePath + "support").exists()) {
-            new File(Globals.savePath + "support").mkdirs();
+        if (!new File(Globals.SAVEPATH + "support").exists()) {
+            new File(Globals.SAVEPATH + "support").mkdirs();
         }
 //        Globals.REPEATS = 5;
         System.out.println("Model selection (" + Globals.REPEATS + " iterations):");
@@ -71,7 +71,7 @@ public class ModelSelection {
                 if (Globals.LOG_BIC) {
                     StringBuilder sb = new StringBuilder();
                     sb.append(new Summary().print(em.getOr()));
-                    Utils.saveFile(Globals.savePath + "support" + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
+                    Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
                 }
                 if (em.getOr().getBIC() > optBIC || optBIC == 0) {
                     or = em.getOr();
@@ -94,7 +94,7 @@ public class ModelSelection {
                 if (Globals.LOG_BIC) {
                     StringBuilder sb = new StringBuilder();
                     sb.append(new Summary().print(em.getOr()));
-                    Utils.saveFile(Globals.savePath + "support" + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
+                    Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
                 }
                 if (em.getOr().getBIC() > optBIC || optBIC == 0) {
                     or = em.getOr();
@@ -124,9 +124,9 @@ public class ModelSelection {
         StringBuilder sb = new StringBuilder();
         sb.append(new Summary().print(or));
 
-        Utils.saveFile(Globals.savePath + "support" + File.separator + "K" + or.getK() + "-result.txt", sb.toString());
+        Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + or.getK() + "-result.txt", sb.toString());
         try {
-            String s = Globals.savePath + "support" + File.separator + "optimumJava";// + (bestK ? "" : K);
+            String s = Globals.SAVEPATH + "support" + File.separator + "optimumJava";// + (bestK ? "" : K);
             FileOutputStream fos = new FileOutputStream(s);
             try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
                 out.writeObject(or);
@@ -135,9 +135,9 @@ public class ModelSelection {
             System.out.println("Optimum Java saving\n" + ex.getMessage());
         }
 
-        ModelSampling modelSampling = new ModelSampling(L, n, or.getK(), or.getRho(), or.getPi(), or.getMu(), Globals.savePath);
+        ModelSampling modelSampling = new ModelSampling(L, n, or.getK(), or.getRho(), or.getPi(), or.getMu(), Globals.SAVEPATH);
         modelSampling.save();
-        System.out.println("Quasispecies saved: " + Globals.savePath + "quasispecies.fasta");
+        System.out.println("Quasispecies saved: " + Globals.SAVEPATH + "quasispecies.fasta");
     }
 
     private static void checkRho0(int K) {

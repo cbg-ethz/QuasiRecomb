@@ -73,8 +73,8 @@ public class EM extends Utils {
 //        }
         Globals.log("\n" + new Summary().print(or));
         if (Globals.LOGGING) {
-            Utils.saveFile(Globals.savePath + "log_K" + K, Globals.LOG.toString());
-            Utils.saveFile(Globals.savePath + "restarts_K" + K, restarts.toString());
+            Utils.saveFile(Globals.SAVEPATH + "log_K" + K, Globals.LOG.toString());
+            Utils.saveFile(Globals.SAVEPATH + "restarts_K" + K, restarts.toString());
         }
     }
 
