@@ -75,22 +75,19 @@ public class JHMM {
         this.reads = reads;
         this.rho = rho;
         this.mu = mu;
-        this.uniformEpsilon(eps, antieps);
         this.pi = pi;
-        this.start();
-        this.calculate();
-    }
 
-    private void uniformEpsilon(double eps, double antieps) {
         this.eps = new double[L];
         this.antieps = new double[L];
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-
                 this.eps[j] = eps;
                 this.antieps[j] = antieps;
             }
         }
+
+        this.start();
+        this.calculate();
     }
 
     private void calculateLoglikelihood() {
@@ -120,10 +117,10 @@ public class JHMM {
         this.restart++;
         long time = System.currentTimeMillis();
         if (Globals.PARALLEL_JHMM) {
-            Globals.fjPool.invoke(new ReadHMMWorkerRecalc(this.readHMMArray, rho, pi, mu, eps, 0, this.readCount));
+            Globals.fjPool.invoke(new ReadHMMWorkerRecalc(this.readHMMArray, rho, pi, mu, eps, antieps, 0, this.readCount));
         } else {
             for (ReadHMM r : this.readHMMArray) {
-                r.recalc(rho, pi, mu, eps);
+                r.recalc(rho, pi, mu, eps, antieps);
             }
         }
         System.out.println("R\t: " + (System.currentTimeMillis() - time));
@@ -291,7 +288,7 @@ public class JHMM {
     }
 
     private void mStep() {
-        if (!Globals.rho0) {
+        if (!Globals.NO_RECOMB) {
             this.calcRho();
         }
         this.calcPi();
@@ -318,6 +315,7 @@ public class JHMM {
 //        } else {
         for (int j = 0; j < L; j++) {
             this.eps[j] = f(ew + a) / f((N * (n - 1)) + a + b);
+            this.antieps[j] = 1 - (n - 1) * eps[j];
         }
 //    }
     }

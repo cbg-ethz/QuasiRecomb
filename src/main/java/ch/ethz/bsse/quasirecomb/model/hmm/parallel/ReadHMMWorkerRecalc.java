@@ -24,9 +24,10 @@ import java.util.concurrent.RecursiveTask;
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class ReadHMMWorkerRecalc extends RecursiveTask<Boolean> {
+public class ReadHMMWorkerRecalc extends RecursiveTask<Void> {
 
     private double[] eps;
+    private double[] antieps;
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
@@ -34,7 +35,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<Boolean> {
     private int end;
     private ReadHMM[] readHMMArray;
 
-    public ReadHMMWorkerRecalc(ReadHMM[] readHMMArray, double[][][] rho, double[] pi, double[][][] mu, double[] eps, int start, int end) {
+    public ReadHMMWorkerRecalc(ReadHMM[] readHMMArray, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, int start, int end) {
         this.readHMMArray = readHMMArray;
         this.rho = rho;
         this.pi = pi;
@@ -42,26 +43,23 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<Boolean> {
         this.eps = eps;
         this.start = start;
         this.end = end;
+        this.antieps = antieps;
     }
 
     @Override
-    protected Boolean compute() {
+    protected Void compute() {
         if (end - start < Globals.STEPSIZE) {
-            long time = System.currentTimeMillis();
             for (int i = start; i < end; i++) {
-                this.readHMMArray[i].recalc(rho, pi, mu, eps);
+                this.readHMMArray[i].recalc(rho, pi, mu, eps, antieps);
             }
-//            System.out.println(start + "-" + end + "\t:" + (System.currentTimeMillis() - time));
-
-            return true;
         } else {
             final int mid = start + (end - start) / 2;
-            ReadHMMWorkerRecalc left = new ReadHMMWorkerRecalc(readHMMArray, rho, pi, mu, eps, start, mid);
-            ReadHMMWorkerRecalc right = new ReadHMMWorkerRecalc(readHMMArray, rho, pi, mu, eps, mid, end);
+            ReadHMMWorkerRecalc left = new ReadHMMWorkerRecalc(readHMMArray, rho, pi, mu, eps, antieps, start, mid);
+            ReadHMMWorkerRecalc right = new ReadHMMWorkerRecalc(readHMMArray, rho, pi, mu, eps, antieps, mid, end);
             left.fork();
             right.compute();
             left.join();
-            return true;
         }
+        return null;
     }
 }

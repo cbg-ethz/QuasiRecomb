@@ -64,7 +64,7 @@ public class ModelSelection {
         OptimalResult or = null;
         if (Kmin == 0) {
             for (int k = 1;; k++) {
-                if (!Globals.rho0force || k == 1) {
+                if (!Globals.NO_RECOMB || k == 1) {
                     checkRho0(k);
                 }
                 EM em = new EM(this.N, this.L, k, this.n, reads);
@@ -87,7 +87,7 @@ public class ModelSelection {
             }
         } else if (Kmin != Kmax) {
             for (int k = Kmin; k <= Kmax; k++) {
-                if (!Globals.rho0force || k == 1) {
+                if (!Globals.NO_RECOMB || k == 1) {
                     checkRho0(k);
                 }
                 EM em = new EM(this.N, this.L, k, this.n, reads);
@@ -142,9 +142,9 @@ public class ModelSelection {
 
     private static void checkRho0(int K) {
         if (K == 1) {
-            Globals.rho0 = true;
+            Globals.NO_RECOMB = true;
         } else {
-            Globals.rho0 = false;
+            Globals.NO_RECOMB = false;
         }
     }
 

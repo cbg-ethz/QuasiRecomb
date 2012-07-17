@@ -1,3 +1,20 @@
+/**
+ * Copyright (c) 2011-2012 Armin Töpfer
+ *
+ * This file is part of QuasiRecomb.
+ *
+ * QuasiRecomb is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or any later version.
+ *
+ * QuasiRecomb is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
+ */
 package ch.ethz.bsse.quasirecomb.utils;
 
 import java.util.Map;
@@ -5,8 +22,7 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 /**
- *
- * @author Armin Töpfer (armin.toepfer@bsse.ethz.ch)
+ * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class Frequency<T> {
 
@@ -30,8 +46,6 @@ public class Frequency<T> {
      */
     public T roll() {
         Double key = Math.random() * max;
-//        Double key = Math.random() * max;
-//        Double key = generator.nextDouble() * max;
         return table.higherEntry(key).getValue();
     }
 }

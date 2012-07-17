@@ -1,46 +1,33 @@
+/**
+ * Copyright (c) 2011-2012 Armin Töpfer
+ *
+ * This file is part of QuasiRecomb.
+ *
+ * QuasiRecomb is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or any later version.
+ *
+ * QuasiRecomb is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
+ */
 package ch.ethz.bsse.quasirecomb.utils;
 
 import cc.mallet.types.Dirichlet;
 import ch.ethz.bsse.quasirecomb.model.Globals;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
- *
  * @author Armin Töpfer (armin.toepfer@bsse.ethz.ch)
  */
 public class Random {
 
-    private static final Dirichlet dir5 = new Dirichlet(5, Globals.BETA_H);
-    private static final Dirichlet dir4 = new Dirichlet(4, Globals.BETA_H);
-    private static final Dirichlet dir3 = new Dirichlet(3, Globals.BETA_H);
-    private static final Dirichlet dir2 = new Dirichlet(2, Globals.BETA_H);
-    private static Dirichlet dirPhi;
-
-//    public static double[][][] generatePriorRho(int Ldec, int K) {
-//        double[][][] rho = new double[Ldec][K][K];
-//        if (!Globals.rho0) {
-//            for (int j = 0; j < Ldec; j++) {
-//                for (int k = 0; k < K; k++) {
-//                    for (int l = 0; l < K; l++) {
-//                        rho[j][k][l] = 1d/K;
-//                    }
-//                }
-//            }
-//        } else {
-//            for (int j = 0; j < Ldec; j++) {
-//                for (int k = 0; k < K; k++) {
-//                    for (int l = 0; l < K; l++) {
-//                        rho[j][k][l] = (l == k) ? 1d : 0d;
-//                    }
-//                }
-//            }
-//        }
-//        return rho;
-//    }
     public static double[][][] generateInitRho(int Ldec, int K) {
         double[][][] rho = new double[Ldec][K][K];
-        if (!Globals.rho0) {
+        if (!Globals.NO_RECOMB) {
             for (int j = 0; j < Ldec; j++) {
                 for (int k = 0; k < K; k++) {
                     rho[j][k] = new Dirichlet(K, Globals.BETA_Z).nextDistribution();
@@ -67,70 +54,25 @@ public class Random {
         }
         return rho;
     }
-    private static Map<Integer, Dirichlet> piGen = new HashMap<>();
 
     public static double[] generateInitPi(int K) {
-//        if (!piGen.containsKey(K)) {
-        double[] d = new double[K];
+        double[] pi = new double[K];
         for (int k = 1; k <= K; k++) {
-            d[k - 1] = 1d / K;
-//            d[k - 1] = 2d;
+            pi[k - 1] = 1d / K;
         }
-//            piGen.put(K, new Dirichlet(d));
-//        }
-//        return piGen.get(K).nextDistribution();
-        return d;
-    }
-
-    public static double[] generateMuVector(int n) {
-        double[] d = null;
-//        if (n == 5) {
-//            d = dir5.nextDistribution();
-//        } else if (n == 4) {
-//            d = dir4.nextDistribution();
-//        } else if (n == 3) {
-//            d = dir3.nextDistribution();
-//        } else if (n == 2) {
-//            d = dir2.nextDistribution();
-//        }
-        d = new double[n];
-        for (int i = 0; i < n; i++) {
-            d[i] = 1d / n;
-        }
-        return d;
+        return pi;
     }
 
     public static double[][][] generateMuInit(int L, int K, int n) {
-        double[][][] eArray = new double[L][K][n];
-//        if (Globals.ALPHA_H_USER) {
-//            for (int j = 0; j < L; j++) {
-//                double[] vd = new double[n];
-//                for (int v = 0; v < n; v++) {
-//                    if (Globals.ALPHA_H[j][v] == 0d) {
-//                        vd[v] = 0.01;
-//                    } else {
-//                        vd[v] = Globals.ALPHA_H[j][v];
-//                    }
-//                }
-//                try {
-//                Dirichlet d = new Dirichlet(vd);
-//                for (int k = 0; k < K; k++) {
-//                    eArray[j][k] = d.nextDistribution();
-//                }
-//                } catch (java.lang.IllegalArgumentException e) {
-//                    System.out.println(Globals.ALPHA_H[j]);
-//                    System.out.println(e);
-//                    System.exit(0);
-//                }
-//            }
-//        } else {
+        double[][][] mu = new double[L][K][n];
 
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                eArray[j][k] = Random.generateMuVector(n);
+        for (int j = L - 1; j >= 0; j--) {
+            for (int k = K - 1; k >= 0; k--) {
+                for (int i = n - 1; i >= 0; i--) {
+                    mu[j][k][i] = 1d / n;
+                }
             }
         }
-//        }
-        return eArray;
+        return mu;
     }
 }

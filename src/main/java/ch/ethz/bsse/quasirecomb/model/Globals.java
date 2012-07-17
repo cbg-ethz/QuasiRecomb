@@ -28,18 +28,11 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class Globals {
 
-    public static boolean FIX_EPSILON = false;
-    public static double BETA_Z = 0.01;
-    public static double BETA_H = 2;
-    public static double ALPHA_Z = 0.001;
-    public static boolean ALPHA_H_USER = false;
+    public static boolean FLAT_EPSILON_PRIOR;
+    public static double BETA_Z;
+    public static double ALPHA_Z;
     public static double ALPHA_H;
     public static String[] HAPLOTYPE_ARRAY_EMPIRICAL;
-    public static boolean GLOBAL = false;
-    public static boolean BOOTSTRAP = false;
-    public static boolean CROSSVALIDATION = false;
-    public static boolean SAVE = true;
-    public static String filePrefix = "";
     public static String savePath = "C:\\Users\\XLR\\Dropbox\\JData\\";
     public static double ESTIMATION_EPSILON = .0003;
     public static double SAMPLING_EPSILON = .001;
@@ -53,30 +46,19 @@ public class Globals {
     public static boolean SIMULATION = false;
     public static boolean DISTANCE = false;
     public static List<Integer> runtime = new LinkedList<>();
-    public static boolean rho0 = false;
-    public static int RUNS = 20;
-    public static int REPEATS = 10;
-    public static int DESIRED_REPEATS = 50;
-    public static boolean rho0force = false;
-    public static boolean TEST = false;
-    public static int N;
+    public static boolean NO_RECOMB = false;
+    public static int REPEATS;
+    public static int DESIRED_REPEATS;
     public static double MASK_RHO_THRESHOLD;
-    public static double PRIOR_ALPHA = 0.01;
-    public static boolean ADD_ALPHA = false;
-    public static int MAX_PRE_BREAK = 50;
     public static int PARALLEL_RESTARTS_UPPER_BOUND = 10;
     public static boolean PARALLEL_JHMM = true;
     public static boolean PARALLEL_RESTARTS = false;
-    public static boolean NO_REFINE = false;
-    public static boolean NO_BREAK_THRESHOLD = false;
-    public static double MIN_LLH = Double.NEGATIVE_INFINITY;
-    public static double BIAS = 0.1;
     private static double MAX_LLH = Double.NEGATIVE_INFINITY;
-    public static StringBuilder LOG = new StringBuilder();
     public static boolean LOG_BIC = false;
     public static boolean LOGGING = false;
     public static boolean PRINT = true;
-    public static int SAMPLING_NUMBER = 10000;
+    public static int SAMPLING_NUMBER;
+    public static StringBuilder LOG = new StringBuilder();
 
     public static void log(Object o) {
         if (PRINT) {

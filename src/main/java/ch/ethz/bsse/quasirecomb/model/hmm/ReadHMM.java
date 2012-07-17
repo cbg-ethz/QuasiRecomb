@@ -74,7 +74,6 @@ public class ReadHMM {
     private void calculate() {
         this.forward();
         this.backward();
-        this.gammaXsi();
     }
 
     public boolean checkConsistency() {
@@ -103,14 +102,12 @@ public class ReadHMM {
         return true;
     }
 
-    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double[] epsilon) {
+    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double[] epsilon, double[] antieps) {
         this.rho = rho;
         this.pi = pi;
         this.mu = mu;
         this.eps = epsilon;
-        for (int j = 0; j < L; j++) {
-            this.antieps[j] = 1 - (n - 1) * epsilon[j];
-        }
+        this.antieps = antieps;
         this.calculate();
     }
 
@@ -187,49 +184,6 @@ public class ReadHMM {
                 }
             }
         }
-//        this.bJK = new double[length][K];
-//        for (int j = length - 1; j >= 0; j--) {
-//            for (int k = 0; k < K; k++) {
-//                if (j == length - 1) {
-//                    bJK[j][k] = 1d / c[length - 1];
-//                } else {
-//                    for (int l = 0; l < K; l++) {
-//                        double sumV = 0d;
-//                        for (int v = 0; v < n; v++) {
-//                            sumV += prRjHv(begin + j + 1, v) * mu[begin + j + 1][l][v];
-//                        }
-//                        bJK[j][k] += sumV * rho[begin + j][k][l] * bJK[j + 1][l];
-//                    }
-//                    if (c[j] != 0d) {
-//                        bJK[j][k] /= c[j];
-//                    }
-//                }
-//            }
-//        }
-    }
-
-    private void gammaXsi() {
-//        this.gJK = new double[length][K];
-//        this.gJKV = new double[length][K][n];
-//        this.xJKL = new double[length][K][K];
-//        for (int j = 0; j < length; j++) {
-//            for (int k = 0; k < K; k++) {
-//                this.gJK[j][k] = this.fJK[j][k] * this.bJK[j][k] * c[j];
-//                for (int v = 0; v < n; v++) {
-//                    this.gJKV[j][k][v] = this.fJKV[j][k][v] * this.bJK[j][k] * c[j];
-//                }
-//                this.gJK[j][k] = this.fJK[j][k] * c[j] * this.bJK[j][k];
-//                if (j > 0) {
-//                    for (int l = 0; l < K; l++) {
-//                        double marginalV = 0d;
-//                        for (int v = 0; v < n; v++) {
-//                            marginalV += prRjHv(j, v) * mu[begin + j][l][v];
-//                        }
-//                        this.xJKL[j][k][l] = this.fJK[j - 1][k] * marginalV * rho[begin + j - 1][k][l] * this.bJK[j][l];
-//                    }
-//                }
-//            }
-//        }
     }
 
     public double gamma(int j, int k) {

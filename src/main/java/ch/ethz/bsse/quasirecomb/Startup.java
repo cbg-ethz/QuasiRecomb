@@ -17,13 +17,13 @@
  */
 package ch.ethz.bsse.quasirecomb;
 
-import ch.ethz.bsse.quasirecomb.utils.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
 import ch.ethz.bsse.quasirecomb.utils.Cutter;
+import ch.ethz.bsse.quasirecomb.utils.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import java.io.File;
@@ -78,14 +78,12 @@ public class Startup {
     private boolean parallelRestarts;
     @Option(name = "-singleCore")
     private boolean singleCore;
-    @Option(name = "-fixEpsilon")
-    private boolean fixEpsilon;
+    @Option(name = "-flatEpsPrior")
+    private boolean flatEpsilonPrior;
     @Option(name = "-noRecomb")
     private boolean noRecomb;
     @Option(name = "-alphah")
     private double alphah = 0.001;
-    @Option(name = "-betah")
-    private double betah = 2;
     @Option(name = "-alphaz")
     private double alphaz = 0.001;
     @Option(name = "-betaz")
@@ -209,11 +207,10 @@ public class Startup {
                     Kmax = Integer.parseInt(K);
                 }
 
-                Globals.FIX_EPSILON = this.fixEpsilon;
+                Globals.FLAT_EPSILON_PRIOR = this.flatEpsilonPrior;
                 Globals.ALPHA_Z = this.alphaz;
                 Globals.ALPHA_H = this.alphah;
                 Globals.BETA_Z = this.betaz;
-                Globals.BETA_H = this.betah;
                 Globals.PARALLEL_JHMM = !this.singleCore;
                 Globals.PARALLEL_RESTARTS = this.parallelRestarts;
                 Globals.ESTIMATION_EPSILON = this.e;
@@ -224,10 +221,7 @@ public class Startup {
                 Globals.DEBUG = this.verbose;
                 Globals.savePath = output + File.separator;
                 new File(Globals.savePath).mkdirs();
-                if (this.noRecomb) {
-                    Globals.rho0 = true;
-                    Globals.rho0force = true;
-                }
+                Globals.NO_RECOMB = this.noRecomb;
                 ArtificialExperimentalForwarder.forward(this.input, Kmin, Kmax, N);
             } else if (cut) {
                 Cutter.cut(input, output, begin, end);

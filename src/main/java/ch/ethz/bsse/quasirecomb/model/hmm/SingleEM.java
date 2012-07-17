@@ -70,17 +70,6 @@ public class SingleEM {
             history.add(llh);
             oldllh = llh;
             llh = jhmm.getLoglikelihood();
-            if (((oldllh - llh) / llh) < 1e-5 || Globals.NO_BREAK_THRESHOLD) {
-                if (iterations % Globals.MAX_PRE_BREAK == 0 && iterations > 0) {
-                    Globals.log("BIAS CHECK! This: " + llh + "\tbias: " + (llh - (this.llh_opt * Globals.BIAS)) + "\topt:" + this.llh_opt);
-                    if ((llh - (this.llh_opt * Globals.BIAS)) < this.llh_opt) {
-                        Globals.log("pre break;\t");
-                        broken = true;
-                        break;
-                    }
-                }
-            }
-
             if (iterations > 500) {
                 if (history.get(iterations - 500) - llh > -1) {
                     Globals.log("break 500;\t");
@@ -94,40 +83,9 @@ public class SingleEM {
                 if ((oldllh - llh) / llh == -1) {
                     Globals.log("0\t");
                 } else {
-                    Globals.log((oldllh - llh) / llh + "\t" + Math.abs((oldllh - llh) / llh) + "\t" + this.delta + "\t");
+                    Globals.log((oldllh - llh) / llh + "\t");
                 }
                 Globals.log(llh + "\n");
-            }
-            if (Double.isNaN(llh)) {
-                System.out.println("llh NaN");
-
-                for (ReadHMM r : jhmm.getReadHMMArray()) {
-                    r.checkConsistency();
-                }
-
-                for (int k = 0; k < K; k++) {
-                    if (Double.isNaN(jhmm.getPi()[k])) {
-                        System.out.println("pi");
-                    }
-                }
-                for (int j = 0; j < L; j++) {
-                    for (int k = 0; k < K; k++) {
-                        for (int v = 0; v < n; v++) {
-                            if (Double.isNaN(jhmm.getMu()[j][k][v])) {
-                                System.out.println("mu");
-                            }
-                        }
-                    }
-                }
-                for (int j = 0; j < L - 1; j++) {
-                    for (int k = 0; k < K; k++) {
-                        for (int l = 0; l < K; l++) {
-                            if (Double.isNaN(jhmm.getRho()[j][k][l])) {
-                                System.out.println("rho");
-                            }
-                        }
-                    }
-                }
             }
             jhmm.restart();
             iterations++;
@@ -226,9 +184,9 @@ public class SingleEM {
                 System.arraycopy(jhmm.getMu()[j][k], 0, mu_tmp[j][k], 0, n);
             }
         }
-        this.or = new OptimalResult(N, K, L, n, 
+        this.or = new OptimalResult(N, K, L, n,
                 Arrays.copyOf(jhmm.getRho(), jhmm.getRho().length),
-                Arrays.copyOf(jhmm.getPi(),jhmm.getPi().length),
+                Arrays.copyOf(jhmm.getPi(), jhmm.getPi().length),
                 mu_tmp,
                 llh,
                 BIC_current, jhmm.getEps(), jhmm.getRestart());
