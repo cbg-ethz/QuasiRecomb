@@ -17,15 +17,14 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.RestartWorker;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 /**
  * Responsible for the start of the repeats within the EM algorithm.
@@ -41,27 +40,15 @@ public class EM extends Utils {
     private int K;
     private int L;
     private int n;
-    private Map<byte[], Integer> reads;
-    private byte[][] haplotypesArray;
     private OptimalResult or;
     private List<OptimalResult> ors;
 
-    protected EM(int N, int L, int K, int n, String[] reads, byte[][] haplotypesArray) {
-        this(K, N, L, n, Utils.clusterReads(Utils.splitReadsIntoByteArrays(reads)), haplotypesArray);
-    }
-
-    protected EM(int N, int L, int K, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray) {
+    protected EM(int N, int L, int K, int n, Read[] reads) {
         this.N = N;
         this.L = L;
         this.K = K;
         this.n = n;
-        this.reads = reads;
-        this.haplotypesArray = haplotypesArray;
-        this.blackbox();
-    }
-
-    protected EM(int N, int L, int K, int n, byte[][] reads, byte[][] haplotypesArray) {
-        this(K, N, L, n, Utils.clusterReads(reads), haplotypesArray);
+        this.blackbox(reads);
     }
 
     public void shorten(double value) {
@@ -85,15 +72,15 @@ public class EM extends Utils {
         }
     }
 
-    private void blackbox() {
+    private void blackbox(Read[] reads) {
         Globals.LOG = new StringBuilder();
 
         if (Globals.PARALLEL_RESTARTS) {
-            ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, haplotypesArray, Globals.DELTA_LLH, 0, Globals.REPEATS));
+            ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, Globals.DELTA_LLH, 0, Globals.REPEATS));
         } else {
             ors = new ArrayList<>();
             for (int i = 0; i < Globals.REPEATS; i++) {
-                SingleEM sem = new SingleEM(N, K, L, n, reads, haplotypesArray, Globals.DELTA_LLH);
+                SingleEM sem = new SingleEM(N, K, L, n, reads, Globals.DELTA_LLH);
                 ors.add(sem.getOptimalResult());
             }
         }

@@ -15,10 +15,9 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.informatioholder;
+package ch.ethz.bsse.quasirecomb.informationholder;
 
 import java.io.Serializable;
-import java.util.Map;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -29,8 +28,7 @@ public class OptimalResult implements Serializable {
     private int K;
     private int L;
     private int n;
-    private Map<byte[], Integer> reads;
-    private byte[][] haplotypesArray;
+    private Read[] reads;
     private double[][][] rho;
     private double[][][] priorRho;
     private double[] pi;
@@ -40,13 +38,12 @@ public class OptimalResult implements Serializable {
     private double BIC;
     private int restarts;
 
-    public OptimalResult(int N, int K, int L, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[][][] priorRho, double[] eps, int restarts) {
+    public OptimalResult(int N, int K, int L, int n, Read[] reads,  double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[][][] priorRho, double[] eps, int restarts) {
         this.N = N;
         this.K = K;
         this.L = L;
         this.n = n;
         this.reads = reads;
-        this.haplotypesArray = haplotypesArray;
         this.rho = rho;
         this.pi = pi;
         this.mu = mu;
@@ -69,10 +66,6 @@ public class OptimalResult implements Serializable {
         return N;
     }
 
-    public byte[][] getHaplotypesArray() {
-        return haplotypesArray;
-    }
-
     public double getLlh() {
         return llh;
     }
@@ -89,7 +82,7 @@ public class OptimalResult implements Serializable {
         return pi;
     }
 
-    public Map<byte[], Integer> getReads() {
+    public Read[] getReads() {
         return reads;
     }
 

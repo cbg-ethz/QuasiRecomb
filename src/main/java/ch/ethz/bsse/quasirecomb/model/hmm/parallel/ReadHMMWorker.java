@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
 import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMM;
@@ -30,7 +31,7 @@ import java.util.concurrent.RecursiveTask;
 public class ReadHMMWorker extends RecursiveTask<List<ReadHMM>> {
 
     private JHMM jhmm;
-    private byte[][] reads;
+    private Read[] reads;
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
@@ -42,7 +43,7 @@ public class ReadHMMWorker extends RecursiveTask<List<ReadHMM>> {
     private int start;
     private int end;
 
-    public ReadHMMWorker(JHMM jhmm, byte[][] reads, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, int K, int L, int n, int start, int end) {
+    public ReadHMMWorker(JHMM jhmm, Read[] reads, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, int K, int L, int n, int start, int end) {
         this.jhmm = jhmm;
         this.reads = reads;
         this.rho = rho;

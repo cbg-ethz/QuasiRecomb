@@ -1,6 +1,6 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

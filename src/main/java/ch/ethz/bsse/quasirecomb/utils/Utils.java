@@ -1,9 +1,12 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -106,24 +109,6 @@ public class Utils extends FastaParser {
         return Rs;
     }
 
-    public static Map<byte[], Integer> clusterReads(byte[][] reads) {
-        Map<byte[], Integer> readsMap = new HashMap<>();
-        for (byte[] readm : reads) {
-            boolean hit = false;
-            for (byte[] read : readsMap.keySet()) {
-                if (Arrays.equals(read, readm)) {
-                    readsMap.put(read, readsMap.get(read) + 1);
-                    hit = true;
-                    break;
-                }
-            }
-            if (!hit) {
-                readsMap.put(readm, 1);
-            }
-        }
-        return readsMap;
-    }
-
     public static void saveClusteredReads(Map<byte[], Integer> clusterReads) {
         StringBuilder sb = new StringBuilder();
         for (byte[] read : clusterReads.keySet()) {
@@ -136,9 +121,23 @@ public class Utils extends FastaParser {
         Utils.saveFile(SAVEPATH + "readsClustered.txt", sb.toString());
     }
 
-    public static byte[][] parseInput(String path) {
+    public static Read[] parseInput(String path) {
         byte[][] haplotypesArray = splitReadsIntoByteArrays(parseFarFile(path));
-        return haplotypesArray;
+        List<Read> hashing = new ArrayList<>();
+        for (byte[] b : haplotypesArray) {
+            boolean missing = true;
+            for (Read r : hashing) {
+                if (Arrays.equals(r.getSequence(),b)) {
+                    r.incCount();
+                    missing = false;
+                    break;
+                }
+            }
+            if (missing) {
+                hashing.add(new Read(b, 0, b.length,1));
+            }
+        }
+        return hashing.toArray(new Read[hashing.size()]);
     }
 
     public static Map<String, Integer> reverse(Map<byte[], Integer> src) {

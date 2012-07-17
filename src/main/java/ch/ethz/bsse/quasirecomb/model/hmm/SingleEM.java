@@ -17,13 +17,13 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -38,53 +38,25 @@ public class SingleEM {
     private int K;
     private int L;
     private int n;
-    private Map<byte[], Integer> reads;
-    private byte[][] haplotypesArray;
     private double llh_opt;
     private OptimalResult or;
     private double delta;
+    private Read[] reads;
 
-    public SingleEM(int N, int K, int L, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray, double delta) {
+    public SingleEM(int N, int K, int L, int n, Read[] reads, double delta) {
         this.N = N;
         this.K = K;
         this.L = L;
         this.n = n;
-        this.reads = reads;
-        this.haplotypesArray = haplotypesArray;
         this.delta = delta;
-        start(null);
-    }
-
-    public SingleEM(OptimalResult or) {
-        this.N = or.getN();
-        this.K = or.getK();
-        this.L = or.getL();
-        this.n = or.getn();
-        this.reads = or.getReads();
-        this.haplotypesArray = or.getHaplotypesArray();
-        this.delta = Globals.DELTA_LLH_HARDER;
-        start(or);
-    }
-
-    public SingleEM(int N, int K, int L, int n, Map<byte[], Integer> reads, byte[][] haplotypesArray, double delta, OptimalResult or) {
-        this.N = N;
-        this.K = K;
-        this.L = L;
-        this.n = n;
         this.reads = reads;
-        this.haplotypesArray = haplotypesArray;
-        this.delta = delta;
-        start(or);
+        start();
     }
 
-    private void start(OptimalResult givenPrior) {
+    private void start() {
         this.llh_opt = Globals.getMAX_LLH();
         time(false);
-        if (givenPrior == null) {
-            jhmm = new JHMM(reads, N, L, K, n, Globals.ESTIMATION_EPSILON);
-        } else {
-            jhmm = new JHMM(givenPrior);
-        }
+        jhmm = new JHMM(reads, N, L, K, n, Globals.ESTIMATION_EPSILON);
 
         double llh = Double.MIN_VALUE;
         double oldllh = Double.MIN_VALUE;
@@ -129,7 +101,7 @@ public class SingleEM {
             if (Double.isNaN(llh)) {
                 System.out.println("llh NaN");
 
-                for (ReadHMM r : jhmm.getReadHMMMap().keySet()) {
+                for (ReadHMM r : jhmm.getReadHMMArray()) {
                     r.checkConsistency();
                 }
 
@@ -180,8 +152,8 @@ public class SingleEM {
         double BIC_current = 0;
 
         // calculate loglikelihood from scaling factors
-        for (ReadHMM r : jhmm.getReadHMMMap().keySet()) {
-            int times = jhmm.getReadHMMMap().get(r);
+        for (ReadHMM r : jhmm.getReadHMMArray()) {
+            int times = r.getCount();
             for (int j = 0; j < jhmm.getL(); j++) {
                 BIC_current += Math.log(r.getC(j)) * times;
             }
@@ -254,7 +226,7 @@ public class SingleEM {
                 System.arraycopy(jhmm.getMu()[j][k], 0, mu_tmp[j][k], 0, n);
             }
         }
-        this.or = new OptimalResult(N, K, L, n, reads, haplotypesArray,
+        this.or = new OptimalResult(N, K, L, n, reads,
                 Arrays.copyOf(jhmm.getRho(), jhmm.getRho().length),
                 Arrays.copyOf(jhmm.getPi(),
                 jhmm.getPi().length),

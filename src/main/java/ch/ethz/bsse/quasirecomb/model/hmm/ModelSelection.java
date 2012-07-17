@@ -17,7 +17,8 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
@@ -26,7 +27,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.Map;
 
 /**
  * Selects the best model among the specified range of generators.
@@ -41,24 +41,20 @@ public class ModelSelection {
     private int L;
     private int n;
     private int bestK;
-    private Map<byte[], Integer> clusterReads;
-    private byte[][] haplotypesArray;
     private double[][][] mu = null;
     private double[][][] rho = null;
     private double[] pi = null;
 
-    public ModelSelection(Map<byte[], Integer> clusterReads, int Kmin, int Kmax, int N, int L, int n, byte[][] haplotypesArray) {
+    public ModelSelection(Read[] reads, int Kmin, int Kmax, int N, int L, int n) {
         this.Kmax = Kmax;
         this.Kmin = Kmin;
         this.N = N;
         this.L = L;
         this.n = n;
-        this.clusterReads = clusterReads;
-        this.haplotypesArray = haplotypesArray;
-        this.start();
+        this.start(reads);
     }
 
-    private void start() {
+    private void start(Read[] reads) {
         double optBIC = 0;
         if (!new File(Globals.savePath + "support").exists()) {
             new File(Globals.savePath + "support").mkdirs();
@@ -71,7 +67,7 @@ public class ModelSelection {
                 if (!Globals.rho0force || k == 1) {
                     checkRho0(k);
                 }
-                EM em = new EM(this.N, this.L, k, this.n, this.clusterReads, this.haplotypesArray);
+                EM em = new EM(this.N, this.L, k, this.n, reads);
                 if (Globals.LOG_BIC) {
                     StringBuilder sb = new StringBuilder();
                     sb.append(new Summary().print(em.getOr()));
@@ -94,7 +90,7 @@ public class ModelSelection {
                 if (!Globals.rho0force || k == 1) {
                     checkRho0(k);
                 }
-                EM em = new EM(this.N, this.L, k, this.n, this.clusterReads, this.haplotypesArray);
+                EM em = new EM(this.N, this.L, k, this.n, reads);
                 if (Globals.LOG_BIC) {
                     StringBuilder sb = new StringBuilder();
                     sb.append(new Summary().print(em.getOr()));
@@ -117,7 +113,7 @@ public class ModelSelection {
         Globals.REPEATS = Globals.DESIRED_REPEATS;
         Globals.PERCENTAGE = 0;
         System.out.println("Model training (" + Globals.REPEATS + " iterations):");
-        EM em = new EM(this.N, this.L, bestK, this.n, this.clusterReads, this.haplotypesArray);
+        EM em = new EM(this.N, this.L, bestK, this.n, reads);
         if (em.getOr().getLlh() > optBIC || optBIC == 0) {
             or = em.getOr();
             this.mu = em.getMu_opt();
@@ -138,7 +134,7 @@ public class ModelSelection {
         } catch (IOException ex) {
             System.out.println("Optimum Java saving\n" + ex.getMessage());
         }
-        
+
         ModelSampling modelSampling = new ModelSampling(L, n, or.getK(), or.getRho(), or.getPi(), or.getMu(), Globals.savePath);
         modelSampling.save();
         System.out.println("Quasispecies saved: " + Globals.savePath + "quasispecies.fasta");

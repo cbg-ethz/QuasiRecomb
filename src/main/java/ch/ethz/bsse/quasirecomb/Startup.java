@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb;
 
 import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;

@@ -17,7 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.modelsampling;
 
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
@@ -68,7 +68,6 @@ public final class ModelSampling extends Utils {
         this.L = or.getL();
         this.n = or.getn();
         this.rho = or.getRho();
-        this.reads = or.getReads();
         this.pi = or.getPi();
         this.H = or.getMu();
         this.rhoArray = new Frequency[L - 1][K];
@@ -93,7 +92,6 @@ public final class ModelSampling extends Utils {
         this.L = or.getL();
         this.n = or.getn();
         this.rho = or.getRho();
-        this.reads = or.getReads();
         this.pi = or.getPi();
         this.H = or.getMu();
         this.rhoArray = new Frequency[L - 1][K];

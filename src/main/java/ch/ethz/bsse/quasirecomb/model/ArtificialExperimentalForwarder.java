@@ -18,6 +18,7 @@
 package ch.ethz.bsse.quasirecomb.model;
 
 import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Sampling;
@@ -48,36 +49,27 @@ public class ArtificialExperimentalForwarder {
      * @param N amount of reads in case exp is false
      */
     public static void forward(String input, int Kmin, int Kmax, int N) {
-            byte[][] haplotypesArray = Utils.parseInput(input);
-
-        if (Globals.BOOTSTRAP) {
-            Map<byte[], Double> hapMap = new HashMap<>();
-            int hapL = haplotypesArray.length;
-
-            for (int i = 0; i < hapL; i++) {
-                hapMap.put(haplotypesArray[i], 1d / hapL);
+        Read[] reads = Utils.parseInput(input);
+        
+        int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
+        int ALIGNMENT_END = Integer.MIN_VALUE;
+        for (Read r : reads) {
+            if (r.getBegin() < ALIGNMENT_BEGIN) {
+                ALIGNMENT_BEGIN = r.getBegin();
             }
-
-            Frequency<byte[]> f = new Frequency<>(hapMap);
-
-            byte[][] haplotypesBootstrap = new byte[hapL][];
-            for (int i = 0; i < hapL; i++) {
-                haplotypesBootstrap[i] = f.roll();
+            if (r.getEnd() > ALIGNMENT_END) {
+                ALIGNMENT_END = r.getEnd();
             }
-            haplotypesArray = haplotypesBootstrap;
         }
-
-        Map<byte[], Integer> clusterReads = Utils.clusterReads(haplotypesArray);
-
-        int n = countChars(haplotypesArray);
-        ModelSelection ms = new ModelSelection(clusterReads, Kmin, Kmax, N, haplotypesArray[0].length, n, haplotypesArray);
+        int L = ALIGNMENT_END-ALIGNMENT_BEGIN;
+        int n = countChars(reads);
+        ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, N, L, n);
     }
 
-
-    private static int countChars(byte[][] bbb) {
+    private static int countChars(Read[] rs) {
         Map<Byte, Boolean> map = new HashMap<>();
-        for (byte[] bb : bbb) {
-            for (byte b : bb) {
+        for (Read r : rs) {
+            for (byte b : r.getSequence()) {
                 map.put(b, Boolean.TRUE);
             }
         }

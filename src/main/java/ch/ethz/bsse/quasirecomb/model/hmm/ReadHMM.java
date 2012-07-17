@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 
 /**
@@ -29,7 +30,7 @@ public class ReadHMM {
     private final int L;
     private final int K;
     private final int n;
-    private final byte[] read;
+    private final Read read;
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
@@ -52,7 +53,7 @@ public class ReadHMM {
     private int end;
     private int length;
 
-    public ReadHMM(int L, int K, int n, byte[] read, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps) {
+    public ReadHMM(int L, int K, int n, Read read, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps) {
         this.L = L;
         this.K = K;
         this.n = n;
@@ -62,20 +63,8 @@ public class ReadHMM {
         this.mu = mu;
         this.eps = eps;
         this.antieps = antieps;
-
-        for (int j = 0; j < L; j++) {
-            if (read[j] != 4) {
-                begin = j;
-                break;
-            }
-        }
-        for (int j = L - 1; j >= 0; j--) {
-            if (read[j] != 4) {
-                end = j + 1;
-                break;
-            }
-        }
-
+        this.begin = read.getBegin();
+        this.end = read.getEnd();
         this.length = end - begin;
 
         calculate();
@@ -122,7 +111,7 @@ public class ReadHMM {
         this.mu = mu;
         this.eps = epsilon;
         for (int j = 0; j < L; j++) {
-                this.antieps[j] = 1 - (n - 1) * epsilon[j];
+            this.antieps[j] = 1 - (n - 1) * epsilon[j];
         }
         this.calculate();
     }
@@ -231,7 +220,7 @@ public class ReadHMM {
     }
 
     private double prRjHv(int j, int v, int k) {
-        return (read[j] == v) ? antieps[j] : eps[j];
+        return (this.getSequence()[j] == v) ? antieps[j] : eps[j];
     }
 
     final public double getC(int j) {
@@ -241,8 +230,8 @@ public class ReadHMM {
         return 1;
     }
 
-    final public byte[] getRead() {
-        return read;
+    final public byte[] getSequence() {
+        return read.getSequence();
     }
 
     private void calculateUnscaled() {
@@ -335,5 +324,9 @@ public class ReadHMM {
                 }
             }
         }
+    }
+
+    public int getCount() {
+        return this.read.getCount();
     }
 }

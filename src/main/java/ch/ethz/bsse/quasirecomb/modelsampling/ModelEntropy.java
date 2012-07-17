@@ -17,7 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.modelsampling;
 
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;

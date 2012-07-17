@@ -17,7 +17,8 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorker;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
@@ -58,45 +59,12 @@ public class JHMM {
     private double loglikelihood;
     private double likelihood;
     private double Q;
-    private Map<ReadHMM, Integer> readHMMMap;
-    private int mapSize;
-    private Map<byte[], Integer> clusterReads;
+    private Read[] reads;
+    private ReadHMM[] readHMMArray;
     private int restart = 0;
+    private int readCount;
 
-    public JHMM(String[] reads, int K, int n) {
-        this(Utils.splitReadsIntoByteArrays(reads), K, n, Globals.ESTIMATION_EPSILON);
-    }
-
-    public JHMM(String[] reads, int K, int n, double epsilon) {
-        this(Utils.splitReadsIntoByteArrays(reads), K, n, epsilon);
-    }
-
-    public JHMM(byte[][] reads, int K, int n) {
-        this(reads, K, n, Globals.ESTIMATION_EPSILON);
-    }
-
-    public JHMM(byte[][] reads, int K, int n, double epsilon) {
-        this(reads, reads.length, reads[0].length, K, n, epsilon);
-    }
-
-    public JHMM(OptimalResult or) {
-        throw new IllegalAccessError("JHMM");
-//        this.N = or.getN();
-//        this.L = or.getL();
-//        this.K = or.getK();
-//        this.n = or.getn();
-//        this.clusterReads = or.getReads();
-//        this.rho = or.getRho();
-//        this.mu = or.getMu();
-//        this.eps = Globals.ESTIMATION_EPSILON;
-//        this.antieps = (1 - (n - 1) * Globals.ESTIMATION_EPSILON);
-//        this.pi = or.getPi();
-//        this.priorRho = or.getPriorRho();
-//        this.start();
-//        this.calculate();
-    }
-
-    public JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double epsilon) {
+    public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
                 (1 - (n - 1) * epsilon),
                 Random.generateInitRho(L - 1, K),
@@ -104,35 +72,12 @@ public class JHMM {
                 Random.generateMuInit(L, K, n));
     }
 
-    public JHMM(byte[][] reads, int N, int L, int K, int n, double epsilon) {
-        this(reads, N, L, K, n, epsilon,
-                (1 - (n - 1) * epsilon),
-                Random.generateInitRho(L - 1, K),
-                Random.generateInitPi(K),
-                Random.generateMuInit(L, K, n));
-    }
-
-    public JHMM(byte[][] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
+    private JHMM(Read[] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
         this.N = N;
         this.L = L;
         this.K = K;
         this.n = n;
-        this.clusterReads = Utils.clusterReads(reads);
-        this.rho = rho;
-        this.mu = mu;
-        this.uniformEpsilon(eps, antieps);
-        this.pi = pi;
-        this.priorRho = rho;
-        this.start();
-        this.calculate();
-    }
-
-    private JHMM(Map<byte[], Integer> reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
-        this.N = N;
-        this.L = L;
-        this.K = K;
-        this.n = n;
-        this.clusterReads = reads;
+        this.reads = reads;
         this.rho = rho;
         this.mu = mu;
         this.uniformEpsilon(eps, antieps);
@@ -156,45 +101,38 @@ public class JHMM {
 
     private void calculateLoglikelihood() {
         this.loglikelihood = 0d;
-        for (ReadHMM r : this.readHMMMap.keySet()) {
+        for (ReadHMM r : this.readHMMArray) {
             for (int j = 0; j < L; j++) {
-                this.loglikelihood += Math.log(r.getC(j)) * this.readHMMMap.get(r);
+                this.loglikelihood += Math.log(r.getC(j)) * r.getCount();
             }
         }
     }
 
     private void start() {
-//        long time = System.currentTimeMillis();
-        byte[][] uniqueReads = new byte[clusterReads.keySet().size()][L];
-        for (byte[] read : this.clusterReads.keySet()) {
-            uniqueReads[mapSize++] = read;
-        }
-        this.readHMMMap = new HashMap<>();
-        ReadHMM[] rArray = new ReadHMM[uniqueReads.length];
+        long time = System.currentTimeMillis();
+        readHMMArray = new ReadHMM[reads.length];
+        this.readCount = this.reads.length;
         if (Globals.PARALLEL_JHMM) {
-            rArray = Globals.fjPool.invoke(new ReadHMMWorker(this, uniqueReads, rho, pi, mu, eps, antieps, K, L, n, 0, mapSize)).toArray(new ReadHMM[mapSize]);
+            readHMMArray = Globals.fjPool.invoke(new ReadHMMWorker(this, reads, rho, pi, mu, eps, antieps, K, L, n, 0, this.readCount)).toArray(new ReadHMM[this.readCount]);
         } else {
-            for (int i = 0; i < uniqueReads.length; i++) {
-                rArray[i] = new ReadHMM(L, K, n, uniqueReads[i], rho, pi, mu, eps, antieps);
+            for (int i = 0; i < reads.length; i++) {
+                readHMMArray[i] = new ReadHMM(L, K, n, reads[i], rho, pi, mu, eps, antieps);
             }
         }
-        for (ReadHMM r : rArray) {
-            this.readHMMMap.put(r, clusterReads.get(r.getRead()));
-        }
-//        System.out.println("R\t: " + (System.currentTimeMillis() - time));
+        System.out.println("R\t: " + (System.currentTimeMillis() - time));
     }
 
     public void restart() {
         this.restart++;
-//        long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         if (Globals.PARALLEL_JHMM) {
-            Globals.fjPool.invoke(new ReadHMMWorkerRecalc(this.readHMMMap.keySet().toArray(new ReadHMM[this.readHMMMap.keySet().size()]), rho, pi, mu, eps, 0, mapSize));
+            Globals.fjPool.invoke(new ReadHMMWorkerRecalc(this.readHMMArray, rho, pi, mu, eps, 0, this.readCount));
         } else {
-            for (ReadHMM r : this.readHMMMap.keySet()) {
+            for (ReadHMM r : this.readHMMArray) {
                 r.recalc(rho, pi, mu, eps);
             }
         }
-//        System.out.println("R\t: " + (System.currentTimeMillis() - time));
+        System.out.println("R\t: " + (System.currentTimeMillis() - time));
         this.calculate();
     }
 
@@ -205,7 +143,7 @@ public class JHMM {
     }
 
     private void eStep() {
-//        long time = System.currentTimeMillis();
+        long time = System.currentTimeMillis();
         this.nJK = new double[L][K];
         this.nJKL = new double[L][K][K];
         this.nJKV = new double[L][K][n];
@@ -214,9 +152,8 @@ public class JHMM {
         this.nJneq = new double[L];
         this.neqPos = new double[L];
         this.nneqPos = new double[L];
-        for (Iterator<ReadHMM> it = this.readHMMMap.keySet().iterator(); it.hasNext();) {
-            ReadHMM r = it.next();
-            int times = this.readHMMMap.get(r);
+        for (ReadHMM r : this.readHMMArray) {
+            int times = r.getCount();
             for (int j = 0; j < L; j++) {
                 for (int k = 0; k < K; k++) {
                     this.nJK[j][k] += r.gamma(j, k) * times;
@@ -235,7 +172,7 @@ public class JHMM {
                     }
                 }
                 for (int v = 0; v < n; v++) {
-                    byte b = r.getRead()[j];
+                    byte b = r.getSequence()[j];
                     for (int k = 0; k < K; k++) {
                         if (v != b) {
                             this.nneqPos[j] += r.gamma(j, k, v) * times;
@@ -245,7 +182,7 @@ public class JHMM {
 
                     }
                 }
-//        System.out.println("E\t: " + (System.currentTimeMillis() - time));
+        System.out.println("E\t: " + (System.currentTimeMillis() - time));
             }
         }
     }
@@ -355,9 +292,9 @@ public class JHMM {
         this.pi = this.calcPi();
         this.mu_old = this.mu;
         this.mu = this.calcMu();
-        
-        
-        
+
+
+
         double ew = 0d;
         int nonzero = 0;
         for (int j = 0; j < L; j++) {
@@ -370,15 +307,15 @@ public class JHMM {
         double a = 20;
         double b = (-a * ew + a + 2 * ew - 1) / ew;
 //        if (Globals.FIX_EPSILON) {
-            for (int j = 0; j < L; j++) {
-                this.eps[j] = f(ew + a) / f((N * (n - 1)) + a + b);
-            }
+        for (int j = 0; j < L; j++) {
+            this.eps[j] = f(ew + a) / f((N * (n - 1)) + a + b);
+        }
 //        } else {
 //            for (int j = 0; j < L; j++) {
 //                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
 //            }
 //        }
-        
+
 //        if (!Globals.FIX_EPSILON) {
 //            for (int j = 0; j < L; j++) {
 //                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
@@ -463,8 +400,8 @@ public class JHMM {
         return rho;
     }
 
-    public Map<ReadHMM, Integer> getReadHMMMap() {
-        return readHMMMap;
+    public ReadHMM[] getReadHMMArray() {
+        return this.readHMMArray;
     }
 
     public double getLikelihood() {
