@@ -226,13 +226,12 @@ public class SingleEM {
                 System.arraycopy(jhmm.getMu()[j][k], 0, mu_tmp[j][k], 0, n);
             }
         }
-        this.or = new OptimalResult(N, K, L, n, reads,
+        this.or = new OptimalResult(N, K, L, n, 
                 Arrays.copyOf(jhmm.getRho(), jhmm.getRho().length),
-                Arrays.copyOf(jhmm.getPi(),
-                jhmm.getPi().length),
+                Arrays.copyOf(jhmm.getPi(),jhmm.getPi().length),
                 mu_tmp,
                 llh,
-                BIC_current, jhmm.getPrior_rho(), jhmm.getEps(), jhmm.getRestart());
+                BIC_current, jhmm.getEps(), jhmm.getRestart());
         if (llh >= llh_opt) {
             Globals.maxMAX_LLH(llh);
         }

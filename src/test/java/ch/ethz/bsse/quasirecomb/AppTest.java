@@ -33,8 +33,10 @@ public class AppTest
      */
     public void testApp()
     {
-        
-//        Sampling.fromHaplotypesGlobal("/Users/toepfera/Dropbox/QuasiRecomb/src/main/resources/haplotypes/dataset_1.fasta", 
-//                5000, 300, Globals.SAMPLING_EPSILON, new double[]{.8,.1,.05,.05}, 4, "/Users/toepfera/Desktop/DATASET1");
+        do {
+            System.out.println("a");
+            continue;
+        } while (false);
+        System.out.println("b");
     }
 }

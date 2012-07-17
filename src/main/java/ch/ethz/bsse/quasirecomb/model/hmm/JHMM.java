@@ -17,16 +17,12 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorker;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Offers a HMM with the E and M step.
@@ -39,9 +35,8 @@ public class JHMM {
     private final int L;
     private final int K;
     private final int n;
-    //rho[j][l][k] := transition prob. at position j, for k given l
+    //rho[j][k][l] := transition prob. at position j, for l given k
     private double[][][] rho;
-    private double[][][] priorRho;
     private double[] pi;
     private double[][][] mu;
     private double[] eps;
@@ -82,7 +77,6 @@ public class JHMM {
         this.mu = mu;
         this.uniformEpsilon(eps, antieps);
         this.pi = pi;
-        this.priorRho = rho;
         this.start();
         this.calculate();
     }
@@ -182,65 +176,77 @@ public class JHMM {
 
                     }
                 }
-        System.out.println("E\t: " + (System.currentTimeMillis() - time));
             }
         }
+        System.out.println("E\t: " + (System.currentTimeMillis() - time));
     }
 
-    private double[][][] calcMu() {
-        double[][][] mu_ = new double[L][K][n];
+    private void calcMu() {
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double sumV = 0d;
-                double sumP = 0d;
-                for (int v = 0; v < n; v++) {
-                    mu_[j][k][v] = this.f(this.getnJKV(j, k, v) + Globals.ALPHA_H);
-                    sumV += this.getnJKV(j, k, v);
-                    sumP += Globals.ALPHA_H;
-                }
-                sumV = this.f(sumV + sumP);
-                double divisor = 0d;
-                if (sumV != 0) {
+                double AH = Globals.ALPHA_H;
+                double divisor;
+                double sum;
+                do {
+                    sum = 0d;
+                    divisor = 0d;
                     for (int v = 0; v < n; v++) {
-                        mu_[j][k][v] /= sumV;
-                        divisor += mu_[j][k][v];
+                        mu[j][k][v] = this.f(this.getnJKV(j, k, v) + AH);
+                        sum += this.getnJKV(j, k, v);
                     }
-                    for (int v = 0; v < n; v++) {
-                        mu_[j][k][v] /= divisor;
+                    sum = this.f(sum + n * AH);
+                    if (sum > 0) {
+                        for (int v = 0; v < n; v++) {
+                            mu[j][k][v] /= sum;
+                            divisor += mu[j][k][v];
+                        }
+                        if (divisor > 0) {
+                            for (int v = 0; v < n; v++) {
+                                mu[j][k][v] /= divisor;
+                            }
+                        } else {
+                            AH *= 10;
+                        }
+                    } else {
+                        AH *= 10;
                     }
-                } else {
-                    System.out.println("mu");
-                }
+                } while (sum == 0 || divisor == 0);
             }
         }
-        return mu_;
     }
 
-    private double[][][] calcRho() {
-        double[][][] rho_ = new double[L - 1][K][K];
+    private void calcRho() {
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double divisor = 0d;
-                double sum = 0d;
-                for (int l = 0; l < K; l++) {
-                    if (Double.isNaN(this.getnJKL(j, k, l))) {
-                        System.out.println("rho");
+                double AZ = Globals.ALPHA_Z;
+                double divisor;
+                double sum;
+                do {
+                    sum = 0d;
+                    divisor = 0d;
+                    for (int l = 0; l < K; l++) {
+                        rho[j - 1][k][l] = this.f(this.getnJKL(j, k, l) + AZ);
+                        sum += this.getnJKL(j, k, l);
                     }
-                    rho_[j - 1][k][l] = this.f(this.getnJKL(j, k, l) + Globals.ALPHA_Z);
-                    sum += this.getnJKL(j, k, l);
-                }
-                sum = this.f(sum + K * Globals.ALPHA_Z);
-
-                for (int l = 0; l < K; l++) {
-                    rho_[j - 1][k][l] /= sum;
-                    divisor += rho_[j - 1][k][l];
-                }
-                for (int l = 0; l < K; l++) {
-                    rho_[j - 1][k][l] /= divisor;
-                }
+                    sum = this.f(sum + K * AZ);
+                    if (sum > 0) {
+                        for (int l = 0; l < K; l++) {
+                            rho[j - 1][k][l] /= sum;
+                            divisor += rho[j - 1][k][l];
+                        }
+                        if (divisor > 0) {
+                            for (int l = 0; l < K; l++) {
+                                rho[j - 1][k][l] /= divisor;
+                            }
+                        } else {
+                            AZ *= 10;
+                        }
+                    } else {
+                        AZ *= 10;
+                    }
+                } while (sum == 0 || divisor == 0);
             }
         }
-        return rho_;
     }
 
     private double f(double upsilon) {
@@ -273,25 +279,23 @@ public class JHMM {
     }
 
     private double[] calcPi() {
-        double[] pi_ = new double[K];
         double sumK = 0d;
         for (int k = 0; k < K; k++) {
-            pi_[k] = this.getnJK(0, k);
-            sumK += pi_[k];
+            pi[k] = this.getnJK(0, k);
+            sumK += pi[k];
         }
         for (int k = 0; k < K; k++) {
-            pi_[k] /= sumK;
+            pi[k] /= sumK;
         }
-        return pi_;
+        return pi;
     }
 
     private void mStep() {
         if (!Globals.rho0) {
-            this.rho = this.calcRho();
+            this.calcRho();
         }
-        this.pi = this.calcPi();
-        this.mu_old = this.mu;
-        this.mu = this.calcMu();
+        this.calcPi();
+        this.calcMu();
 
 
 
@@ -306,21 +310,16 @@ public class JHMM {
         ew /= nonzero;
         double a = 20;
         double b = (-a * ew + a + 2 * ew - 1) / ew;
-//        if (Globals.FIX_EPSILON) {
-        for (int j = 0; j < L; j++) {
-            this.eps[j] = f(ew + a) / f((N * (n - 1)) + a + b);
-        }
-//        } else {
-//            for (int j = 0; j < L; j++) {
-//                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
-//            }
-//        }
 
 //        if (!Globals.FIX_EPSILON) {
 //            for (int j = 0; j < L; j++) {
 //                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
 //            }
-//        }
+//        } else {
+        for (int j = 0; j < L; j++) {
+            this.eps[j] = f(ew + a) / f((N * (n - 1)) + a + b);
+        }
+//    }
     }
     public double[][][] mu_old;
 
@@ -406,10 +405,6 @@ public class JHMM {
 
     public double getLikelihood() {
         return likelihood;
-    }
-
-    public double[][][] getPrior_rho() {
-        return priorRho;
     }
 
     public int getRestart() {

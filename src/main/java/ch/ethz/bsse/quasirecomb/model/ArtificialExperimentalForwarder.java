@@ -17,16 +17,11 @@
  */
 package ch.ethz.bsse.quasirecomb.model;
 
-import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
-import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
-import ch.ethz.bsse.quasirecomb.simulation.Sampling;
-import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
-import java.io.File;
-import java.util.*;
-import org.javatuples.Pair;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Forwards parameters depending if input is from an experimental dataset or

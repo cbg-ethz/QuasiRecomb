@@ -83,13 +83,13 @@ public class Startup {
     @Option(name = "-noRecomb")
     private boolean noRecomb;
     @Option(name = "-alphah")
-    private double alphah = 0.01;
+    private double alphah = 0.001;
     @Option(name = "-betah")
     private double betah = 2;
     @Option(name = "-alphaz")
-    private double alphaz = 0.01;
+    private double alphaz = 0.001;
     @Option(name = "-betaz")
-    private double betaz = 0.005;
+    private double betaz = 0.01;
     @Option(name = "-logBic")
     private boolean logBIC;
     @Option(name = "--recombine")

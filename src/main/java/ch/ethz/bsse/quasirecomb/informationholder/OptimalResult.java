@@ -28,9 +28,7 @@ public class OptimalResult implements Serializable {
     private int K;
     private int L;
     private int n;
-    private Read[] reads;
     private double[][][] rho;
-    private double[][][] priorRho;
     private double[] pi;
     private double[][][] mu;
     private double llh;
@@ -38,18 +36,16 @@ public class OptimalResult implements Serializable {
     private double BIC;
     private int restarts;
 
-    public OptimalResult(int N, int K, int L, int n, Read[] reads,  double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[][][] priorRho, double[] eps, int restarts) {
+    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts) {
         this.N = N;
         this.K = K;
         this.L = L;
         this.n = n;
-        this.reads = reads;
         this.rho = rho;
         this.pi = pi;
         this.mu = mu;
         this.llh = llh;
         this.BIC = BIC;
-        this.priorRho = priorRho;
         this.eps = eps;
         this.restarts = restarts;
     }
@@ -82,20 +78,12 @@ public class OptimalResult implements Serializable {
         return pi;
     }
 
-    public Read[] getReads() {
-        return reads;
-    }
-
     public double[][][] getRho() {
         return rho;
     }
 
     public double getBIC() {
         return BIC;
-    }
-
-    public double[][][] getPriorRho() {
-        return priorRho;
     }
 
     public double[] getEps() {

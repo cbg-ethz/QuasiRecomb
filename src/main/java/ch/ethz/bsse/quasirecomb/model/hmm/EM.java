@@ -35,44 +35,14 @@ public class EM extends Utils {
 
     private StringBuilder sb = new StringBuilder();
     private double BIC_opt = Double.NEGATIVE_INFINITY;
-    private int iterations = 0;
-    private int N;
-    private int K;
-    private int L;
-    private int n;
     private OptimalResult or;
     private List<OptimalResult> ors;
 
     protected EM(int N, int L, int K, int n, Read[] reads) {
-        this.N = N;
-        this.L = L;
-        this.K = K;
-        this.n = n;
-        this.blackbox(reads);
+        this.blackbox(reads,N,L,K,n);
     }
 
-    public void shorten(double value) {
-        if (value < 1e-5) {
-            sb.append("0      ");
-        } else if (value == 1.0) {
-            sb.append("1      ");
-        } else {
-            String t = "" + value;
-            String r;
-            if (t.length() > 5) {
-                r = t.substring(0, 7);
-                if (t.contains("E")) {
-                    r = r.substring(0, 4);
-                    r += "E" + t.split("E")[1];
-                }
-                sb.append(r);
-            } else {
-                sb.append(value);
-            }
-        }
-    }
-
-    private void blackbox(Read[] reads) {
+    private void blackbox(Read[] reads,int N, int L, int K, int n) {
         Globals.LOG = new StringBuilder();
 
         if (Globals.PARALLEL_RESTARTS) {
@@ -101,30 +71,11 @@ public class EM extends Utils {
 //            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);
 //            this.or = bestEM.getOptimalResult();
 //        }
-//        this.saveEM();
         Globals.log("\n" + new Summary().print(or));
         if (Globals.LOGGING) {
             Utils.saveFile(Globals.savePath + "log_K" + K, Globals.LOG.toString());
             Utils.saveFile(Globals.savePath + "restarts_K" + K, restarts.toString());
         }
-    }
-
-    /**
-     * Returns the StringBuilder with the information of the best result.
-     *
-     * @return StringBuilder with result
-     */
-    public StringBuilder getSb() {
-        return sb;
-    }
-
-    /**
-     * Returns the best BIC.
-     *
-     * @return best BIC
-     */
-    public double getBIC_opt() {
-        return BIC_opt;
     }
 
     /**
@@ -143,10 +94,6 @@ public class EM extends Utils {
      */
     public double[] getPi_opt() {
         return or.getPi();
-    }
-
-    public List<OptimalResult> getOrs() {
-        return ors;
     }
 
     /**
