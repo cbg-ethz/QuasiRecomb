@@ -18,7 +18,6 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
-import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResultsList;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
@@ -138,17 +137,6 @@ public class ModelSelection {
             }
         } catch (IOException ex) {
             System.out.println("Optimum Java saving\n" + ex.getMessage());
-        }
-        
-        //save optimaList
-        try {
-            String s = Globals.savePath + "support" + File.separator + "optimaList";// + (bestK ? "" : K);
-            FileOutputStream fos = new FileOutputStream(s);
-            try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
-                out.writeObject(new OptimalResultsList(em.getOrs()));
-            }
-        } catch (IOException ex) {
-            System.out.println("OptimaList saving\n" + ex.getMessage());
         }
         
         ModelSampling modelSampling = new ModelSampling(L, n, or.getK(), or.getRho(), or.getPi(), or.getMu(), Globals.savePath);

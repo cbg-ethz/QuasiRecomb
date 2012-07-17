@@ -257,11 +257,11 @@ public class JHMM {
                 double sumV = 0d;
                 double sumP = 0d;
                 for (int v = 0; v < n; v++) {
-                    mu_[j][k][v] = this.rho_f(this.getnJKV(j, k, v) + Globals.ALPHA_H[j][v]);
+                    mu_[j][k][v] = this.f(this.getnJKV(j, k, v) + Globals.ALPHA_H[j][v]);
                     sumV += this.getnJKV(j, k, v);
                     sumP += Globals.ALPHA_H[j][v];
                 }
-                sumV = this.rho_f(sumV + sumP);
+                sumV = this.f(sumV + sumP);
                 double divisor = 0d;
                 if (sumV != 0) {
                     for (int v = 0; v < n; v++) {
@@ -289,10 +289,10 @@ public class JHMM {
                     if (Double.isNaN(this.getnJKL(j, k, l))) {
                         System.out.println("rho");
                     }
-                    rho_[j - 1][k][l] = this.rho_f(this.getnJKL(j, k, l) + Globals.ALPHA_Z);
+                    rho_[j - 1][k][l] = this.f(this.getnJKL(j, k, l) + Globals.ALPHA_Z);
                     sum += this.getnJKL(j, k, l);
                 }
-                sum = this.rho_f(sum + K * Globals.ALPHA_Z);
+                sum = this.f(sum + K * Globals.ALPHA_Z);
 
                 for (int l = 0; l < K; l++) {
                     rho_[j - 1][k][l] /= sum;
@@ -306,7 +306,7 @@ public class JHMM {
         return rho_;
     }
 
-    private double rho_f(double upsilon) {
+    private double f(double upsilon) {
         if (upsilon == 0d) {
             return 0d;
         }
@@ -355,11 +355,35 @@ public class JHMM {
         this.pi = this.calcPi();
         this.mu_old = this.mu;
         this.mu = this.calcMu();
-        if (!Globals.FIX_EPSILON) {
-            for (int j = 0; j < L; j++) {
-                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
+        
+        
+        
+        double ew = 0d;
+        int nonzero = 0;
+        for (int j = 0; j < L; j++) {
+            if (this.nneqPos[j] != 0d) {
+                ew += this.nneqPos[j] / N;
+                nonzero++;
             }
         }
+        ew /= nonzero;
+        double a = 20;
+        double b = (-a * ew + a + 2 * ew - 1) / ew;
+//        if (Globals.FIX_EPSILON) {
+            for (int j = 0; j < L; j++) {
+                this.eps[j] = f(ew + a) / f((N * (n - 1)) + a + b);
+            }
+//        } else {
+//            for (int j = 0; j < L; j++) {
+//                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
+//            }
+//        }
+        
+//        if (!Globals.FIX_EPSILON) {
+//            for (int j = 0; j < L; j++) {
+//                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
+//            }
+//        }
     }
     public double[][][] mu_old;
 

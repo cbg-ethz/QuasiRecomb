@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.filter;
+package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import java.io.*;

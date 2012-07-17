@@ -19,28 +19,21 @@ package ch.ethz.bsse.quasirecomb;
 
 import ch.ethz.bsse.quasiprior.Prior;
 import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
-import ch.ethz.bsse.quasirecomb.diversity.Diversity;
-import ch.ethz.bsse.quasirecomb.diversity.PairwiseEntropyComparison;
-import ch.ethz.bsse.quasirecomb.filter.Cutter;
-import ch.ethz.bsse.quasirecomb.filter.MAExtract;
+import ch.ethz.bsse.quasirecomb.utils.Cutter;
 import ch.ethz.bsse.quasirecomb.informatioholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelEntropy;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
-import ch.ethz.bsse.quasirecomb.modelsampling.OptimaModelSampling;
 import ch.ethz.bsse.quasirecomb.quasiviz.QuasiViz;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
-import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.javatuples.Pair;
 import org.kohsuke.args4j.CmdLineException;
@@ -66,14 +59,8 @@ public class Startup {
     //TRAIN
     @Option(name = "--train", usage = "Train model for given multiple alignment")
     private boolean train;
-    @Option(name = "-c10")
-    private boolean crossvalidation = false;
-    @Option(name = "-b")
-    private boolean bootstrap = false;
     @Option(name = "-noRefine")
     private boolean noRefine = false;
-    @Option(name = "-global")
-    private boolean global = false;
     @Option(name = "-K")
     private String K = "0";
     @Option(name = "-m")
@@ -82,10 +69,6 @@ public class Startup {
     private int t = 50;
     @Option(name = "-N")
     private int N = 2000;
-    @Option(name = "-chunk")
-    private int chunk = 20;
-    @Option(name = "-maxsim")
-    private int maxsim = 1;
     @Option(name = "-samplingNumber")
     private int samplingNumber = 10000;
     @Option(name = "-f")
@@ -96,8 +79,6 @@ public class Startup {
     private double ee = .001;
     @Option(name = "-d")
     private double d = 1e-8;
-    @Option(name = "-min")
-    private double minLLH = Double.NEGATIVE_INFINITY;
     @Option(name = "-parallelRestarts")
     private boolean parallelRestarts;
     @Option(name = "-singleCore")
@@ -108,56 +89,28 @@ public class Startup {
     private boolean noRecomb;
     @Option(name = "-alphah")
     private double alphah = 0.01;
-    @Option(name = "-alpha1")
-    private String alpha1;
     @Option(name = "-betah")
     private double betah = 2;
     @Option(name = "-alphaz")
     private double alphaz = 0.01;
-//    private double alphaz = 0.07;
     @Option(name = "-betaz")
     private double betaz = 0.005;
     @Option(name = "-logBic")
     private boolean logBIC;
-    //subset
-    @Option(name = "--subset")
-    private boolean subset;
     @Option(name = "--recombine")
     private boolean recombine;
     @Option(name = "-spots")
     private String spots;
     @Option(name = "--sample", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
     private boolean sample;
-    @Option(name = "--sampleS", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
-    private boolean sampleS;
-    @Option(name = "--muentropy")
-    private boolean muentropy;
     @Option(name = "--summary")
     private boolean summary;
-    @Option(name = "--filter")
-    private boolean filter;
-    @Option(name = "-c")
-    private double gapc = 0.01;
-    @Option(name = "--viz")
-    private boolean viz;
     @Option(name = "--cut")
     private boolean cut;
     @Option(name = "-begin")
     private int begin;
     @Option(name = "-end")
     private int end;
-    @Option(name = "-entropy")
-    private boolean entropy;
-    @Option(name = "-plot")
-    private boolean plot;
-    @Option(name = "-shannonindex")
-    private boolean shannonindex;
-    @Option(name = "--diversity")
-    private boolean diversity;
-    @Option(name = "-desc")
-    private String description;
-    @Option(name = "--pairEntropyTest")
-    private boolean pairEntropyTest;
     @Option(name = "--hamming")
     private boolean hamming;
     @Option(name = "--distance")
@@ -191,50 +144,9 @@ public class Startup {
             Globals.SAMPLING_NUMBER = this.samplingNumber;
             Globals.PRINT = this.print;
 
-            if (this.sampleS) {
+            if (this.sample) {
                 ModelSampling simulation = new ModelSampling(input, output);
                 simulation.save();
-            } else if (this.sample) {
-                System.out.println("Sampling " + input);
-                OptimaModelSampling oms = new OptimaModelSampling(input, output);
-
-//                List<Map<byte[], Integer>> reads = new ArrayList<>();
-//                Map<byte[], Integer> uniqueReads = new HashMap<>();
-//                for (int i = 0; i < 100; i++) {
-//                    ModelSampling simulation = new ModelSampling(input, output);
-//                    reads.add(simulation.getReads());
-//                    if (uniqueReads.isEmpty()) {
-//                        uniqueReads.putAll(simulation.getReads());
-//                    } else {
-//                        Map<byte[], Integer> reads_tmp = simulation.getReads();
-//                        for (byte[] b : reads_tmp.keySet()) {
-//                            if (uniqueReads.containsKey(b)) {
-//                                uniqueReads.put(b, uniqueReads.get(b) + reads_tmp.get(b));
-//                            } else {
-//                                uniqueReads.remove(b);
-//                            }
-//                        }
-//                    }
-//                }
-//                int amount = 0;
-//                for(Integer x : uniqueReads.values()) {
-//                    amount += x;
-//                }
-//                StringBuilder sb = new StringBuilder();
-//                int i = 0;
-//                Map sortMapByValue = ModelSampling.sortMapByValue(uniqueReads);
-//                for (Object o : sortMapByValue.keySet()) {
-//                    byte[] read = (byte[]) o;
-//                    sb.append(">read").append(i++).append("_").append(((double) uniqueReads.get(read)) / amount).append("\n");
-//                    for (int r : read) {
-//                        sb.append(Utils.reverse(r));
-//                    }
-//                    sb.append("\n");
-//                }
-//                Utils.saveFile(output + "quasispecies.fasta", sb.toString());
-//                simulation.save();
-            } else if (this.subset) {
-                System.out.println(this.input);
             } else if (this.recombine) {
                 if (this.spots != null) {
                     String[] split = this.spots.split(",");
@@ -247,8 +159,6 @@ public class Startup {
                 } else {
                     System.out.println("Please provide -spots, i.e. -spots 50,140,321");
                 }
-            } else if (this.muentropy) {
-                new ModelEntropy(this.input);
             } else if (this.hamming) {
                 System.out.println(DistanceUtils.calcHamming(afile, bfile));
             } else if (this.summary) {
@@ -295,10 +205,7 @@ public class Startup {
                     }
                 }
             } else if (this.train) {
-                Globals.GLOBAL = this.global;
                 Globals.NO_REFINE = this.noRefine;
-                Globals.CROSSVALIDATION = this.crossvalidation;
-                Globals.BOOTSTRAP = this.bootstrap;
                 int Kmin, Kmax;
                 if (K.contains(":")) {
                     Kmin = Integer.parseInt(K.split(":")[0]);
@@ -331,14 +238,9 @@ public class Startup {
 
                 Globals.FIX_EPSILON = this.fixEpsilon;
                 Globals.ALPHA_Z = this.alphaz;
-                if (this.alpha1 != null) {
-                    Globals.ALPHA_H = new Prior(this.alpha1).getNormalized();
-                    Globals.ALPHA_H_USER = true;
-                }
                 Globals.ALPHAH = this.alphah;
                 Globals.BETA_Z = this.betaz;
                 Globals.BETA_H = this.betah;
-                Globals.MIN_LLH = this.minLLH;
                 Globals.PARALLEL_JHMM = !this.singleCore;
                 Globals.PARALLEL_RESTARTS = this.parallelRestarts;
                 Globals.ESTIMATION_EPSILON = this.e;
@@ -347,8 +249,6 @@ public class Startup {
                 Globals.REPEATS = this.m;
                 Globals.DESIRED_REPEATS = this.t;
                 Globals.DEBUG = this.verbose;
-                Globals.PARALLEL_RESTARTS_UPPER_BOUND = maxsim;
-                Globals.STEPSIZE = chunk;
                 Globals.savePath = output + File.separator;
                 new File(Globals.savePath).mkdirs();
                 if (this.noRecomb) {
@@ -356,51 +256,8 @@ public class Startup {
                     Globals.rho0force = true;
                 }
                 ArtificialExperimentalForwarder.forward(exp, this.input, Kmin, Kmax, fArray, N);
-            } else if (viz) {
-                QuasiViz.paint(input, output);
             } else if (cut) {
                 Cutter.cut(input, output, begin, end);
-            } else if (diversity) {
-                Diversity diversity = new Diversity(input, output, description, plot);
-                if (entropy) {
-                    diversity.entropy();
-                }
-                if (shannonindex) {
-                    diversity.shannonIndex();
-                }
-            } else if (pairEntropyTest) {
-//                File dir;
-//                FileFilter fileFilter;
-//                if (input.contains(File.separator)) {
-//                    String[] split = input.split(File.separator);
-//                    String path = "";
-//                    for (int i = 0; i < split.length - 1; i++) {
-//                        path += split[i] + File.separator;
-//                    }
-//                    dir = new File(path);
-//                    fileFilter = new WildcardFileFilter(split[split.length - 1].replace("#", "*"));
-//                } else {
-//                    dir = new File(".");
-//                    fileFilter = new WildcardFileFilter(input.replace("#", "*"));
-//                }
-//                File[] files = dir.listFiles(fileFilter);
-//                for (int i = 0; i < files.length; i++) {
-//                    System.out.println(files[i]);
-//                }
-                new PairwiseEntropyComparison(afile, bfile);
-            } else if (filter) {
-                if (input.contains("#")) {
-                    String[] splitBracket = input.split("#");
-                    String[] split = splitBracket[1].split("-");
-
-                    for (int i = Integer.parseInt(split[0]); i <= Integer.parseInt(split[1]); i++) {
-                        System.out.println("Filtering " + splitBracket[0] + i);
-                        MAExtract.calc(splitBracket[0] + i, output + i, gapc);
-                    }
-                } else {
-                    System.out.println("Filtering " + input);
-                    MAExtract.calc(input, output, gapc);
-                }
             } else {
                 throw new CmdLineException("No input given");
             }
@@ -425,49 +282,14 @@ public class Startup {
             System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
             System.err.println("  -e DOUBLE\t\t: Error rate of the sequencing machine (default: 0.0001)");
-//            System.err.println("  -min DOUBLE\t\t: Minimal likelihood which has to be reached after 50 iterations");
             System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
-//            System.err.println("  -f DOUBLE,DOUBLE,...\t: The distribution of the original haplotypes\n"
-//                    + "\t\t\t  Comma seperated format, i.e. 0.8,0.1,0.1\n"
-//                    + "\t\t\t  If not specified, the input is treated as experimental dataset");
             System.err.println("  -fixEpsilon\t: Do not train epsilon, in combination with -e");
             System.err.println("  -noRecomb\t: Do not allow recombination");
             System.err.println("  -parallelRestarts\t: Parallelize the EM restarts, use this only on machines with 10+ cores!");
             System.err.println("");
             System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar --train -i input.fasta");
-//            System.err.println("  -noSample\t\t: Do not infer haplotypes, only model training");
             System.err.println(" ------------------------");
             System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === FILTER alignment ===");
-//            System.err.println("  --filter");
-//            System.err.println("  -i INPUT\t\t: Multiple alignment in fasta format");
-//            System.err.println("");
-//            System.err.println("  -c DOUBLE\t\t: Percentage of gaps allowed (default: 0.01)");
-//            System.err.println("");
-//            System.err.println("  Example for filtering:\n   java -jar QuasiRecomb.jar --filter -i input.fasta -o output_filtered.fasta");
-//            System.err.println(" ------------------------");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === Cut alignment ===");
-//            System.err.println("  --cut");
-//            System.err.println("  -i INPUT\t\t: Multiple alignment in fasta format");
-//            System.err.println("");
-//            System.err.println("  -begin INT\t\t: Beginning position of the window");
-//            System.err.println("  -end INT\t\t: Ending position of the window");
-//            System.err.println("");
-//            System.err.println("  Example for cutting:\n   java -jar QuasiRecomb.jar --cut -i input.fasta -o output_w1200-2420.fasta -begin 1200 -end 2420");
-//            System.err.println(" ------------------------");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === Visualize Quasispezies ===");
-//            System.err.println("  --viz");
-//            System.err.println("  -i INPUT\t\t: Multiple alignment in fasta format");
-//            System.err.println("");
-//            System.err.println("  -exec PATH\t\t: Executable dot file of graphviz");
-//            System.err.println("");
-//            System.err.println("  Example for vizualization:\n   java -jar QuasiRecomb.jar --viz -i hapDist.fasta -o hapViz -exec /PATH/TO/dot");
-//            System.err.println(" ------------------------");
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === SAMPLE from model === ");
@@ -487,18 +309,6 @@ public class Startup {
             System.err.println("  Example for summary:\n   java -jar QuasiRecomb.jar --summary -i path/to/optimumJava");
             System.err.println("");
             System.err.println(" ------------------------");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === DIVERSITY measurements === ");
-//            System.err.println("  --diversity ");
-//            System.err.println("  -i FILE\t\t: Multiple fasta file");
-//            System.err.println("  -desc STRING\t\t: Short description (i.e. name of strain)");
-//            System.err.println("  -shannonindex\t\t\t: Calculate Shannon-index");
-//            System.err.println("  -entropy\t\t\t: Plot site-wise Shannon-Entropy");
-//            System.err.println("  -coverage\t\t\t: Plot site-wise Coverage");
-//            System.err.println("");
-//            System.err.println("  Example for entropy:\n   java -jar QuasiRecomb.jar --entropy -i input.far");
-//            System.err.println(" ------------------------");
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === DISTANCE (phi) === ");
