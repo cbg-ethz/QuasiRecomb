@@ -60,6 +60,13 @@ public class ReadHMM {
         this.begin = read.getBegin();
         this.end = read.getEnd();
         this.length = end - begin;
+        
+        this.fJKV = new double[length][K][n];
+        this.fJK = new double[length][K];
+        this.bJK = new double[length][K];
+        this.gJK = new double[length][K];
+        this.gJKV = new double[length][K][n];
+        this.xJKL = new double[length][K][K];
 
         calculate();
     }
@@ -114,7 +121,7 @@ public class ReadHMM {
         for (int j = 0; j < length; j++) {
             for (int k = 0; k < K; k++) {
                 for (int v = 0; v < n; v++) {
-                    fJKV[j][k][v] = prRjHv(begin + j, v, k) * mu[begin + j][k][v];
+                    fJKV[j][k][v] = prRjHv(begin + j, v) * mu[begin + j][k][v];
                     if (j == 0) {
                         fJKV[j][k][v] *= pi[k];
                     } else {
@@ -125,9 +132,6 @@ public class ReadHMM {
                         fJKV[j][k][v] *= sumL;
                     }
                     c[j] += fJKV[j][k][v];
-                    if (fJKV[j][k][v] < 0) {
-                        System.out.println("fjkv");
-                    }
                 }
             }
 
@@ -139,18 +143,20 @@ public class ReadHMM {
             }
         }
     }
+    
+    
 
     private void backward() {
-        this.bJK = new double[length][K];
         for (int j = length - 1; j >= 0; j--) {
             for (int k = 0; k < K; k++) {
                 if (j == length - 1) {
                     bJK[j][k] = 1d / c[length - 1];
                 } else {
+                    bJK[j][k] = 0;
                     for (int l = 0; l < K; l++) {
                         double sumV = 0d;
                         for (int v = 0; v < n; v++) {
-                            sumV += prRjHv(begin + j + 1, v, k) * mu[begin + j + 1][l][v];
+                            sumV += prRjHv(j + 1, v) * mu[begin + j + 1][l][v];
                         }
                         bJK[j][k] += sumV * rho[begin + j][k][l] * bJK[j + 1][l];
                     }
@@ -158,32 +164,72 @@ public class ReadHMM {
                         bJK[j][k] /= c[j];
                     }
                 }
-            }
-        }
-    }
-
-    private void gammaXsi() {
-        this.gJK = new double[length][K];
-        this.gJKV = new double[length][K][n];
-        this.xJKL = new double[length][K][K];
-        for (int j = 0; j < length; j++) {
-            for (int k = 0; k < K; k++) {
                 this.gJK[j][k] = this.fJK[j][k] * this.bJK[j][k] * c[j];
                 for (int v = 0; v < n; v++) {
                     this.gJKV[j][k][v] = this.fJKV[j][k][v] * this.bJK[j][k] * c[j];
                 }
-                this.gJK[j][k] = this.fJK[j][k] * c[j] * this.bJK[j][k];
-                if (j > 0) {
+                if (Double.isInfinite(bJK[j][k])) {
+                    //this is infinite, because the char has not been observed and there no probability to emit it
+                    //thus we divide 0 by a very small number, i.e. 1e-300.
+                    bJK[j][k] = 0d;
+                }
+            }
+            if (j > 0) {
+                for (int k = 0; k < K; k++) {
                     for (int l = 0; l < K; l++) {
                         double marginalV = 0d;
                         for (int v = 0; v < n; v++) {
-                            marginalV += prRjHv(j, v, k) * mu[begin + j][l][v];
+                            marginalV += prRjHv(j, v) * mu[begin + j][l][v];
                         }
+
                         this.xJKL[j][k][l] = this.fJK[j - 1][k] * marginalV * rho[begin + j - 1][k][l] * this.bJK[j][l];
                     }
                 }
             }
         }
+//        this.bJK = new double[length][K];
+//        for (int j = length - 1; j >= 0; j--) {
+//            for (int k = 0; k < K; k++) {
+//                if (j == length - 1) {
+//                    bJK[j][k] = 1d / c[length - 1];
+//                } else {
+//                    for (int l = 0; l < K; l++) {
+//                        double sumV = 0d;
+//                        for (int v = 0; v < n; v++) {
+//                            sumV += prRjHv(begin + j + 1, v) * mu[begin + j + 1][l][v];
+//                        }
+//                        bJK[j][k] += sumV * rho[begin + j][k][l] * bJK[j + 1][l];
+//                    }
+//                    if (c[j] != 0d) {
+//                        bJK[j][k] /= c[j];
+//                    }
+//                }
+//            }
+//        }
+    }
+
+    private void gammaXsi() {
+//        this.gJK = new double[length][K];
+//        this.gJKV = new double[length][K][n];
+//        this.xJKL = new double[length][K][K];
+//        for (int j = 0; j < length; j++) {
+//            for (int k = 0; k < K; k++) {
+//                this.gJK[j][k] = this.fJK[j][k] * this.bJK[j][k] * c[j];
+//                for (int v = 0; v < n; v++) {
+//                    this.gJKV[j][k][v] = this.fJKV[j][k][v] * this.bJK[j][k] * c[j];
+//                }
+//                this.gJK[j][k] = this.fJK[j][k] * c[j] * this.bJK[j][k];
+//                if (j > 0) {
+//                    for (int l = 0; l < K; l++) {
+//                        double marginalV = 0d;
+//                        for (int v = 0; v < n; v++) {
+//                            marginalV += prRjHv(j, v) * mu[begin + j][l][v];
+//                        }
+//                        this.xJKL[j][k][l] = this.fJK[j - 1][k] * marginalV * rho[begin + j - 1][k][l] * this.bJK[j][l];
+//                    }
+//                }
+//            }
+//        }
     }
 
     public double gamma(int j, int k) {
@@ -210,7 +256,7 @@ public class ReadHMM {
         return 0;
     }
 
-    private double prRjHv(int j, int v, int k) {
+    private double prRjHv(int j, int v) {
         return (this.getSequence()[j] == v) ? antieps[j] : eps[j];
     }
 
