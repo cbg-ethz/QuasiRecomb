@@ -32,7 +32,7 @@ public class ReadHMM {
     private final int n;
     private final Read read;
     private double[][][] rho;
-    private double[] pi;
+    private double[][] pi;
     private double[][][] mu;
     private double[] eps;
     private double[] antieps;
@@ -47,7 +47,7 @@ public class ReadHMM {
     private int end;
     private int length;
 
-    public ReadHMM(int L, int K, int n, Read read, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps) {
+    public ReadHMM(int L, int K, int n, Read read, double[][][] rho, double[][] pi, double[][][] mu, double[] eps, double[] antieps) {
         this.L = L;
         this.K = K;
         this.n = n;
@@ -60,8 +60,6 @@ public class ReadHMM {
         this.begin = read.getBegin() - Globals.ALIGNMENT_BEGIN;
         this.length = this.read.getSequence().length;
         this.end = this.begin + this.length;
-        this.begin = read.getBegin();
-        this.end = read.getEnd();
         this.length = end - begin;
         
         this.fJKV = new double[length][K][n];
@@ -105,7 +103,7 @@ public class ReadHMM {
         return true;
     }
 
-    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double[] epsilon, double[] antieps) {
+    public void recalc(double[][][] rho, double[][] pi, double[][][] mu, double[] epsilon, double[] antieps) {
         this.rho = rho;
         this.pi = pi;
         this.mu = mu;
@@ -121,9 +119,10 @@ public class ReadHMM {
         for (int j = 0; j < length; j++) {
             for (int k = 0; k < K; k++) {
                 for (int v = 0; v < n; v++) {
-                    fJKV[j][k][v] = prRjHv(begin + j, v) * mu[begin + j][k][v];
+                    fJKV[j][k][v] = (this.getSequence()[j] == v ? antieps[begin+j] : eps[begin+j]);
+                    fJKV[j][k][v] *= mu[begin + j][k][v];
                     if (j == 0) {
-                        fJKV[j][k][v] *= pi[k];
+                        fJKV[j][k][v] *= pi[begin+j][k];
                     } else {
                         double sumL = 0d;
                         for (int l = 0; l < K; l++) {
@@ -134,7 +133,9 @@ public class ReadHMM {
                     c[j] += fJKV[j][k][v];
                 }
             }
-
+            if (c[j] == 0) {
+                System.out.println("R");
+            }
             for (int k = 0; k < K; k++) {
                 for (int v = 0; v < n; v++) {
                     fJKV[j][k][v] /= c[j];
@@ -156,7 +157,7 @@ public class ReadHMM {
                     for (int l = 0; l < K; l++) {
                         double sumV = 0d;
                         for (int v = 0; v < n; v++) {
-                            sumV += prRjHv(j + 1, v) * mu[begin + j + 1][l][v];
+                            sumV += (this.getSequence()[j+1] == v ? antieps[begin+j+1] : eps[begin+j+1]) * mu[begin + j + 1][l][v];
                         }
                         bJK[j][k] += sumV * rho[begin + j][k][l] * bJK[j + 1][l];
                     }
@@ -179,7 +180,7 @@ public class ReadHMM {
                     for (int l = 0; l < K; l++) {
                         double marginalV = 0d;
                         for (int v = 0; v < n; v++) {
-                            marginalV += prRjHv(j, v) * mu[begin + j][l][v];
+                            marginalV += (this.getSequence()[j] == v ? antieps[begin+j] : eps[begin+j]) * mu[begin + j][l][v];
                         }
 
                         this.xJKL[j][k][l] = this.fJK[j - 1][k] * marginalV * rho[begin + j - 1][k][l] * this.bJK[j][l];
@@ -190,31 +191,18 @@ public class ReadHMM {
     }
 
     public double gamma(int j, int k) {
-        if (j >= begin && j - begin < length) {
-            return this.gJK[j - begin][k];
-        }
-        return 0;
+            return this.gJK[j][k];
     }
 
     final public double gamma(int j, int k, int v) {
-        if (j >= begin && j - begin < length) {
-            return this.gJKV[j - begin][k][v];
-        }
-        return 0;
+            return this.gJKV[j][k][v];
     }
 
     final public double xi(int j, int k, int l) {
         if (j < 1) {
             throw new IllegalStateException("J >= 1?");
         }
-        if (j >= begin && j - begin < length) {
-            return this.xJKL[j - begin][k][l];
-        }
-        return 0;
-    }
-
-    private double prRjHv(int j, int v) {
-        return (this.getSequence()[j] == v) ? antieps[j] : eps[j];
+            return this.xJKL[j][k][l];
     }
 
     final public double getC(int j) {

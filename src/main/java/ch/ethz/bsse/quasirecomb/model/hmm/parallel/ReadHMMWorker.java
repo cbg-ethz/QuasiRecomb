@@ -33,7 +33,7 @@ public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
     private JHMM jhmm;
     private Read[] reads;
     private double[][][] rho;
-    private double[] pi;
+    private double[][] pi;
     private double[][][] mu;
     private double[] eps;
     private double[] antieps;
@@ -43,7 +43,7 @@ public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
     private int start;
     private int end;
 
-    public ReadHMMWorker(JHMM jhmm, Read[] reads, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps,
+    public ReadHMMWorker(JHMM jhmm, Read[] reads, double[][][] rho, double[][] pi, double[][][] mu, double[] eps, double[] antieps,
             int K, int L, int n, int start, int end) {
         this.jhmm = jhmm;
         this.reads = reads;
@@ -74,9 +74,8 @@ public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
                     int jGlobal = offset + j;
                     einfo.coverage[jGlobal] += times;
                     for (int k = 0; k < K; k++) {
-                        if (j == 0) {
-                            einfo.nJK[0][k] += r.gamma(j, k) * times;
-                        } else {
+                        einfo.nJK[jGlobal][k] += r.gamma(j, k) * times;
+                        if (j > 0) {
                             for (int l = 0; l < K; l++) {
                                 einfo.nJKL[jGlobal][k][l] += r.xi(j, k, l) * times;
                                 if (k == l) {

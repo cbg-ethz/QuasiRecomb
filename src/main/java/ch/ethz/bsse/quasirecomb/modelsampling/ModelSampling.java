@@ -38,7 +38,7 @@ public final class ModelSampling extends Utils {
     private int n;
     private final int K;
     private double[][][] rho;
-    private double[] pi;
+    private double[][] pi;
     private double[][][] H;
     private Frequency<Integer>[][] rhoArray;
     private Frequency<Byte>[][] muArray;
@@ -49,7 +49,7 @@ public final class ModelSampling extends Utils {
     private StringBuilder sb = new StringBuilder();
     private TreeMap<byte[], Integer> sorted_map;
 
-    public ModelSampling(int L, int n, int K, double[][][] rho, double[] pi, double[][][] mu, String savePath) {
+    public ModelSampling(int L, int n, int K, double[][][] rho, double[][] pi, double[][][] mu, String savePath) {
         this.L = L;
         this.n = n;
         this.K = K;
@@ -146,7 +146,7 @@ public final class ModelSampling extends Utils {
         byte[] read = new byte[L];
         Map<Integer, Double> piMap = new HashMap<>();
         for (int k = 0; k < K; k++) {
-            piMap.put(k, pi[k]);
+            piMap.put(k, pi[0][k]);
         }
         Frequency<Integer> piF = new Frequency<>(piMap);
         int k = piF.roll();

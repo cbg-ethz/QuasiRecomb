@@ -22,12 +22,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class FastaParser {
 
+    
     /**
      *
      * @param location
@@ -66,12 +68,11 @@ public class FastaParser {
      * @return
      */
     public static Map<String, Double> parseQuasispeciesFile(String location) {
-        Map<String, Double> hapMap = new HashMap<>();
+        Map<String, Double> hapMap = new ConcurrentHashMap<>();
         try {
             FileInputStream fstream = new FileInputStream(location);
             StringBuilder sb;
             String head = null;
-            int i = 0;
             try (DataInputStream in = new DataInputStream(fstream)) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(in));
                 String strLine;
@@ -109,12 +110,11 @@ public class FastaParser {
     }
 
     public static Map<String, String> parseHaplotypeFile(String location) {
-        Map<String, String> hapMap = new HashMap<>();
+        Map<String, String> hapMap = new ConcurrentHashMap<>();
         try {
             FileInputStream fstream = new FileInputStream(location);
             StringBuilder sb;
             String head = null;
-            int i = 0;
             try (DataInputStream in = new DataInputStream(fstream)) {
                 BufferedReader br = new BufferedReader(new InputStreamReader(in));
                 String strLine;
@@ -131,6 +131,36 @@ public class FastaParser {
                     }
                 }
                 hapMap.put(sb.toString(), head);
+
+            }
+        } catch (IOException | NumberFormatException e) {
+            System.err.println("Error Far: " + e.getMessage());
+        }
+        return hapMap;
+    }
+
+    public static Map<String, String> parseGlobalFarFile(String location) {
+        Map<String, String> hapMap = new ConcurrentHashMap<>();
+        try {
+            FileInputStream fstream = new FileInputStream(location);
+            StringBuilder sb;
+            String head = null;
+            try (DataInputStream in = new DataInputStream(fstream)) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String strLine;
+                sb = new StringBuilder();
+                while ((strLine = br.readLine()) != null) {
+                    if (strLine.startsWith(">")) {
+                        if (sb.length() > 0) {
+                            hapMap.put(head, sb.toString());
+                            sb.setLength(0);
+                        }
+                        head = strLine;
+                    } else {
+                        sb.append(strLine);
+                    }
+                }
+                hapMap.put(head, sb.toString());
 
             }
         } catch (IOException | NumberFormatException e) {

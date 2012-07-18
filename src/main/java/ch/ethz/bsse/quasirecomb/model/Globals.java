@@ -17,6 +17,8 @@
  */
 package ch.ethz.bsse.quasirecomb.model;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
@@ -28,8 +30,8 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class Globals {
 
-    public static int ALIGNMENT_BEGIN;
-    public static int ALIGNMENT_END;
+    public static int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
+    public static int ALIGNMENT_END = Integer.MIN_VALUE;
     public static boolean FLAT_EPSILON_PRIOR;
     public static double BETA_Z;
     public static double ALPHA_Z;
@@ -49,12 +51,14 @@ public class Globals {
     public static int PARALLEL_RESTARTS_UPPER_BOUND = 10;
     public static boolean PARALLEL_JHMM = true;
     public static boolean PARALLEL_RESTARTS = false;
-    private static double MAX_LLH = Double.NEGATIVE_INFINITY;
+    public static double MAX_LLH = Double.NEGATIVE_INFINITY;
     public static boolean LOG_BIC = false;
     public static boolean LOGGING = false;
     public static boolean PRINT = true;
+    public static boolean MODELSELECTION;
     public static int SAMPLING_NUMBER;
     public static StringBuilder LOG = new StringBuilder();
+    private static final long start = System.currentTimeMillis();
 
     public static void log(Object o) {
         if (PRINT) {
@@ -67,9 +71,31 @@ public class Globals {
     }
     public static double PERCENTAGE = 0;
 
-    public static void printPercentage(int K) {
+    public static void incPercentage() {
         PERCENTAGE += 100d / Globals.REPEATS;
-        System.out.print("\r\tK " + K + ":\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%");
+    }
+
+    public static void printBIC(int K, int bic) {
+        if (MODELSELECTION) {
+            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
+        } else {
+            System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
+        }
+    }
+
+    public static void print(String s) {
+        System.out.print("\r" + time() + " " + s);
+    }
+    public static void printPercentage(int K) {
+        if (MODELSELECTION) {
+            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + (int) MAX_LLH + "]                 ");
+        } else {
+            System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + (int) MAX_LLH + "]                 ");
+        }
+    }
+
+    private static String time() {
+        return new SimpleDateFormat("hh:mm:ss:SSS").format(new Date(System.currentTimeMillis() - start));
     }
 
     public static synchronized double getMAX_LLH() {

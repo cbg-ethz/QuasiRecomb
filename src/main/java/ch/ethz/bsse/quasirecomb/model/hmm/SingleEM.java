@@ -89,7 +89,7 @@ public class SingleEM {
             }
             jhmm.restart();
             iterations++;
-
+            Globals.printPercentage(K);
         } while (Math.abs((oldllh - llh) / llh) > this.delta);
         if (!broken) {
             Globals.log("\t\t");
@@ -97,12 +97,12 @@ public class SingleEM {
 
         Globals.log((String.valueOf((oldllh - llh) / llh).contains("-") ? "dist: 1e-" + (String.valueOf((oldllh - llh) / llh).split("-")[1]) : String.valueOf((oldllh - llh) / llh)) + "(" + iterations + ")" + this.llh_opt + "\tthis: " + llh + "\topt:" + this.llh_opt + "\tmax:" + Globals.getMAX_LLH());
 
+        Globals.incPercentage();
         this.calcBic(llh);
 
         if (Globals.DEBUG) {
             Globals.log("####");
         }
-        Globals.printPercentage(K);
     }
 
     public void calcBic(double llh) {
@@ -123,7 +123,7 @@ public class SingleEM {
 
         double[][][] rho = jhmm.getRho();
         double[][][] mu = jhmm.getMu();
-        double[] pi = jhmm.getPi();
+        double[][] pi = jhmm.getPi();
         double[] eps = jhmm.getEps();
         for (int j = 0; j < rho.length; j++) {
             for (int k = 0; k < rho[j].length; k++) {
@@ -161,9 +161,12 @@ public class SingleEM {
                 }
             }
         }
-        for (int k = 0; k < pi.length; k++) {
-            if (pi[k] > ERROR) {
-                freeParameters++;
+
+        for (int j = 0; j < pi.length; j++) {
+            for (int k = 0; k < pi[j].length; k++) {
+                if (pi[j][k] > ERROR) {
+                    freeParameters++;
+                }
             }
         }
         for (int j = 0; j < eps.length; j++) {

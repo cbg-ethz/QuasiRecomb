@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb;
 
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
-import ch.ethz.bsse.quasirecomb.model.ArtificialExperimentalForwarder;
+import ch.ethz.bsse.quasirecomb.model.Preprocessing;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
@@ -222,7 +222,7 @@ public class Startup {
                 Globals.SAVEPATH = output + File.separator;
                 new File(Globals.SAVEPATH).mkdirs();
                 Globals.NO_RECOMB = this.noRecomb;
-                ArtificialExperimentalForwarder.forward(this.input, Kmin, Kmax, N);
+                Preprocessing.forward(this.input, Kmin, Kmax, N);
             } else if (cut) {
                 Cutter.cut(input, output, begin, end);
             } else {

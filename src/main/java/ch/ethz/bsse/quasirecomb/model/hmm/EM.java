@@ -33,8 +33,6 @@ import java.util.List;
  */
 public class EM extends Utils {
 
-    private StringBuilder sb = new StringBuilder();
-    private double BIC_opt = Double.NEGATIVE_INFINITY;
     private OptimalResult or;
     private List<OptimalResult> ors;
 
@@ -44,7 +42,7 @@ public class EM extends Utils {
 
     private void blackbox(Read[] reads,int N, int L, int K, int n) {
         Globals.LOG = new StringBuilder();
-
+        Globals.MAX_LLH = Double.NEGATIVE_INFINITY;
         if (Globals.PARALLEL_RESTARTS) {
             ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, Globals.DELTA_LLH, 0, Globals.REPEATS));
         } else {
@@ -66,7 +64,9 @@ public class EM extends Utils {
             }
         }
 
-        System.out.println("\tBIC: " + (int) or.getBIC());
+//        System.out.println("\tBIC: " + (int) or.getBIC());
+        Globals.printBIC(K, (int)or.getBIC());
+        System.out.print("\n");
 //        if (!Globals.NO_REFINE) {
 //            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);
 //            this.or = bestEM.getOptimalResult();
@@ -92,7 +92,7 @@ public class EM extends Utils {
      *
      * @return pi
      */
-    public double[] getPi_opt() {
+    public double[][] getPi_opt() {
         return or.getPi();
     }
 

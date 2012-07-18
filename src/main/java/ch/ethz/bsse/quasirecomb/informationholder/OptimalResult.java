@@ -29,14 +29,14 @@ public class OptimalResult implements Serializable {
     private int L;
     private int n;
     private double[][][] rho;
-    private double[] pi;
+    private double[][] pi;
     private double[][][] mu;
     private double llh;
     private double[] eps;
     private double BIC;
     private int restarts;
 
-    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts) {
+    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[][] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts) {
         this.N = N;
         this.K = K;
         this.L = L;
@@ -74,7 +74,7 @@ public class OptimalResult implements Serializable {
         return n;
     }
 
-    public double[] getPi() {
+    public double[][] getPi() {
         return pi;
     }
 

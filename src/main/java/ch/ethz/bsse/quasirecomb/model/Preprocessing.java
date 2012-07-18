@@ -19,17 +19,19 @@ package ch.ethz.bsse.quasirecomb.model;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
+import ch.ethz.bsse.quasirecomb.utils.Plot;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Forwards parameters depending if input is from an experimental dataset or
- * artifical haplotypes from which has to be sampled.
+ * Responsible for orchestrating parsing, proper read placement in alignment 
+ * and forwards parameters to ModelSelection.
  *
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class ArtificialExperimentalForwarder {
+public class Preprocessing {
 
     /**
      * Entry point. Forwards invokes of the specified workflow.
@@ -46,20 +48,26 @@ public class ArtificialExperimentalForwarder {
     public static void forward(String input, int Kmin, int Kmax, int N) {
         Read[] reads = Utils.parseInput(input);
         
-        int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
-        int ALIGNMENT_END = Integer.MIN_VALUE;
         for (Read r : reads) {
-            if (r.getBegin() < ALIGNMENT_BEGIN) {
-                ALIGNMENT_BEGIN = r.getBegin();
-            }
-            if (r.getEnd() > ALIGNMENT_END) {
-                ALIGNMENT_END = r.getEnd();
-            }
+            Globals.ALIGNMENT_BEGIN = Math.min(r.getBegin(), Globals.ALIGNMENT_BEGIN);
+            Globals.ALIGNMENT_END = Math.max(r.getEnd(), Globals.ALIGNMENT_END);
         }
-        int L = ALIGNMENT_END-ALIGNMENT_BEGIN;
-        Globals.ALIGNMENT_BEGIN = ALIGNMENT_BEGIN;
-        Globals.ALIGNMENT_END = ALIGNMENT_END;
+        int L = Globals.ALIGNMENT_END-Globals.ALIGNMENT_BEGIN;
+        StringBuilder sb = new StringBuilder();
+        for (Read r : reads) {
+//            sb.append(">").append(r.getCount()).append(":").append(r.getBegin()).append("-").append(r.getEnd()).append("\n");
+            sb.append(r.getCount()).append("\t");
+            if (r.getCount()<1000) {
+                sb.append("\t");
+            }
+            for (int i = Globals.ALIGNMENT_BEGIN; i < r.getBegin(); i++) {
+                sb.append(" ");
+            }
+            sb.append(Utils.reverse(r.getSequence())).append("\n");
+        }
+        Utils.saveFile(Globals.SAVEPATH+File.separator+"in.fasta", sb.toString());
         int n = countChars(reads);
+        Plot.plotCoverage(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, N, L, n);
     }
 

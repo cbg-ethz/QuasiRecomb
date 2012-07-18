@@ -29,7 +29,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
     private double[] eps;
     private double[] antieps;
     private double[][][] rho;
-    private double[] pi;
+    private double[][] pi;
     private double[][][] mu;
     private int start;
     private int end;
@@ -38,7 +38,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
     private int L;
     private int n;
 
-    public ReadHMMWorkerRecalc(int K, int L, int n, ReadHMM[] readHMMArray, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, int start, int end) {
+    public ReadHMMWorkerRecalc(int K, int L, int n, ReadHMM[] readHMMArray, double[][][] rho, double[][] pi, double[][][] mu, double[] eps, double[] antieps, int start, int end) {
         this.readHMMArray = readHMMArray;
         this.rho = rho;
         this.pi = pi;
@@ -66,15 +66,10 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
                     int jGlobal = offset + j;
                     einfo.coverage[jGlobal] += times;
                     for (int k = 0; k < K; k++) {
-                        if (j == 0) {
-                            einfo.nJK[0][k] += r.gamma(j, k) * times;
-                        } else {
+                        einfo.nJK[jGlobal][k] += r.gamma(j, k) * times;
+                        if (j > 0) {
                             for (int l = 0; l < K; l++) {
                                 einfo.nJKL[jGlobal][k][l] += r.xi(j, k, l) * times;
-                                if (Double.isNaN(einfo.nJKL[jGlobal][k][l])) {
-                                    System.out.println("J1");
-                                    System.exit(9);
-                                }
                                 if (k == l) {
                                     einfo.nJeq[jGlobal] += r.xi(j, k, l) * times;
                                 } else {
@@ -84,10 +79,6 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
                         }
                         for (int v = 0; v < n; v++) {
                             einfo.nJKV[jGlobal][k][v] += r.gamma(j, k, v) * times;
-                            if (Double.isNaN(einfo.nJKV[jGlobal][k][v])) {
-                                System.out.println("J nJKV");
-                                System.exit(9);
-                            }
                         }
                     }
                     for (int v = 0; v < n; v++) {
@@ -98,7 +89,6 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
                             } else {
                                 einfo.neqPos[jGlobal] += r.gamma(j, k, v) * times;
                             }
-
                         }
                     }
                 }

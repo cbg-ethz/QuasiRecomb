@@ -55,10 +55,12 @@ public class Random {
         return rho;
     }
 
-    public static double[] generateInitPi(int K) {
-        double[] pi = new double[K];
-        for (int k = 1; k <= K; k++) {
-            pi[k - 1] = 1d / K;
+    public static double[][] generateInitPi(int L, int K) {
+        double[][] pi = new double[L][K];
+        for (int j = 0; j < L; j++) {
+            for (int k = 1; k <= K; k++) {
+                pi[j][k - 1] = 1d / K;
+            }
         }
         return pi;
     }

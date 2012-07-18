@@ -40,7 +40,7 @@ public class JHMM {
     private final int n;
     //rho[j][k][l] := transition prob. at position j, for l given k
     private double[][][] rho;
-    private double[] pi;
+    private double[][] pi;
     private double[][][] mu;
     private double[] eps;
     private double[] antieps;
@@ -67,11 +67,11 @@ public class JHMM {
         this(reads, N, L, K, n, epsilon,
                 (1 - (n - 1) * epsilon),
                 Random.generateInitRho(L - 1, K),
-                Random.generateInitPi(K),
+                Random.generateInitPi(L, K),
                 Random.generateMuInit(L, K, n));
     }
 
-    private JHMM(Read[] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
+    private JHMM(Read[] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[][] pi, double[][][] mu) {
         this.N = N;
         this.L = L;
         this.K = K;
@@ -241,16 +241,17 @@ public class JHMM {
         return Math.log(x) + .04167 * Math.pow(x, -2) - .00729 * Math.pow(x, -4) + .00384 * Math.pow(x, -6) - .00413 * Math.pow(x, -8);
     }
 
-    private double[] calcPi() {
-        double sumK = 0d;
-        for (int k = 0; k < K; k++) {
-            pi[k] = this.getnJK(0, k);
-            sumK += pi[k];
+    private void calcPi() {
+        for (int j = 0; j < L; j++) {
+            double sumK = 0d;
+            for (int k = 0; k < K; k++) {
+                pi[j][k] = this.getnJK(j, k);
+                sumK += pi[j][k];
+            }
+            for (int k = 0; k < K; k++) {
+                pi[j][k] /= sumK;
+            }
         }
-        for (int k = 0; k < K; k++) {
-            pi[k] /= sumK;
-        }
-        return pi;
     }
 
     private void mStep() {
@@ -278,7 +279,7 @@ public class JHMM {
 //            }
 //        } else {
         for (int j = 0; j < L; j++) {
-            this.eps[j] = f(ew + a) / f((N * (n - 1)) + a + b);
+            this.eps[j] = f(ew + a) / f((coverage[j] * (n - 1)) + a + b);
             this.antieps[j] = 1 - (n - 1) * eps[j];
         }
 //    }
@@ -353,7 +354,7 @@ public class JHMM {
         return mu;
     }
 
-    public double[] getPi() {
+    public double[][] getPi() {
         return pi;
     }
 

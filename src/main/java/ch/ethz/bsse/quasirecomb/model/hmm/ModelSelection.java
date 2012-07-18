@@ -43,7 +43,7 @@ public class ModelSelection {
     private int bestK;
     private double[][][] mu = null;
     private double[][][] rho = null;
-    private double[] pi = null;
+    private double[][] pi = null;
 
     public ModelSelection(Read[] reads, int Kmin, int Kmax, int N, int L, int n) {
         this.Kmax = Kmax;
@@ -60,9 +60,11 @@ public class ModelSelection {
             new File(Globals.SAVEPATH + "support").mkdirs();
         }
 //        Globals.REPEATS = 5;
-        System.out.println("Model selection (" + Globals.REPEATS + " iterations):");
+//        System.out.println("Model selection (" + Globals.REPEATS + " iterations):");
+        
         OptimalResult or = null;
         if (Kmin == 0) {
+            Globals.MODELSELECTION = true;
             for (int k = 1;; k++) {
                 if (!Globals.NO_RECOMB || k == 1) {
                     checkRho0(k);
@@ -86,6 +88,7 @@ public class ModelSelection {
                 Globals.PERCENTAGE = 0;
             }
         } else if (Kmin != Kmax) {
+            Globals.MODELSELECTION = true;
             for (int k = Kmin; k <= Kmax; k++) {
                 if (!Globals.NO_RECOMB || k == 1) {
                     checkRho0(k);
@@ -109,10 +112,11 @@ public class ModelSelection {
         } else {
             bestK = Kmin;
         }
-        System.out.println("\nBest model: " + bestK);
+        Globals.MODELSELECTION = false;
+//        System.out.println("\nBest model: " + bestK);
         Globals.REPEATS = Globals.DESIRED_REPEATS;
         Globals.PERCENTAGE = 0;
-        System.out.println("Model training (" + Globals.REPEATS + " iterations):");
+//        System.out.println("Model training (" + Globals.REPEATS + " iterations):");
         EM em = new EM(this.N, this.L, bestK, this.n, reads);
         if (em.getOr().getLlh() > optBIC || optBIC == 0) {
             or = em.getOr();
@@ -156,7 +160,7 @@ public class ModelSelection {
         return mu;
     }
 
-    public double[] getPi() {
+    public double[][] getPi() {
         return pi;
     }
 

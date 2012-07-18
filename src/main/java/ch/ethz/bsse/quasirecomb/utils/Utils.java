@@ -1,4 +1,3 @@
-
 /**
  * Copyright (c) 2011-2012 Armin Töpfer
  *
@@ -19,8 +18,8 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import ch.ethz.bsse.quasirecomb.model.Globals;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -135,22 +134,113 @@ public class Utils extends FastaParser {
     }
 
     public static Read[] parseInput(String path) {
-        byte[][] haplotypesArray = splitReadsIntoByteArrays(parseFarFile(path));
+        if (isFastaFormat(path)) {
+            return parseFastaInput(path);
+        } else {
+//            return parseBAMSAM(path);
+            return null;
+        }
+    }
+
+//    public static Read[] parseInput(String path) {
+//        byte[][] haplotypesArray = splitReadsIntoByteArrays(parseFarFile(path));
+//        List<Read> hashing = new ArrayList<>();
+//        for (byte[] b : haplotypesArray) {
+//            boolean missing = true;
+//            for (Read r : hashing) {
+//                if (Arrays.equals(r.getSequence(), b)) {
+//                    r.incCount();
+//                    missing = false;
+//                    break;
+//                }
+//            }
+//            if (missing) {
+//                hashing.add(new Read(b, 0, b.length, 1));
+//            }
+//        }
+//        return hashing.toArray(new Read[hashing.size()]);
+//    }
+
+    public static Read[] parseFastaInput(String path) {
         List<Read> hashing = new ArrayList<>();
-        for (byte[] b : haplotypesArray) {
-            boolean missing = true;
-            for (Read r : hashing) {
-                if (Arrays.equals(r.getSequence(),b)) {
-                    r.incCount();
-                    missing = false;
-                    break;
+        if (isFastaGlobalFormat(path)) {
+            Map<String, String> haps = parseGlobalFarFile(path);
+            for (String head : haps.keySet()) {
+                String[] split = head.split("_")[1].split("-");
+                int begin = Integer.parseInt(split[0]);
+                int end = Integer.parseInt(split[1]);
+                byte[] seq = splitReadIntoByteArray(haps.get(head));
+                boolean missing = true;
+                for (Read r : hashing) {
+                    if (Arrays.equals(r.getSequence(), seq)
+                            && r.getBegin() == begin
+                            && r.getEnd() == end) {
+                        r.incCount();
+                        missing = false;
+                        break;
+                    }
+                }
+                if (missing) {
+                    hashing.add(new Read(seq, begin, end, 1));
                 }
             }
-            if (missing) {
-                hashing.add(new Read(b, 0, b.length,1));
+        } else {
+            byte[][] haplotypesArray = splitReadsIntoByteArrays(parseFarFile(path));
+            for (byte[] b : haplotypesArray) {
+                boolean missing = true;
+                for (Read r : hashing) {
+                    if (Arrays.equals(r.getSequence(), b)) {
+                        r.incCount();
+                        missing = false;
+                        break;
+                    }
+                }
+                if (missing) {
+                    hashing.add(new Read(b, 0, b.length, 1));
+                }
             }
         }
         return hashing.toArray(new Read[hashing.size()]);
+    }
+
+    private static boolean isFastaFormat(String path) {
+        try {
+            FileInputStream fstream = new FileInputStream(path);
+            try (DataInputStream in = new DataInputStream(fstream)) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String strLine;
+                while ((strLine = br.readLine()) != null) {
+                    if (strLine.startsWith(">")) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error identifying format of input file: " + e.getMessage());
+        }
+        return false;
+    }
+
+    private static boolean isFastaGlobalFormat(String path) {
+        try {
+            FileInputStream fstream = new FileInputStream(path);
+            try (DataInputStream in = new DataInputStream(fstream)) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String strLine;
+                while ((strLine = br.readLine()) != null) {
+                    if (strLine.startsWith(">") && strLine.contains("_") && strLine.contains("-")) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error identifying format of input file: " + e.getMessage());
+        }
+        return false;
     }
 
     public static Map<String, Integer> reverse(Map<byte[], Integer> src) {
