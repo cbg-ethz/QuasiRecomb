@@ -123,21 +123,23 @@ public class SingleEM {
 
         double[][][] rho = jhmm.getRho();
         double[][][] mu = jhmm.getMu();
-        double[][] pi = jhmm.getPi();
+        double[] pi = jhmm.getPi();
         double[] eps = jhmm.getEps();
-        for (int j = 0; j < rho.length; j++) {
-            for (int k = 0; k < rho[j].length; k++) {
-                boolean different = false;
-                for (int l = 1; l < rho[j][k].length; l++) {
-                    if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
-                        different = true;
-                        break;
+        if (!Globals.NO_RECOMB) {
+            for (int j = 0; j < rho.length; j++) {
+                for (int k = 0; k < rho[j].length; k++) {
+                    boolean different = false;
+                    for (int l = 1; l < rho[j][k].length; l++) {
+                        if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
+                            different = true;
+                            break;
+                        }
                     }
-                }
-                if (different) {
-                    for (int l = 0; l < rho[j][k].length; l++) {
-                        if (rho[j][k][l] > ERROR) {
-                            freeParameters++;
+                    if (different) {
+                        for (int l = 0; l < rho[j][k].length; l++) {
+                            if (rho[j][k][l] > ERROR) {
+                                freeParameters++;
+                            }
                         }
                     }
                 }
@@ -162,13 +164,13 @@ public class SingleEM {
             }
         }
 
-        for (int j = 0; j < pi.length; j++) {
-            for (int k = 0; k < pi[j].length; k++) {
-                if (pi[j][k] > ERROR) {
-                    freeParameters++;
-                }
+//        for (int j = 0; j < pi.length; j++) {
+        for (int k = 0; k < pi.length; k++) {
+            if (pi[k] > ERROR) {
+                freeParameters++;
             }
         }
+//        }
         for (int j = 0; j < eps.length; j++) {
             if (eps[j] > ERROR) {
                 freeParameters++;

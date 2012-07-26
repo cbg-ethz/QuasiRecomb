@@ -22,6 +22,7 @@ import ch.ethz.bsse.quasirecomb.model.Preprocessing;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
+import ch.ethz.bsse.quasirecomb.simulation.Sampling;
 import ch.ethz.bsse.quasirecomb.utils.Cutter;
 import ch.ethz.bsse.quasirecomb.utils.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
@@ -66,8 +67,6 @@ public class Startup {
     private int N = 2000;
     @Option(name = "-samplingNumber")
     private int samplingNumber = 10000;
-    @Option(name = "-f")
-    private String f;
     @Option(name = "-e")
     private double e = .001;
     @Option(name = "-ee")
@@ -83,7 +82,7 @@ public class Startup {
     @Option(name = "-noRecomb")
     private boolean noRecomb;
     @Option(name = "-alphah")
-    private double alphah = 0.001;
+    private double alphah = 0.00001;
     @Option(name = "-alphaz")
     private double alphaz = 0.001;
     @Option(name = "-betaz")
@@ -114,6 +113,12 @@ public class Startup {
     private String bfile;
     @Option(name = "-h")
     private String haplotypes;
+    @Option(name = "--simulate")
+    private boolean simulate;
+    @Option(name = "-f")
+    private String f;
+    @Option(name = "-L")
+    private int L;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -140,6 +145,29 @@ public class Startup {
             if (this.sample) {
                 ModelSampling simulation = new ModelSampling(input, output);
                 simulation.save();
+            } else if (this.simulate) {
+                double fArray[] = null;
+                String[] split = f.split(",");
+                fArray = new double[split.length];
+                int i = 0;
+                double sum = 0d;
+                for (String s : split) {
+                    fArray[i++] = Double.parseDouble(s);
+                    sum += fArray[i - 1];
+                }
+                if (sum != 1d && Math.abs(sum) - 1d > 1e-6) {
+                    System.err.println("Frequencies do not add up to 1, instead to " + sum);
+                    System.exit(0);
+                }
+                if (sum != 1d && Math.abs(sum - 1d) > 1e-6) {
+                    System.err.println("Frequencies do not add up to 1, instead to " + sum);
+                    System.exit(0);
+                }
+                if (this.output.endsWith(File.separator)) {
+                    this.output += "reads.fasta";
+                }
+                Sampling.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
+//                Sampling.fromHaplotypesGlobal(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
             } else if (this.recombine) {
                 if (this.spots != null) {
                     String[] split = this.spots.split(",");

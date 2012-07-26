@@ -92,7 +92,7 @@ public class EM extends Utils {
      *
      * @return pi
      */
-    public double[][] getPi_opt() {
+    public double[] getPi_opt() {
         return or.getPi();
     }
 

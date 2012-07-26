@@ -17,12 +17,15 @@
  */
 package ch.ethz.bsse.quasirecomb.simulation;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -32,49 +35,65 @@ public class Sampling {
     public static String newline = System.getProperty("line.separator");
     public static Random random = new Random();
 
-    public static String[] fromHaplotypesCross(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        return fromHaplotypesCross(Utils.parseFarFile(path), N, L, epsilon, hapProb, n, savePath);
-    }
-
-    public static Map<String, Integer> fromHaplotypes(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        return fromHaplotypes(Utils.parseFarFile(path), N, L, epsilon, hapProb, n, savePath);
-    }
-
-    public static Map<String, Integer> fromHaplotypesGlobal(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        return fromHaplotypesGlobal(Utils.parseFarFile(path), N, L, epsilon, hapProb, n, savePath);
-    }
-
-    public static Map<String, Integer> fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        Map<Integer, Double> freqMap = new HashMap<>();
+//    public static String[] fromHaplotypesCross(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
+//        return fromHaplotypesCross(Utils.parseBAMSAM(path), N, L, epsilon, hapProb, n, savePath);
+//    }
+//
+//    public static Map<String, Integer> fromHaplotypes(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
+//        return fromHaplotypes(Utils.parseBAMSAM(path), N, L, epsilon, hapProb, n, savePath);
+//    }
+//
+//    public static Map<String, Integer> fromHaplotypesGlobal(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
+//        return fromHaplotypesGlobal(Utils.parseBAMSAM(path), N, L, epsilon, hapProb, n, savePath);
+//    }
+    public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
+        Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
             freqMap.put(i, hapProb[i]);
         }
         Frequency<Integer> frequency = new Frequency<>(freqMap);
-        Map<Integer, Double> hapFreq = new HashMap<>();
-        for (int i = 0; i < hapProb.length; i++) {
-            hapFreq.put(i, 0d);
-        }
-        Map<String, Integer> map = new HashMap<>();
+
+        List<Read> reads = new ArrayList<>();
         String read;
         for (int i = 0; i < N; i++) {
             int hap = frequency.roll();
-            hapFreq.put(hap, hapFreq.get(hap) + 1);
-            char[] readArray = new char[L];
-            int start = random.nextInt((int) (L * 0.9));
+
+            int start = 0;
             int length = 0;
-            do {
-                length = random.nextInt(20);
+            for (;;) {
+//                length = (int)(Math.random()*300);
+                length = 400;
+                if (Math.random() > .5) {
+                    length -= (int) (Math.random() * 100);
+                } else {
+                    length += (int) (Math.random() * 100);
+                }
+                start = (int) (Math.random() * (L + 300 + 300));
+                start -= 300;
+                if (start >= L) {
+                    continue;
+                }
+                if (start + length <= L) {
+                    if (start < 0) {
+                        start = 0;
+                    }
+                    break;
+                }
                 if (start + length > L) {
                     length = L - start;
                     break;
                 }
-            } while (length < 10);
-            for (int j = start; j < start + length; j++) {
+            }
+            System.out.println(start);
+            char[] readArray = new char[length];
+
+
+            for (int j = 0; j < length; j++) {
                 //error
-                Map<Character, Double> baseMap = new HashMap<>();
+                Map<Character, Double> baseMap = new ConcurrentHashMap<>();
                 for (int v = 0; v < n; v++) {
                     char x = reverse(v);
-                    if (haplotypes[hap].charAt(j) == x) {
+                    if (haplotypes[hap].charAt(j + start) == x) {
                         baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
                     } else {
                         baseMap.put(x, epsilon);
@@ -83,40 +102,29 @@ public class Sampling {
                 Frequency<Character> errorF = new Frequency<>(baseMap);
                 readArray[j] = errorF.roll();
             }
-            StringBuilder s = new StringBuilder(length);
-            for (int j = start; j < start + length; j++) {
-                s.append(readArray[j]);
+            StringBuilder sb = new StringBuilder(length);
+            for (int j = 0; j < length; j++) {
+                sb.append(readArray[j]);
             }
-            read = s.toString();
-            if (!map.containsKey(read)) {
-                map.put(read, 0);
-            }
-            map.put(read, map.get(read) + 1);
+            read = sb.toString();
+            reads.add(new Read(Utils.splitReadIntoByteArray(read), start, start + length));
         }
-        StringBuilder sb = new StringBuilder();
-        for (String readX : map.keySet()) {
-            sb.append(map.get(readX)).append("\t").append(readX).append("\n");
-        }
-        Utils.saveFile(savePath + "sampledReadDistribution.txt", sb.toString());
         int z = 0;
-        sb.setLength(0);
-        for (String readX : map.keySet()) {
-            for (int i = 0; i < map.get(readX); i++) {
-                sb.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
-
-            }
+        StringBuilder sb = new StringBuilder();
+        for (Read r : reads) {
+            sb.append(">SAMPLED").append(z++).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("\n");
+            sb.append(Utils.reverse(r.getSequence())).append("\n");
         }
-        Utils.saveFile(savePath + "reads.fasta", sb.toString());
-        return map;
+        Utils.saveFile(savePath, sb.toString());
     }
 
     public static String[] fromHaplotypesCross(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        Map<Integer, Double> freqMap = new HashMap<>();
+        Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
             freqMap.put(i, hapProb[i]);
         }
         Frequency<Integer> frequency = new Frequency<>(freqMap);
-        Map<Integer, Double> hapFreq = new HashMap<>();
+        Map<Integer, Double> hapFreq = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
             hapFreq.put(i, 0d);
         }
@@ -128,7 +136,7 @@ public class Sampling {
             char[] readArray = new char[L];
             for (int j = 0; j < L; j++) {
                 //error
-                Map<Character, Double> baseMap = new HashMap<>();
+                Map<Character, Double> baseMap = new ConcurrentHashMap<>();
                 for (int v = 0; v < n; v++) {
                     char x = reverse(v);
                     if (haplotypes[hap].charAt(j) == x) {
@@ -144,7 +152,7 @@ public class Sampling {
             reads[i] = read;
         }
         Globals.HAPLOTYPE_ARRAY_EMPIRICAL = new String[N / 10];
-        Map<String, Integer> map = new HashMap<>();
+        Map<String, Integer> map = new ConcurrentHashMap<>();
         for (int i = 0; i < N; i++) {
             if (i < N / 10) {
                 Globals.HAPLOTYPE_ARRAY_EMPIRICAL[i] = reads[i];
@@ -173,16 +181,17 @@ public class Sampling {
     }
 
     public static Map<String, Integer> fromHaplotypes(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        Map<Integer, Double> freqMap = new HashMap<>();
+        int[] hits = new int[L];
+        Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
             freqMap.put(i, hapProb[i]);
         }
         Frequency<Integer> frequency = new Frequency<>(freqMap);
-        Map<Integer, Double> hapFreq = new HashMap<>();
+        Map<Integer, Double> hapFreq = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
             hapFreq.put(i, 0d);
         }
-        Map<String, Integer> map = new HashMap<>();
+        Map<String, Integer> map = new ConcurrentHashMap<>();
         String read;
         for (int i = 0; i < N; i++) {
             int hap = frequency.roll();
@@ -190,7 +199,7 @@ public class Sampling {
             char[] readArray = new char[L];
             for (int j = 0; j < L; j++) {
                 //error
-                Map<Character, Double> baseMap = new HashMap<>();
+                Map<Character, Double> baseMap = new ConcurrentHashMap<>();
                 for (int v = 0; v < n; v++) {
                     char x = reverse(v);
                     if (haplotypes[hap].charAt(j) == x) {
@@ -201,6 +210,9 @@ public class Sampling {
                 }
                 Frequency<Character> errorF = new Frequency<>(baseMap);
                 readArray[j] = errorF.roll();
+                if (readArray[j] != haplotypes[hap].charAt(j)) {
+                    hits[j]++;
+                }
             }
             read = String.valueOf(readArray);
             if (!map.containsKey(read)) {
@@ -222,6 +234,9 @@ public class Sampling {
             }
         }
         Utils.saveFile(savePath + "reads.fasta", sb.toString());
+        for (int i : hits) {
+            System.out.println(i);
+        }
         return map;
     }
 

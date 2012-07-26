@@ -40,7 +40,7 @@ public class JHMM {
     private final int n;
     //rho[j][k][l] := transition prob. at position j, for l given k
     private double[][][] rho;
-    private double[][] pi;
+    private double[] pi;
     private double[][][] mu;
     private double[] eps;
     private double[] antieps;
@@ -71,7 +71,7 @@ public class JHMM {
                 Random.generateMuInit(L, K, n));
     }
 
-    private JHMM(Read[] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[][] pi, double[][][] mu) {
+    private JHMM(Read[] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
         this.N = N;
         this.L = L;
         this.K = K;
@@ -242,16 +242,18 @@ public class JHMM {
     }
 
     private void calcPi() {
-        for (int j = 0; j < L; j++) {
-            double sumK = 0d;
-            for (int k = 0; k < K; k++) {
-                pi[j][k] = this.getnJK(j, k);
-                sumK += pi[j][k];
+//        for (int j = 0; j < L; j++) {
+        double sumK = 0d;
+        for (int k = 0; k < K; k++) {
+            for (int j = 0; j < L; j++) {
+                pi[k] = this.getnJK(j, k);
             }
-            for (int k = 0; k < K; k++) {
-                pi[j][k] /= sumK;
-            }
+            sumK += pi[k];
         }
+        for (int k = 0; k < K; k++) {
+            pi[k] /= sumK;
+        }
+//        }
     }
 
     private void mStep() {
@@ -261,28 +263,30 @@ public class JHMM {
         this.calcPi();
         this.calcMu();
 
-        double ew = 0d;
-        int nonzero = 0;
-        for (int j = 0; j < L; j++) {
-            if (this.nneqPos[j] != 0d) {
-                ew += this.nneqPos[j] / N;
-                nonzero++;
+        if (!Globals.FLAT_EPSILON_PRIOR) {
+            double ew = 0d;
+            int nonzero = 0;
+            for (int j = 0; j < L; j++) {
+                if (this.nneqPos[j] != 0d) {
+                    ew += this.nneqPos[j] / N;
+                    nonzero++;
+                }
             }
-        }
-        ew /= nonzero;
-        double a = 20;
-        double b = (-a * ew + a + 2 * ew - 1) / ew;
+            ew /= nonzero;
+            double a = 20;
+            double b = (-a * ew + a + 2 * ew - 1) / ew;
 
 //        if (!Globals.FIX_EPSILON) {
 //            for (int j = 0; j < L; j++) {
 //                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
 //            }
 //        } else {
-        for (int j = 0; j < L; j++) {
-            this.eps[j] = f(ew + a) / f((coverage[j] * (n - 1)) + a + b);
-            this.antieps[j] = 1 - (n - 1) * eps[j];
-        }
+            for (int j = 0; j < L; j++) {
+                this.eps[j] = f(ew + a) / f((coverage[j] * (n - 1)) + a + b);
+                this.antieps[j] = 1 - (n - 1) * eps[j];
+            }
 //    }
+        }
     }
     public double[][][] mu_old;
 
@@ -354,7 +358,7 @@ public class JHMM {
         return mu;
     }
 
-    public double[][] getPi() {
+    public double[] getPi() {
         return pi;
     }
 

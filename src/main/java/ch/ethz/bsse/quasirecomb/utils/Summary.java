@@ -60,7 +60,7 @@ public class Summary extends Utils {
 
         sb.append("#PI:\n");
         for (int k = 0; k < or.getK(); k++) {
-            sb.append("##").append(or.getPi()[0][k]).append("\n");
+            sb.append("##").append(or.getPi()[k]).append("\n");
         }
         sb.append("\n");
         sb.append("#RHO:\n");

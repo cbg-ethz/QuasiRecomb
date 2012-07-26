@@ -29,7 +29,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
     private double[] eps;
     private double[] antieps;
     private double[][][] rho;
-    private double[][] pi;
+    private double[] pi;
     private double[][][] mu;
     private int start;
     private int end;
@@ -38,7 +38,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
     private int L;
     private int n;
 
-    public ReadHMMWorkerRecalc(int K, int L, int n, ReadHMM[] readHMMArray, double[][][] rho, double[][] pi, double[][][] mu, double[] eps, double[] antieps, int start, int end) {
+    public ReadHMMWorkerRecalc(int K, int L, int n, ReadHMM[] readHMMArray, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, int start, int end) {
         this.readHMMArray = readHMMArray;
         this.rho = rho;
         this.pi = pi;

@@ -5,7 +5,7 @@
 
     <groupId>ch.ethz.bsse</groupId>
     <artifactId>QuasiRecomb</artifactId>
-    <version>0.1.3</version>
+    <version>0.2</version>
     <packaging>jar</packaging>
     <url>http://www.cbg.ethz.ch/software/quasirecomb</url>
     <name>QuasiRecomb</name>
@@ -137,11 +137,6 @@
     </pluginRepositories>
     <repositories>
         <repository>
-            <id>biojava-maven-repo</id>
-            <name>BioJava repository</name>
-            <url>http://www.biojava.org/download/maven/</url>			
-        </repository>
-        <repository>
             <id>ibiblio</id>
             <url>http://www.ibiblio.org/maven/</url>			
         </repository>
@@ -149,5 +144,10 @@
             <id>snapshots</id>
             <url>https://repository.apache.org/content/repositories/snapshots</url>
         </repository>
+<!--        <repository>
+            <id>biojava-maven-repo</id>
+            <name>BioJava repository</name>
+            <url>http://www.biojava.org/download/maven/</url>			
+        </repository>-->
     </repositories>
 </project>

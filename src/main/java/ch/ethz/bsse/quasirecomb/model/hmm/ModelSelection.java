@@ -43,7 +43,7 @@ public class ModelSelection {
     private int bestK;
     private double[][][] mu = null;
     private double[][][] rho = null;
-    private double[][] pi = null;
+    private double[] pi = null;
 
     public ModelSelection(Read[] reads, int Kmin, int Kmax, int N, int L, int n) {
         this.Kmax = Kmax;
@@ -160,7 +160,7 @@ public class ModelSelection {
         return mu;
     }
 
-    public double[][] getPi() {
+    public double[] getPi() {
         return pi;
     }
 

@@ -55,14 +55,16 @@ public class Random {
         return rho;
     }
 
-    public static double[][] generateInitPi(int L, int K) {
-        double[][] pi = new double[L][K];
-        for (int j = 0; j < L; j++) {
+    public static double[] generateInitPi(int L, int K) {
+        if (Globals.NO_RECOMB) {
+            return new Dirichlet(K, 2).nextDistribution();
+        } else {
+            double[] pi = new double[K];
             for (int k = 1; k <= K; k++) {
-                pi[j][k - 1] = 1d / K;
+                pi[k - 1] = 1d / K;
             }
+            return pi;
         }
-        return pi;
     }
 
     public static double[][][] generateMuInit(int L, int K, int n) {
@@ -70,8 +72,12 @@ public class Random {
 
         for (int j = L - 1; j >= 0; j--) {
             for (int k = K - 1; k >= 0; k--) {
-                for (int i = n - 1; i >= 0; i--) {
-                    mu[j][k][i] = 1d / n;
+                if (Globals.NO_RECOMB) {
+                    mu[j][k] = new Dirichlet(n, 2).nextDistribution();
+                } else {
+                    for (int i = n - 1; i >= 0; i--) {
+                        mu[j][k][i] = 1d / n;
+                    }
                 }
             }
         }

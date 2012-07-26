@@ -32,7 +32,7 @@ public class ReadHMM {
     private final int n;
     private final Read read;
     private double[][][] rho;
-    private double[][] pi;
+    private double[] pi;
     private double[][][] mu;
     private double[] eps;
     private double[] antieps;
@@ -47,7 +47,7 @@ public class ReadHMM {
     private int end;
     private int length;
 
-    public ReadHMM(int L, int K, int n, Read read, double[][][] rho, double[][] pi, double[][][] mu, double[] eps, double[] antieps) {
+    public ReadHMM(int L, int K, int n, Read read, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps) {
         this.L = L;
         this.K = K;
         this.n = n;
@@ -103,7 +103,7 @@ public class ReadHMM {
         return true;
     }
 
-    public void recalc(double[][][] rho, double[][] pi, double[][][] mu, double[] epsilon, double[] antieps) {
+    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double[] epsilon, double[] antieps) {
         this.rho = rho;
         this.pi = pi;
         this.mu = mu;
@@ -122,7 +122,7 @@ public class ReadHMM {
                     fJKV[j][k][v] = (this.getSequence()[j] == v ? antieps[begin+j] : eps[begin+j]);
                     fJKV[j][k][v] *= mu[begin + j][k][v];
                     if (j == 0) {
-                        fJKV[j][k][v] *= pi[begin+j][k];
+                        fJKV[j][k][v] *= pi[k];
                     } else {
                         double sumL = 0d;
                         for (int l = 0; l < K; l++) {
