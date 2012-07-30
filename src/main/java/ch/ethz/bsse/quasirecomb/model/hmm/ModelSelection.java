@@ -59,8 +59,6 @@ public class ModelSelection {
         if (!new File(Globals.SAVEPATH + "support").exists()) {
             new File(Globals.SAVEPATH + "support").mkdirs();
         }
-//        Globals.REPEATS = 5;
-//        System.out.println("Model selection (" + Globals.REPEATS + " iterations):");
         
         OptimalResult or = null;
         if (Kmin == 0) {
@@ -113,10 +111,8 @@ public class ModelSelection {
             bestK = Kmin;
         }
         Globals.MODELSELECTION = false;
-//        System.out.println("\nBest model: " + bestK);
         Globals.REPEATS = Globals.DESIRED_REPEATS;
         Globals.PERCENTAGE = 0;
-//        System.out.println("Model training (" + Globals.REPEATS + " iterations):");
         EM em = new EM(this.N, this.L, bestK, this.n, reads);
         if (em.getOr().getLlh() > optBIC || optBIC == 0) {
             or = em.getOr();

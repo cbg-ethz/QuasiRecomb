@@ -18,7 +18,6 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.Globals;
 import java.io.*;
 import java.util.*;
 

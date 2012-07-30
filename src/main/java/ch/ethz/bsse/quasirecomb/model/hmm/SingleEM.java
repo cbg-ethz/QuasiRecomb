@@ -59,9 +59,8 @@ public class SingleEM {
         jhmm = new JHMM(reads, N, L, K, n, Globals.ESTIMATION_EPSILON);
 
         double llh = Double.MIN_VALUE;
-        double oldllh = Double.MIN_VALUE;
+        double oldllh;
         List<Double> history = new ArrayList<>();
-        boolean broken = false;
         do {
             if (iterations % 10 == 0 && iterations > 0) {
                 Globals.maxMAX_LLH(llh);
@@ -73,7 +72,6 @@ public class SingleEM {
             if (iterations > 500) {
                 if (history.get(iterations - 500) - llh > -1) {
                     Globals.log("break 500;\t");
-                    broken = true;
                     break;
                 }
             }
@@ -90,34 +88,21 @@ public class SingleEM {
             jhmm.restart();
             iterations++;
             Globals.printPercentage(K);
-//        } while (jhmm.getParametersChanged() != 0);
         } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
-//        if (!broken) {
-//            Globals.log("\t\t");
-//        }
-        Globals.log("###\t" + jhmm.getParametersChanged()+"\n");
-        Utils.appendFile(Globals.SAVEPATH+"p.txt", jhmm.getParametersChanged()+"\n");
-//        Globals.log((String.valueOf((oldllh - llh) / llh).contains("-") ? "dist: 1e-" + (String.valueOf((oldllh - llh) / llh).split("-")[1]) : String.valueOf((oldllh - llh) / llh)) + "(" + iterations + ")" + this.llh_opt + "\tthis: " + llh + "\topt:" + this.llh_opt + "\tmax:" + Globals.getMAX_LLH());
+        Globals.log("###\t" + jhmm.getParametersChanged() + "\n");
+        Utils.appendFile(Globals.SAVEPATH + "p.txt", jhmm.getParametersChanged() + "\n");
 
         Globals.incPercentage();
-        this.calcBic(llh);
+        this.calcBic();
 
         if (Globals.DEBUG) {
             Globals.log("####");
         }
     }
 
-    public void calcBic(double llh) {
+    public void calcBic() {
         //overview
-        double BIC_current = 0;
-
-        // calculate loglikelihood from scaling factors
-        for (ReadHMM r : jhmm.getReadHMMArray()) {
-            int times = r.getCount();
-            for (int j = 0; j < jhmm.getL(); j++) {
-                BIC_current += Math.log(r.getC(j)) * times;
-            }
-        }
+        double BIC_current = this.jhmm.getLoglikelihood();
 
         // count free parameters
         int freeParameters = 0;
@@ -127,28 +112,11 @@ public class SingleEM {
         double[][][] mu = jhmm.getMu();
         double[] pi = jhmm.getPi();
         double[] eps = jhmm.getEps();
-        if (!Globals.NO_RECOMB) {
-            for (int j = 0; j < rho.length; j++) {
-                for (int k = 0; k < rho[j].length; k++) {
-                    boolean different = false;
-                    for (int l = 1; l < rho[j][k].length; l++) {
-                        if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
-                            different = true;
-                            break;
-                        }
-                    }
-                    if (different) {
-                        for (int l = 0; l < rho[j][k].length; l++) {
-                            if (rho[j][k][l] > ERROR) {
-                                freeParameters++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        
         for (int j = 0; j < mu.length; j++) {
             for (int k = 0; k < mu[j].length; k++) {
+
+                //mu
                 boolean different = false;
                 for (int v = 1; v < mu[j][k].length; v++) {
                     if (Math.abs(mu[j][k][v - 1] - mu[j][k][v]) > ERROR) {
@@ -163,42 +131,57 @@ public class SingleEM {
                         }
                     }
                 }
-            }
-        }
 
-//        for (int j = 0; j < pi.length; j++) {
-        for (int k = 0; k < pi.length; k++) {
-            if (pi[k] > ERROR) {
-                freeParameters++;
+                //rho
+                if (!Globals.NO_RECOMB) {
+                    different = false;
+                    for (int l = 1; l < rho[j][k].length; l++) {
+                        if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
+                            different = true;
+                            break;
+                        }
+                    }
+                    if (different) {
+                        for (int l = 0; l < rho[j][k].length; l++) {
+                            if (rho[j][k][l] > ERROR) {
+                                freeParameters++;
+                            }
+                        }
+                    }
+                }
+                if (eps[j] > ERROR) {
+                    freeParameters++;
+                }
             }
-        }
-//        }
-        for (int j = 0; j < eps.length; j++) {
-            if (eps[j] > ERROR) {
-                freeParameters++;
-            }
-        }
 
+            for (int k = 0; k < pi.length; k++) {
+                if (pi[k] > ERROR) {
+                    freeParameters++;
+                }
+            }
+        }
         BIC_current -= (freeParameters / 2d) * Math.log(N);
-
         if (Globals.LOG_BIC) {
             Utils.appendFile(Globals.SAVEPATH + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
         }
-
-        double[][][] mu_tmp = new double[L][K][n];
-        for (int j = 0; j < L; j++) {
+        double[][][] muCopy = new double[L][K][n];
+        for (int j = 0;
+                j < L;
+                j++) {
             for (int k = 0; k < K; k++) {
-                System.arraycopy(jhmm.getMu()[j][k], 0, mu_tmp[j][k], 0, n);
+                System.arraycopy(jhmm.getMu()[j][k], 0, muCopy[j][k], 0, n);
             }
         }
         this.or = new OptimalResult(N, K, L, n,
                 Arrays.copyOf(jhmm.getRho(), jhmm.getRho().length),
                 Arrays.copyOf(jhmm.getPi(), jhmm.getPi().length),
-                mu_tmp,
-                llh,
-                BIC_current, jhmm.getEps(), jhmm.getRestart());
-        if (llh >= llh_opt) {
-            Globals.maxMAX_LLH(llh);
+                muCopy,
+                this.jhmm.getLoglikelihood(),
+                BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart());
+
+        if (this.jhmm.getLoglikelihood()
+                >= llh_opt) {
+            Globals.maxMAX_LLH(this.jhmm.getLoglikelihood());
         }
     }
 

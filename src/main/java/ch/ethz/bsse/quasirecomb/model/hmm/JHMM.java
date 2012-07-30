@@ -23,7 +23,6 @@ import ch.ethz.bsse.quasirecomb.model.hmm.parallel.EInfo;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorker;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
 import ch.ethz.bsse.quasirecomb.utils.Random;
-import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.List;
 import org.javatuples.Pair;
 
@@ -145,9 +144,9 @@ public class JHMM {
             }
         }
     }
-    
+
     private void changed(double a, double b) {
-        if (Math.abs(a-b) > Globals.PCHANGE) {
+        if (Math.abs(a - b) > Globals.PCHANGE) {
             this.parametersChanged++;
         }
     }
@@ -254,18 +253,14 @@ public class JHMM {
     }
 
     private void calcPi() {
-//        for (int j = 0; j < L; j++) {
         double sumK = 0d;
         for (int k = 0; k < K; k++) {
-//            for (int j = 0; j < L; j++) {
             pi[k] = this.nJK[0][k];
-//            }
             sumK += pi[k];
         }
         for (int k = 0; k < K; k++) {
             pi[k] /= sumK;
         }
-//        }
     }
 
     private void mStep() {
@@ -313,22 +308,13 @@ public class JHMM {
         return N;
     }
 
-    public double[] getAntieps() {
-        return antieps;
-    }
-
     public double[] getEps() {
         return eps;
-    }
-
-    public int getn() {
-        return n;
     }
 
     public double getLoglikelihood() {
         return loglikelihood;
     }
-
 
     public double[][][] getMu() {
         return mu;
@@ -342,10 +328,6 @@ public class JHMM {
         return rho;
     }
 
-    public ReadHMM[] getReadHMMArray() {
-        return this.readHMMArray;
-    }
-
     public int getRestart() {
         return restart;
     }
@@ -353,5 +335,4 @@ public class JHMM {
     public int getParametersChanged() {
         return parametersChanged;
     }
-    
 }

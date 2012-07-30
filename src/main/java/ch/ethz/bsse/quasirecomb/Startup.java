@@ -18,8 +18,8 @@
 package ch.ethz.bsse.quasirecomb;
 
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
-import ch.ethz.bsse.quasirecomb.model.Preprocessing;
 import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.model.Preprocessing;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
 import ch.ethz.bsse.quasirecomb.simulation.Sampling;
@@ -283,7 +283,7 @@ public class Startup {
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
             System.err.println("  -e DOUBLE\t\t: Error rate of the sequencing machine (default: 0.0001)");
             System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
-            System.err.println("  -fixEpsilon\t: Do not train epsilon, in combination with -e");
+            System.err.println("  -flatEpsPrior\t: Do not train epsilon, in combination with -e");
             System.err.println("  -noRecomb\t: Do not allow recombination");
             System.err.println("  -parallelRestarts\t: Parallelize the EM restarts, use this only on machines with 10+ cores!");
             System.err.println("");
