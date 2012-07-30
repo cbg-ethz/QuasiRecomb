@@ -19,6 +19,7 @@ package ch.ethz.bsse.quasirecomb.model;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
+import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.Plot;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -45,7 +46,7 @@ public class Preprocessing {
      * @param f distribution of the haplotypes if sampling has to be done
      * @param N amount of reads in case exp is false
      */
-    public static void forward(String input, int Kmin, int Kmax, int N) {
+    public static void workflow(String input, int Kmin, int Kmax, int N) {
         Read[] reads = Utils.parseInput(input);
         
         for (Read r : reads) {
@@ -55,7 +56,6 @@ public class Preprocessing {
         int L = Globals.ALIGNMENT_END-Globals.ALIGNMENT_BEGIN;
         StringBuilder sb = new StringBuilder();
         for (Read r : reads) {
-//            sb.append(">").append(r.getCount()).append(":").append(r.getBegin()).append("-").append(r.getEnd()).append("\n");
             sb.append(r.getCount()).append("\t");
             if (r.getCount()<1000) {
                 sb.append("\t");
@@ -69,6 +69,9 @@ public class Preprocessing {
         int n = countChars(reads);
         Plot.plotCoverage(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, N, L, n);
+        ModelSampling modelSampling = new ModelSampling(L, n, ms.getOptimalResult().getK(), ms.getOptimalResult().getRho(), ms.getOptimalResult().getPi(), ms.getOptimalResult().getMu(), Globals.SAVEPATH);
+        modelSampling.save();
+        System.out.println("Quasispecies saved: " + Globals.SAVEPATH + "quasispecies.fasta");
     }
 
     private static int countChars(Read[] rs) {

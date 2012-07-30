@@ -20,7 +20,6 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.Globals;
-import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -41,9 +40,7 @@ public class ModelSelection {
     private int L;
     private int n;
     private int bestK;
-    private double[][][] mu = null;
-    private double[][][] rho = null;
-    private double[] pi = null;
+    private OptimalResult or;
 
     public ModelSelection(Read[] reads, int Kmin, int Kmax, int N, int L, int n) {
         this.Kmax = Kmax;
@@ -59,33 +56,8 @@ public class ModelSelection {
         if (!new File(Globals.SAVEPATH + "support").exists()) {
             new File(Globals.SAVEPATH + "support").mkdirs();
         }
-        
-        OptimalResult or = null;
-        if (Kmin == 0) {
-            Globals.MODELSELECTION = true;
-            for (int k = 1;; k++) {
-                if (!Globals.NO_RECOMB || k == 1) {
-                    checkRho0(k);
-                }
-                EM em = new EM(this.N, this.L, k, this.n, reads);
-                if (Globals.LOG_BIC) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(new Summary().print(em.getOr()));
-                    Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
-                }
-                if (em.getOr().getBIC() > optBIC || optBIC == 0) {
-                    or = em.getOr();
-                    optBIC = em.getOr().getBIC();
-                    this.bestK = k;
-                    this.mu = em.getMu_opt();
-                    this.pi = em.getPi_opt();
-                    this.rho = em.getRho_opt();
-                } else {
-                    break;
-                }
-                Globals.PERCENTAGE = 0;
-            }
-        } else if (Kmin != Kmax) {
+
+        if (Kmin != Kmax) {
             Globals.MODELSELECTION = true;
             for (int k = Kmin; k <= Kmax; k++) {
                 if (!Globals.NO_RECOMB || k == 1) {
@@ -101,9 +73,6 @@ public class ModelSelection {
                     or = em.getOr();
                     optBIC = em.getOr().getBIC();
                     this.bestK = k;
-                    this.mu = em.getMu_opt();
-                    this.pi = em.getPi_opt();
-                    this.rho = em.getRho_opt();
                 }
                 Globals.PERCENTAGE = 0;
             }
@@ -116,9 +85,6 @@ public class ModelSelection {
         EM em = new EM(this.N, this.L, bestK, this.n, reads);
         if (em.getOr().getLlh() > optBIC || optBIC == 0) {
             or = em.getOr();
-            this.mu = em.getMu_opt();
-            this.pi = em.getPi_opt();
-            this.rho = em.getRho_opt();
         }
 
         Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
@@ -133,10 +99,6 @@ public class ModelSelection {
         } catch (IOException ex) {
             System.out.println("Optimum Java saving\n" + ex.getMessage());
         }
-
-        ModelSampling modelSampling = new ModelSampling(L, n, or.getK(), or.getRho(), or.getPi(), or.getMu(), Globals.SAVEPATH);
-        modelSampling.save();
-        System.out.println("Quasispecies saved: " + Globals.SAVEPATH + "quasispecies.fasta");
     }
 
     private static void checkRho0(int K) {
@@ -151,15 +113,7 @@ public class ModelSelection {
         return bestK;
     }
 
-    public double[][][] getMu() {
-        return mu;
-    }
-
-    public double[] getPi() {
-        return pi;
-    }
-
-    public double[][][] getRho() {
-        return rho;
+    public OptimalResult getOptimalResult() {
+        return or;
     }
 }

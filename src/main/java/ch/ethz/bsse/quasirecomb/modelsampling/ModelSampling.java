@@ -200,37 +200,21 @@ public final class ModelSampling extends Utils {
     }
 
     public static Map sortMapByValue(Map map) {
-
-
-
-        List listForSort = null;
-
+        List listForSort;
         Map sortedList = new LinkedHashMap();
-
         listForSort = new LinkedList(map.entrySet());
-
         Collections.sort(listForSort, new Comparator() {
+            @Override
             public int compare(Object value1, Object value2) {
-
                 return ((Comparable) ((Map.Entry) (value2)).getValue()).compareTo(((Map.Entry) (value1)).getValue());
-
             }
         });
-
         Iterator itret = listForSort.iterator();
-
-
-
         while (itret.hasNext()) {
-
             Map.Entry entry = (Map.Entry) itret.next();
-
             sortedList.put(entry.getKey(), entry.getValue());
-
         }
-
         return sortedList;
-
     }
 
     public int getK() {
@@ -248,7 +232,6 @@ class ValueComparator implements Comparator {
 
     @Override
     public int compare(Object a, Object b) {
-
         if ((Integer) base.get(a) < (Integer) base.get(b)) {
             return 1;
         } else if ((Integer) base.get(a) == (Integer) base.get(b)) {

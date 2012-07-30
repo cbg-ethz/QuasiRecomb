@@ -58,7 +58,7 @@ public class Startup {
     @Option(name = "--train", usage = "Train model for given multiple alignment")
     private boolean train;
     @Option(name = "-K")
-    private String K = "0";
+    private String K = "1:5";
     @Option(name = "-m")
     private int m = 5;
     @Option(name = "-t")
@@ -260,7 +260,7 @@ public class Startup {
                 Globals.SAVEPATH = output + File.separator;
                 new File(Globals.SAVEPATH).mkdirs();
                 Globals.NO_RECOMB = this.noRecomb;
-                Preprocessing.forward(this.input, Kmin, Kmax, N);
+                Preprocessing.workflow(this.input, Kmin, Kmax, N);
             }
 
         } catch (CmdLineException e) {
@@ -278,7 +278,7 @@ public class Startup {
             System.err.println("  -i INPUT\t\t: Multiple fasta file");
             System.err.println("");
             System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
-                    + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached.");
+                    + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached, but will stop at K=5.");
             System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
             System.err.println("  -e DOUBLE\t\t: Error rate of the sequencing machine (default: 0.0001)");
