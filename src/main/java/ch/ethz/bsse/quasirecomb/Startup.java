@@ -134,12 +134,13 @@ public class Startup {
             parser.parseArgument(args);
             if (output == null) {
                 this.output = System.getProperty("user.dir") + File.separator;
-            } else if (this.output.endsWith(File.separator)
-                    && !new File(this.output).exists()) {
+            } else {
+                Globals.getINSTANCE().setSAVEPATH(this.output);
+            }
+            if (!new File(this.output).exists()) {
                 if (!new File(this.output).mkdirs()) {
                     System.out.println("Cannot create directory: " + this.output);
                 }
-
             }
 
             Globals.getINSTANCE().setDEBUG(this.verbose);
@@ -152,7 +153,7 @@ public class Startup {
                 ModelSampling simulation = new ModelSampling(input, output);
                 simulation.save();
             } else if (this.simulate) {
-                double fArray[] = null;
+                double fArray[];
                 String[] split = f.split(",");
                 fArray = new double[split.length];
                 int i = 0;
@@ -161,13 +162,8 @@ public class Startup {
                     fArray[i++] = Double.parseDouble(s);
                     sum += fArray[i - 1];
                 }
-                if (sum != 1d && Math.abs(sum) - 1d > 1e-6) {
-                    System.err.println("Frequencies do not add up to 1, instead to " + sum);
-                    System.exit(0);
-                }
                 if (sum != 1d && Math.abs(sum - 1d) > 1e-6) {
-                    System.err.println("Frequencies do not add up to 1, instead to " + sum);
-                    System.exit(0);
+                    throw new RuntimeException("Frequencies do not add up to 1, instead to " + sum);
                 }
                 if (this.output.endsWith(File.separator)) {
                     this.output += "reads.fasta";
@@ -177,12 +173,12 @@ public class Startup {
             } else if (this.recombine) {
                 if (this.spots != null) {
                     String[] split = this.spots.split(",");
-                    int[] spots = new int[split.length];
+                    int[] spotsArray = new int[split.length];
                     int i = 0;
                     for (String s : split) {
-                        spots[i++] = Integer.parseInt(s);
+                        spotsArray[i++] = Integer.parseInt(s);
                     }
-                    Recombinator.recombine(input, spots, output);
+                    Recombinator.recombine(input, spotsArray, output);
                 } else {
                     System.out.println("Please provide -spots, i.e. -spots 50,140,321");
                 }
@@ -198,9 +194,10 @@ public class Startup {
                 } catch (IOException | ClassNotFoundException ex) {
                     System.err.println(ex);
                 }
-
-                Summary s = new Summary();
-                System.out.println(s.print(or));
+                if (or != null) {
+                    Summary s = new Summary();
+                    System.out.println(s.print(or));
+                }
                 if (this.haplotypes != null) {
                     ModelSampling ms = new ModelSampling(input, "");
                     System.out.println("\n#Quasispecies:");
@@ -209,9 +206,9 @@ public class Startup {
                     System.out.println("\n#Phi distance:");
                     System.out.println("q\tphi");
                     int i = 0;
-                    for (Pair p : phi) {
-                        System.out.println(i++ + "\t" + p.getValue0());
-                        if (((double) p.getValue0()) == 1d) {
+                    for (Pair phiLocal : phi) {
+                        System.out.println(i++ + "\t" + phiLocal.getValue0());
+                        if (((double) phiLocal.getValue0()) == 1d) {
                             break;
                         }
                     }
@@ -219,8 +216,8 @@ public class Startup {
             } else if (this.distance) {
                 Map<String, Double> quasiDouble = FastaParser.parseQuasispeciesFile(input);
                 Map<String, Integer> quasiInt = new HashMap<>();
-                for (String s : quasiDouble.keySet()) {
-                    quasiInt.put(s, (int) (quasiDouble.get(s).doubleValue() * 10000));
+                for (Map.Entry<String, Double> s : quasiDouble.entrySet()) {
+                    quasiInt.put(s.getKey(), (int) (s.getValue().doubleValue() * 10000));
                 }
                 Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), quasiInt);
                 System.out.println("q\tphi");
@@ -261,13 +258,12 @@ public class Startup {
                 Globals.getINSTANCE().setDESIRED_REPEATS(this.t);
                 Globals.getINSTANCE().setDEBUG(this.verbose);
                 Globals.getINSTANCE().setSAVEPATH(output + File.separator);
-                new File(Globals.getINSTANCE().getSAVEPATH()).mkdirs();
                 Globals.getINSTANCE().setNO_RECOMB(this.noRecomb);
                 Preprocessing.workflow(this.input, Kmin, Kmax, N);
             }
 
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
+        } catch (CmdLineException cmderror) {
+            System.err.println(cmderror.getMessage());
             System.err.println("java -jar QuasiRecomb.jar options...\n");
             System.err.println(" ------------------------");
             System.err.println(" === GENERAL options ===");

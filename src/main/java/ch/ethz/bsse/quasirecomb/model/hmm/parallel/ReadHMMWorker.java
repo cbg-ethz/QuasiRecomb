@@ -30,6 +30,7 @@ import org.javatuples.Pair;
  */
 public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
 
+    private static final long serialVersionUID = 1L;
     private JHMM jhmm;
     private Read[] reads;
     private double[][][] rho;

@@ -26,6 +26,7 @@ import java.util.concurrent.RecursiveTask;
  */
 public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
 
+    private static final long serialVersionUID = 1L;
     private double[] eps;
     private double[] antieps;
     private double[][][] rho;

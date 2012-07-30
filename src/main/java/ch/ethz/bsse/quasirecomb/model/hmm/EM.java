@@ -37,10 +37,10 @@ public class EM extends Utils {
     private List<OptimalResult> ors;
 
     protected EM(int N, int L, int K, int n, Read[] reads) {
-        this.blackbox(reads,N,L,K,n);
+        this.blackbox(reads, N, L, K, n);
     }
 
-    private void blackbox(Read[] reads,int N, int L, int K, int n) {
+    private void blackbox(Read[] reads, int N, int L, int K, int n) {
         Globals.getINSTANCE().setLOG(new StringBuilder());
         Globals.getINSTANCE().setMAX_LLH(Double.NEGATIVE_INFINITY);
         if (Globals.getINSTANCE().isPARALLEL_RESTARTS()) {
@@ -57,15 +57,17 @@ public class EM extends Utils {
         double maxLLH = Double.NEGATIVE_INFINITY;
         StringBuilder restarts = new StringBuilder();
         for (OptimalResult tmp : ors) {
-            restarts.append(tmp.getRestarts()).append("\n");
-            if (tmp != null && tmp.getLlh() >= maxLLH) {
-                maxLLH = tmp.getLlh();
-                or = tmp;
+            if (tmp != null) {
+                restarts.append(tmp.getRestarts()).append("\n");
+                if (tmp.getLlh() >= maxLLH) {
+                    maxLLH = tmp.getLlh();
+                    or = tmp;
+                }
             }
         }
 
 //        System.out.println("\tBIC: " + (int) or.getBIC());
-        Globals.getINSTANCE().printBIC(K, (int)or.getBIC());
+        Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
         System.out.print("\n");
 //        if (!Globals.NO_REFINE) {
 //            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);

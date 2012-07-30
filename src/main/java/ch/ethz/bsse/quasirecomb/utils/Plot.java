@@ -24,7 +24,6 @@ import com.google.common.collect.Multiset;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jfree.chart.ChartFactory;

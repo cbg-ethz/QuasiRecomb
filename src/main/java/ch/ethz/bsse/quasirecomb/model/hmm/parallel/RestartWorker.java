@@ -31,6 +31,7 @@ import java.util.concurrent.RecursiveTask;
  */
 public class RestartWorker extends RecursiveTask<List<OptimalResult>> {
 
+    private static final long serialVersionUID = 1L;
     private int N;
     private int K;
     private int L;

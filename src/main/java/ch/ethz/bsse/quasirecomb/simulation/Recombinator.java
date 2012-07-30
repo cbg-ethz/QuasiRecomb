@@ -20,7 +20,6 @@ package ch.ethz.bsse.quasirecomb.simulation;
 import ch.ethz.bsse.quasirecomb.model.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.util.*;
 
 /**
@@ -79,9 +78,9 @@ public class Recombinator {
 //            System.out.println(s);
             sb.append(">recombinant-").append(i++).append("\n").append(s).append("\n");
         }
-        if (output.endsWith(File.separator)) {
-            output+="recombinants.fasta";
-        }
+//        if (output.endsWith(File.separator)) {
+//            output+="recombinants.fasta";
+//        }
         System.out.println(sb.toString());
 //        Utils.saveFile(output, sb.toString());
     }

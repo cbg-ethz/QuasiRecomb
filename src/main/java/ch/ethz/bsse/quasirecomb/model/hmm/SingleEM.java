@@ -78,7 +78,7 @@ public class SingleEM {
             log(llh);
 
             if (Globals.getINSTANCE().isDEBUG()) {
-                if ((oldllh - llh) / llh == -1) {
+                if (Math.abs((oldllh - llh) / llh - 1d) > 1e-15) {
                     Globals.getINSTANCE().log("0\t");
                 } else {
                     Globals.getINSTANCE().log((oldllh - llh) / llh + "\t" + jhmm.getParametersChanged() + "\t");
@@ -133,7 +133,7 @@ public class SingleEM {
                 }
 
                 //rho
-                if (j < L-1) {
+                if (j < L - 1) {
                     if (!Globals.getINSTANCE().isNO_RECOMB()) {
                         different = false;
                         for (int l = 1; l < rho[j][k].length; l++) {

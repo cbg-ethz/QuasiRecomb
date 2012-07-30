@@ -24,7 +24,6 @@ import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -32,8 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Sampling {
 
-    public static String newline = System.getProperty("line.separator");
-    public static Random random = new Random();
+    public final static String newline = System.getProperty("line.separator");
 
 //    public static String[] fromHaplotypesCross(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
 //        return fromHaplotypesCross(Utils.parseBAMSAM(path), N, L, epsilon, hapProb, n, savePath);
@@ -164,24 +162,20 @@ public class Sampling {
             }
         }
         StringBuilder sb = new StringBuilder();
-        for (String readX : map.keySet()) {
-            sb.append(map.get(readX)).append("\t").append(readX).append("\n");
-        }
-        Utils.saveFile(savePath + "sampledReadDistribution.txt", sb.toString());
+        StringBuilder sb2 = new StringBuilder();
         int z = 0;
-        sb.setLength(0);
-        for (String readX : map.keySet()) {
-            for (int i = 0; i < map.get(readX); i++) {
-                sb.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
-
+        for (Map.Entry<String,Integer> readX : map.entrySet()) {
+            sb.append(readX.getValue()).append("\t").append(readX.getKey()).append("\n");
+            for (int i = 0; i < readX.getValue(); i++) {
+                sb2.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
             }
         }
-        Utils.saveFile(savePath + "reads.fasta", sb.toString());
+        Utils.saveFile(savePath + "sampledReadDistribution.txt", sb.toString());
+        Utils.saveFile(savePath + "reads.fasta", sb2.toString());
         return reads;
     }
 
     public static Map<String, Integer> fromHaplotypes(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        int[] hits = new int[L];
         Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
             freqMap.put(i, hapProb[i]);
@@ -210,9 +204,6 @@ public class Sampling {
                 }
                 Frequency<Character> errorF = new Frequency<>(baseMap);
                 readArray[j] = errorF.roll();
-                if (readArray[j] != haplotypes[hap].charAt(j)) {
-                    hits[j]++;
-                }
             }
             read = String.valueOf(readArray);
             if (!map.containsKey(read)) {
@@ -221,22 +212,16 @@ public class Sampling {
             map.put(read, map.get(read) + 1);
         }
         StringBuilder sb = new StringBuilder();
-        for (String readX : map.keySet()) {
-            sb.append(map.get(readX)).append("\t").append(readX).append("\n");
-        }
-        Utils.saveFile(savePath + "sampledReadDistribution.txt", sb.toString());
+        StringBuilder sb2 = new StringBuilder();
         int z = 0;
-        sb.setLength(0);
-        for (String readX : map.keySet()) {
-            for (int i = 0; i < map.get(readX); i++) {
-                sb.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
-
+        for (Map.Entry<String,Integer> readX : map.entrySet()) {
+            sb.append(readX.getValue()).append("\t").append(readX.getKey()).append("\n");
+            for (int i = 0; i < readX.getValue(); i++) {
+                sb2.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
             }
         }
-        Utils.saveFile(savePath + "reads.fasta", sb.toString());
-        for (int i : hits) {
-            System.out.println(i);
-        }
+        Utils.saveFile(savePath + "sampledReadDistribution.txt", sb.toString());
+        Utils.saveFile(savePath + "reads.fasta", sb2.toString());
         return map;
     }
 

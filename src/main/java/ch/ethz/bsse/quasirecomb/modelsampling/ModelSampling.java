@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -46,7 +47,6 @@ public final class ModelSampling extends Utils {
     private int[] recombPerObservation;
     private Map<String, Double> hexMap = new HashMap<>();
     private StringBuilder sb = new StringBuilder();
-    private TreeMap<byte[], Integer> sorted_map;
 
     public ModelSampling(int L, int n, int K, double[][][] rho, double[] pi, double[][][] mu) {
         this.L = L;
@@ -100,10 +100,12 @@ public final class ModelSampling extends Utils {
     }
 
     public void start() {
-        new File(savePath).mkdirs();
+        if (!new File(savePath).exists()) {
+            if (!new File(savePath).mkdirs()) {
+                throw new RuntimeException("Cannot create directory: " + savePath);
+            }
+        }
         this.reads = new HashMap<>();
-        ValueComparator bvc = new ValueComparator(reads);
-        this.sorted_map = new TreeMap(bvc);
         byte[][] readArray = new byte[amount][L];
         for (int i = 0; i < amount; i++) {
             readArray[i] = single(i);
@@ -221,9 +223,10 @@ public final class ModelSampling extends Utils {
     }
 }
 
-class ValueComparator implements Comparator {
+class ValueComparator implements Comparator,Serializable {
 
     Map base;
+    private static final long serialVersionUID = 1L;
 
     public ValueComparator(Map base) {
         this.base = base;

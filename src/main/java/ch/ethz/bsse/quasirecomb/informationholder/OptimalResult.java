@@ -24,6 +24,7 @@ import java.io.Serializable;
  */
 public class OptimalResult implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private int N;
     private int K;
     private int L;

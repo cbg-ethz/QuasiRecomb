@@ -135,9 +135,8 @@ public class DistanceUtils {
         StringBuilder sb = new StringBuilder();
         for (String sequence : PH.keySet()) {
             sb.append(sequence).append("\t").append(PH.get(sequence)).append("\t").append(PhatH.get(sequence)).append("\n");
-            Double frequency1 = (double) PH.get(sequence) / PHsize;
+//            Double frequency1 = (double) PH.get(sequence) / PHsize;
             frequency2 = (double) PhatH.get(sequence) / PhatHsize;
-            result += frequency1 * (Math.log(frequency1 / frequency2) / Math.log(2));
         }
         System.out.println(sb);
         return result;

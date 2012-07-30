@@ -26,7 +26,7 @@ import java.util.*;
  */
 public class Utils extends FastaParser {
 
-    public static String SAVEPATH = "";
+    public final static String SAVEPATH = "";
 
     public static void appendFile(String path, String sb) {
         try {
@@ -122,9 +122,9 @@ public class Utils extends FastaParser {
 
     public static void saveClusteredReads(Map<byte[], Integer> clusterReads) {
         StringBuilder sb = new StringBuilder();
-        for (byte[] read : clusterReads.keySet()) {
-            sb.append(clusterReads.get(read)).append("\t");
-            for (byte b : read) {
+        for (Map.Entry<byte[],Integer> read : clusterReads.entrySet()) {
+            sb.append(read.getValue()).append("\t");
+            for (byte b : read.getKey()) {
                 sb.append(Utils.reverse((int) b));
             }
             sb.append("\n");
@@ -164,11 +164,11 @@ public class Utils extends FastaParser {
         List<Read> hashing = new ArrayList<>();
         if (isFastaGlobalFormat(path)) {
             Map<String, String> haps = parseGlobalFarFile(path);
-            for (String head : haps.keySet()) {
-                String[] split = head.split("_")[1].split("-");
+            for (Map.Entry<String,String> head : haps.entrySet()) {
+                String[] split = head.getKey().split("_")[1].split("-");
                 int begin = Integer.parseInt(split[0]);
                 int end = Integer.parseInt(split[1]);
-                byte[] seq = splitReadIntoByteArray(haps.get(head));
+                byte[] seq = splitReadIntoByteArray(head.getValue());
                 boolean missing = true;
                 for (Read r : hashing) {
                     if (Arrays.equals(r.getSequence(), seq)
@@ -244,12 +244,12 @@ public class Utils extends FastaParser {
 
     public static Map<String, Integer> reverse(Map<byte[], Integer> src) {
         Map<String, Integer> dest = new HashMap<>();
-        for (byte[] bb : src.keySet()) {
-            StringBuilder sb = new StringBuilder(bb.length);
-            for (byte b : bb) {
+        for (Map.Entry<byte[],Integer> bb : src.entrySet()) {
+            StringBuilder sb = new StringBuilder(bb.getKey().length);
+            for (byte b : bb.getKey()) {
                 sb.append(reverse(b));
             }
-            dest.put(sb.toString(), src.get(bb));
+            dest.put(sb.toString(), bb.getValue());
         }
         return dest;
     }
@@ -304,9 +304,9 @@ public class Utils extends FastaParser {
 
     public static void save(Map<String, Integer> map, String path) {
         StringBuilder sb = new StringBuilder();
-        for (String read : map.keySet()) {
-            for (int i = 0; i < map.get(read); i++) {
-                sb.append(">").append(i).append("\n").append(read).append("\n");
+        for (Map.Entry<String,Integer> read : map.entrySet()) {
+            for (int i = 0; i < read.getValue(); i++) {
+                sb.append(">").append(i).append("\n").append(read.getKey()).append("\n");
             }
         }
         saveFile(path, sb.toString());

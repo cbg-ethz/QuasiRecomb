@@ -34,8 +34,8 @@ import java.io.ObjectOutputStream;
  */
 public class ModelSelection {
 
-    private int Kmin;
-    private int Kmax;
+    private int kMin;
+    private int kMax;
     private int N;
     private int L;
     private int n;
@@ -43,8 +43,8 @@ public class ModelSelection {
     private OptimalResult or;
 
     public ModelSelection(Read[] reads, int Kmin, int Kmax, int N, int L, int n) {
-        this.Kmax = Kmax;
-        this.Kmin = Kmin;
+        this.kMax = Kmax;
+        this.kMin = Kmin;
         this.N = N;
         this.L = L;
         this.n = n;
@@ -55,12 +55,14 @@ public class ModelSelection {
         double optBIC = 0;
         String save = Globals.getINSTANCE().getSAVEPATH() + "support";
         if (!new File(save).exists()) {
-            new File(save).mkdirs();
+            if (!new File(save).mkdirs()) {
+                throw new RuntimeException("Cannot create directory: " + save);
+            }
         }
 
-        if (Kmin != Kmax) {
+        if (kMin != kMax) {
             Globals.getINSTANCE().setMODELSELECTION(true);
-            for (int k = Kmin; k <= Kmax; k++) {
+            for (int k = kMin; k <= kMax; k++) {
                 if (!Globals.getINSTANCE().isNO_RECOMB() || k == 1) {
                     checkRho0(k);
                 }
@@ -78,7 +80,7 @@ public class ModelSelection {
                 Globals.getINSTANCE().setPERCENTAGE(0);
             }
         } else {
-            bestK = Kmin;
+            bestK = kMin;
         }
         Globals.getINSTANCE().setMODELSELECTION(false);
         Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());

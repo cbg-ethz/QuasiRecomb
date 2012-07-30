@@ -19,7 +19,6 @@ package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -159,8 +158,8 @@ public class Summary extends Utils {
         }
         return sb.toString();
     }
-    
-     public String html(OptimalResult or) {
+
+    public String html(OptimalResult or) {
         List<Integer> breaks = new ArrayList<>();
         for (int j = 0; j < or.getL(); j++) {
             for (int k = 0; k < or.getK(); k++) {
@@ -249,9 +248,10 @@ public class Summary extends Utils {
                             case 4:
                                 sb.append(" background-color: rgba(97,97,97,");
                                 break;
-
+                            default:
+                                break;
                         }
-                        sb.append(opacity(or.getMu()[j][k][v]) + ")\">");
+                        sb.append(opacity(or.getMu()[j][k][v])).append(")\">");
                         sb.append(shorten(or.getMu()[j][k][v]));
                         sb.append("</tr></td>");
                     }
@@ -266,21 +266,22 @@ public class Summary extends Utils {
                     if (max != Double.MIN_VALUE) {
                         switch (m.get(max)) {
                             case 0:
-                                sb.append(" style=\"background-color:" + A + "\"");
+                                sb.append(" style=\"background-color:").append(A).append("\"");
                                 break;
                             case 1:
-                                sb.append(" style=\"background-color:" + C + "\"");
+                                sb.append(" style=\"background-color:").append(C).append("\"");
                                 break;
                             case 2:
-                                sb.append(" style=\"background-color:" + G + "\"");
+                                sb.append(" style=\"background-color:").append(G).append("\"");
                                 break;
                             case 3:
-                                sb.append(" style=\"background-color:" + T + "\"");
+                                sb.append(" style=\"background-color:").append(T).append("\"");
                                 break;
                             case 4:
-                                sb.append(" style=\"background-color:" + gap + "\"");
+                                sb.append(" style=\"background-color:").append(gap).append("\"");
                                 break;
-
+                            default:
+                                break;
                         }
                     }
                     sb.append(">");
@@ -313,7 +314,7 @@ public class Summary extends Utils {
                                     } else {
                                         sb.append("<tr><td style=\"border:none;\">");
                                     }
-                                    sb.append("G" + l + ":" + shorten(or.getRho()[j][k][l]));
+                                    sb.append("G").append(l).append(":").append(shorten(or.getRho()[j][k][l]));
                                     sb.append("</td></tr>");
                                 }
                             }
@@ -362,6 +363,7 @@ public class Summary extends Utils {
         }
         return s;
     }
+
     private String opacity(double value) {
         String s;
         if (value < 1e-3) {
