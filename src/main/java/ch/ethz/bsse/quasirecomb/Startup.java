@@ -73,6 +73,8 @@ public class Startup {
     private double ee = .001;
     @Option(name = "-d")
     private double d = 1e-8;
+    @Option(name = "-p")
+    private double p = 1e-4;
     @Option(name = "-parallelRestarts")
     private boolean parallelRestarts;
     @Option(name = "-singleCore")
@@ -136,6 +138,7 @@ public class Startup {
                     && !new File(this.output).exists()) {
                 new File(this.output).mkdirs();
             }
+            
             Globals.DEBUG = this.verbose;
             Globals.LOGGING = this.log;
             Globals.LOG_BIC = this.logBIC;
@@ -225,7 +228,13 @@ public class Startup {
                         break;
                     }
                 }
-            } else if (this.train) {
+
+            } else if (cut) {
+                Cutter.cut(input, output, begin, end);
+            } else {
+                if (this.input == null) {
+                    throw new CmdLineException("No input given");
+                }
                 int Kmin, Kmax;
                 if (K.contains(":")) {
                     Kmin = Integer.parseInt(K.split(":")[0]);
@@ -236,6 +245,7 @@ public class Startup {
                 }
 
                 Globals.FLAT_EPSILON_PRIOR = this.flatEpsilonPrior;
+                Globals.PCHANGE = this.p;
                 Globals.ALPHA_Z = this.alphaz;
                 Globals.ALPHA_H = this.alphah;
                 Globals.BETA_Z = this.betaz;
@@ -251,15 +261,11 @@ public class Startup {
                 new File(Globals.SAVEPATH).mkdirs();
                 Globals.NO_RECOMB = this.noRecomb;
                 Preprocessing.forward(this.input, Kmin, Kmax, N);
-            } else if (cut) {
-                Cutter.cut(input, output, begin, end);
-            } else {
-                throw new CmdLineException("No input given");
             }
 
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
-            System.err.println("java -jar QuasiRecomb.jar [options...] arguments...\n");
+            System.err.println("java -jar QuasiRecomb.jar options...\n");
             System.err.println(" ------------------------");
             System.err.println(" === GENERAL options ===");
             System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory)");
@@ -269,7 +275,6 @@ public class Startup {
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === TRAINING options ===");
-            System.err.println("  --train");
             System.err.println("  -i INPUT\t\t: Multiple fasta file");
             System.err.println("");
             System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
@@ -282,37 +287,37 @@ public class Startup {
             System.err.println("  -noRecomb\t: Do not allow recombination");
             System.err.println("  -parallelRestarts\t: Parallelize the EM restarts, use this only on machines with 10+ cores!");
             System.err.println("");
-            System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar --train -i input.fasta");
+            System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -i input.fasta");
             System.err.println(" ------------------------");
-            System.err.println("");
-            System.err.println("");
-            System.err.println(" ------------------------");
-            System.err.println(" === SAMPLE from model === ");
-            System.err.println("  --sample ");
-            System.err.println("  -i FILE\t\t: Sample from given trained model");
-            System.err.println("");
-            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i path/to/optimumJava");
-            System.err.println("");
-            System.err.println(" ------------------------");
-            System.err.println("");
-            System.err.println(" ------------------------");
-            System.err.println(" === SUMMARY of model === ");
-            System.err.println("  --sample ");
-            System.err.println("  -i FILE\t\t: Summary of given trained model");
-            System.err.println("  -h FILE\t\t: Calculates phi distance to this true haplotypes");
-            System.err.println("");
-            System.err.println("  Example for summary:\n   java -jar QuasiRecomb.jar --summary -i path/to/optimumJava");
-            System.err.println("");
-            System.err.println(" ------------------------");
-            System.err.println("");
-            System.err.println(" ------------------------");
-            System.err.println(" === DISTANCE (phi) === ");
-            System.err.println("  --distance ");
-            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
-            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes sampled from");
-            System.err.println("");
-            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasiespecies.fasta -h dataset.fasta");
-            System.err.println(" ------------------------");
+//            System.err.println("");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println(" === SAMPLE from model === ");
+//            System.err.println("  --sample ");
+//            System.err.println("  -i FILE\t\t: Sample from given trained model");
+//            System.err.println("");
+//            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i path/to/optimumJava");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println(" === SUMMARY of model === ");
+//            System.err.println("  --sample ");
+//            System.err.println("  -i FILE\t\t: Summary of given trained model");
+//            System.err.println("  -h FILE\t\t: Calculates phi distance to this true haplotypes");
+//            System.err.println("");
+//            System.err.println("  Example for summary:\n   java -jar QuasiRecomb.jar --summary -i path/to/optimumJava");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println(" === DISTANCE (phi) === ");
+//            System.err.println("  --distance ");
+//            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
+//            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes sampled from");
+//            System.err.println("");
+//            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasiespecies.fasta -h dataset.fasta");
+//            System.err.println(" ------------------------");
         }
     }
 }

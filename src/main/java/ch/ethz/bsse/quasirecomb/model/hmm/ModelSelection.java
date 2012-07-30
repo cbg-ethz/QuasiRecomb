@@ -124,11 +124,10 @@ public class ModelSelection {
             this.pi = em.getPi_opt();
             this.rho = em.getRho_opt();
         }
-        //save optimumJava
-        StringBuilder sb = new StringBuilder();
-        sb.append(new Summary().print(or));
 
-        Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + or.getK() + "-result.txt", sb.toString());
+        Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
+        Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + or.getK() + "-summary.txt", new Summary().html(or));
+        //save optimumJava
         try {
             String s = Globals.SAVEPATH + "support" + File.separator + "optimumJava";// + (bestK ? "" : K);
             FileOutputStream fos = new FileOutputStream(s);

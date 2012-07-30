@@ -33,6 +33,7 @@ public class Globals {
     public static int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     public static int ALIGNMENT_END = Integer.MIN_VALUE;
     public static boolean FLAT_EPSILON_PRIOR;
+    public static double PCHANGE;
     public static double BETA_Z;
     public static double ALPHA_Z;
     public static double ALPHA_H;
@@ -87,10 +88,11 @@ public class Globals {
         System.out.print("\r" + time() + " " + s);
     }
     public static void printPercentage(int K) {
+        if (!DEBUG)
         if (MODELSELECTION) {
-            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + (int) MAX_LLH + "]                 ");
+            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " +  MAX_LLH + "]                 ");
         } else {
-            System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + (int) MAX_LLH + "]                 ");
+            System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " +  MAX_LLH + "]                 ");
         }
     }
 

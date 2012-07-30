@@ -83,19 +83,21 @@ public class SingleEM {
                 if ((oldllh - llh) / llh == -1) {
                     Globals.log("0\t");
                 } else {
-                    Globals.log((oldllh - llh) / llh + "\t");
+                    Globals.log((oldllh - llh) / llh + "\t" + jhmm.getParametersChanged() + "\t");
                 }
                 Globals.log(llh + "\n");
             }
             jhmm.restart();
             iterations++;
             Globals.printPercentage(K);
-        } while (Math.abs((oldllh - llh) / llh) > this.delta);
-        if (!broken) {
-            Globals.log("\t\t");
-        }
-
-        Globals.log((String.valueOf((oldllh - llh) / llh).contains("-") ? "dist: 1e-" + (String.valueOf((oldllh - llh) / llh).split("-")[1]) : String.valueOf((oldllh - llh) / llh)) + "(" + iterations + ")" + this.llh_opt + "\tthis: " + llh + "\topt:" + this.llh_opt + "\tmax:" + Globals.getMAX_LLH());
+//        } while (jhmm.getParametersChanged() != 0);
+        } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
+//        if (!broken) {
+//            Globals.log("\t\t");
+//        }
+        Globals.log("###\t" + jhmm.getParametersChanged()+"\n");
+        Utils.appendFile(Globals.SAVEPATH+"p.txt", jhmm.getParametersChanged()+"\n");
+//        Globals.log((String.valueOf((oldllh - llh) / llh).contains("-") ? "dist: 1e-" + (String.valueOf((oldllh - llh) / llh).split("-")[1]) : String.valueOf((oldllh - llh) / llh)) + "(" + iterations + ")" + this.llh_opt + "\tthis: " + llh + "\topt:" + this.llh_opt + "\tmax:" + Globals.getMAX_LLH());
 
         Globals.incPercentage();
         this.calcBic(llh);

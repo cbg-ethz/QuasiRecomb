@@ -47,21 +47,17 @@ public class JHMM {
     private double[][] nJK;
     private double[][][] nJKL;
     private double[][][] nJKV;
-    private double[][] nVB;
     private double[] neqPos;
     private double[] nneqPos;
     private double[] nJeq;
     private double[] nJneq;
-    private double neq;
-    private double nneq;
     private double loglikelihood;
-    private double likelihood;
-    private double Q;
     private Read[] reads;
     private ReadHMM[] readHMMArray;
     private int restart = 0;
     private int readCount;
     private int coverage[];
+    private int parametersChanged = 0;
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
@@ -84,7 +80,6 @@ public class JHMM {
         this.nJK = new double[L][K];
         this.nJKL = new double[L][K][K];
         this.nJKV = new double[L][K][n];
-        this.nVB = new double[n][n];
         this.nJeq = new double[L];
         this.nJneq = new double[L];
         this.neqPos = new double[L];
@@ -124,6 +119,7 @@ public class JHMM {
 
     public void restart() {
         this.restart++;
+        this.parametersChanged = 0;
         EInfo invoke = Globals.fjPool.invoke(new ReadHMMWorkerRecalc(K, L, n, this.readHMMArray, rho, pi, mu, eps, antieps, 0, this.readCount));
         this.calculate(invoke);
     }
@@ -149,8 +145,15 @@ public class JHMM {
             }
         }
     }
+    
+    private void changed(double a, double b) {
+        if (Math.abs(a-b) > Globals.PCHANGE) {
+            this.parametersChanged++;
+        }
+    }
 
     private void calcMu() {
+        double[] muJKV = new double[n];
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
                 double AH = Globals.ALPHA_H;
@@ -160,18 +163,18 @@ public class JHMM {
                     sum = 0d;
                     divisor = 0d;
                     for (int v = 0; v < n; v++) {
-                        mu[j][k][v] = this.f(this.getnJKV(j, k, v) + AH);
-                        sum += this.getnJKV(j, k, v);
+                        muJKV[v] = this.f(this.nJKV[j][k][v] + AH);
+                        sum += this.nJKV[j][k][v];
                     }
                     sum = this.f(sum + n * AH);
                     if (sum > 0) {
                         for (int v = 0; v < n; v++) {
-                            mu[j][k][v] /= sum;
-                            divisor += mu[j][k][v];
+                            muJKV[v] /= sum;
+                            divisor += muJKV[v];
                         }
                         if (divisor > 0) {
                             for (int v = 0; v < n; v++) {
-                                mu[j][k][v] /= divisor;
+                                muJKV[v] /= divisor;
                             }
                         } else {
                             AH *= 10;
@@ -180,11 +183,16 @@ public class JHMM {
                         AH *= 10;
                     }
                 } while (sum == 0 || divisor == 0);
+                for (int v = 0; v < n; v++) {
+                    this.changed(mu[j][k][v], muJKV[v]);
+                    mu[j][k][v] = muJKV[v];
+                }
             }
         }
     }
 
     private void calcRho() {
+        double[] rhoJKL = new double[K];
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
                 double AZ = Globals.ALPHA_Z;
@@ -194,18 +202,18 @@ public class JHMM {
                     sum = 0d;
                     divisor = 0d;
                     for (int l = 0; l < K; l++) {
-                        rho[j - 1][k][l] = this.f(this.getnJKL(j, k, l) + AZ);
-                        sum += this.getnJKL(j, k, l);
+                        rhoJKL[l] = this.f(this.nJKL[j][k][l] + AZ);
+                        sum += this.nJKL[j][k][l];
                     }
                     sum = this.f(sum + K * AZ);
                     if (sum > 0) {
                         for (int l = 0; l < K; l++) {
-                            rho[j - 1][k][l] /= sum;
-                            divisor += rho[j - 1][k][l];
+                            rhoJKL[l] /= sum;
+                            divisor += rhoJKL[l];
                         }
                         if (divisor > 0) {
                             for (int l = 0; l < K; l++) {
-                                rho[j - 1][k][l] /= divisor;
+                                rhoJKL[l] /= divisor;
                             }
                         } else {
                             AZ *= 10;
@@ -214,6 +222,10 @@ public class JHMM {
                         AZ *= 10;
                     }
                 } while (sum == 0 || divisor == 0);
+                for (int l = 0; l < K; l++) {
+                    this.changed(rho[j - 1][k][l], rhoJKL[l]);
+                    rho[j - 1][k][l] = rhoJKL[l];
+                }
             }
         }
     }
@@ -245,9 +257,9 @@ public class JHMM {
 //        for (int j = 0; j < L; j++) {
         double sumK = 0d;
         for (int k = 0; k < K; k++) {
-            for (int j = 0; j < L; j++) {
-                pi[k] = this.getnJK(j, k);
-            }
+//            for (int j = 0; j < L; j++) {
+            pi[k] = this.nJK[0][k];
+//            }
             sumK += pi[k];
         }
         for (int k = 0; k < K; k++) {
@@ -288,39 +300,6 @@ public class JHMM {
 //    }
         }
     }
-    public double[][][] mu_old;
-
-    public double getnJK(int j, int k) {
-        return nJK[j][k];
-    }
-
-    public double getnJKL(int j, int k, int l) {
-        return nJKL[j][k][l];
-    }
-
-    public double getnJKV(int j, int k, int v) {
-        return nJKV[j][k][v];
-    }
-
-    public double getnJeq(int j) {
-        return nJeq[j];
-    }
-
-    public double getnJneq(int j) {
-        return nJneq[j];
-    }
-
-    public double[][] getnVB() {
-        return nVB;
-    }
-
-    public double getNeq() {
-        return neq;
-    }
-
-    public double getNneq() {
-        return nneq;
-    }
 
     public int getK() {
         return K;
@@ -350,9 +329,6 @@ public class JHMM {
         return loglikelihood;
     }
 
-    public double getQ() {
-        return Q;
-    }
 
     public double[][][] getMu() {
         return mu;
@@ -370,11 +346,12 @@ public class JHMM {
         return this.readHMMArray;
     }
 
-    public double getLikelihood() {
-        return likelihood;
-    }
-
     public int getRestart() {
         return restart;
     }
+
+    public int getParametersChanged() {
+        return parametersChanged;
+    }
+    
 }
