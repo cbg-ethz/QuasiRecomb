@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.*;
 
-
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
@@ -43,13 +42,13 @@ public final class ModelSampling extends Utils {
     private Frequency<Integer>[][] rhoArray;
     private Frequency<Byte>[][] muArray;
     private Map<byte[], Integer> reads;
-    private int amount = Globals.SAMPLING_NUMBER;
+    private int amount = Globals.getINSTANCE().getSAMPLING_NUMBER();
     private int[] recombPerObservation;
     private Map<String, Double> hexMap = new HashMap<>();
     private StringBuilder sb = new StringBuilder();
     private TreeMap<byte[], Integer> sorted_map;
 
-    public ModelSampling(int L, int n, int K, double[][][] rho, double[] pi, double[][][] mu, String savePath) {
+    public ModelSampling(int L, int n, int K, double[][][] rho, double[] pi, double[][][] mu) {
         this.L = L;
         this.n = n;
         this.K = K;
@@ -58,11 +57,11 @@ public final class ModelSampling extends Utils {
         this.H = mu;
         this.rhoArray = new Frequency[L - 1][K];
         this.muArray = new Frequency[L][K];
-        this.savePath = savePath;
+        this.savePath = Globals.getINSTANCE().getSAVEPATH();
         this.recombPerObservation = new int[amount];
         this.start();
     }
-    
+
     public ModelSampling(OptimalResult or) {
         this.K = or.getK();
         this.L = or.getL();
@@ -220,8 +219,8 @@ public final class ModelSampling extends Utils {
     public int getK() {
         return K;
     }
-    
 }
+
 class ValueComparator implements Comparator {
 
     Map base;

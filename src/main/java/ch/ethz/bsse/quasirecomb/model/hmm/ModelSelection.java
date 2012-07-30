@@ -53,45 +53,46 @@ public class ModelSelection {
 
     private void start(Read[] reads) {
         double optBIC = 0;
-        if (!new File(Globals.SAVEPATH + "support").exists()) {
-            new File(Globals.SAVEPATH + "support").mkdirs();
+        String save = Globals.getINSTANCE().getSAVEPATH() + "support";
+        if (!new File(save).exists()) {
+            new File(save).mkdirs();
         }
 
         if (Kmin != Kmax) {
-            Globals.MODELSELECTION = true;
+            Globals.getINSTANCE().setMODELSELECTION(true);
             for (int k = Kmin; k <= Kmax; k++) {
-                if (!Globals.NO_RECOMB || k == 1) {
+                if (!Globals.getINSTANCE().isNO_RECOMB() || k == 1) {
                     checkRho0(k);
                 }
                 EM em = new EM(this.N, this.L, k, this.n, reads);
-                if (Globals.LOG_BIC) {
+                if (Globals.getINSTANCE().isLOG_BIC()) {
                     StringBuilder sb = new StringBuilder();
                     sb.append(new Summary().print(em.getOr()));
-                    Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
+                    Utils.saveFile(save + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
                 }
                 if (em.getOr().getBIC() > optBIC || optBIC == 0) {
                     or = em.getOr();
                     optBIC = em.getOr().getBIC();
                     this.bestK = k;
                 }
-                Globals.PERCENTAGE = 0;
+                Globals.getINSTANCE().setPERCENTAGE(0);
             }
         } else {
             bestK = Kmin;
         }
-        Globals.MODELSELECTION = false;
-        Globals.REPEATS = Globals.DESIRED_REPEATS;
-        Globals.PERCENTAGE = 0;
+        Globals.getINSTANCE().setMODELSELECTION(false);
+        Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
+        Globals.getINSTANCE().setPERCENTAGE(0);
         EM em = new EM(this.N, this.L, bestK, this.n, reads);
         if (em.getOr().getLlh() > optBIC || optBIC == 0) {
             or = em.getOr();
         }
 
-        Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
-        Utils.saveFile(Globals.SAVEPATH + "support" + File.separator + "K" + or.getK() + "-summary.txt", new Summary().html(or));
+        Utils.saveFile(save + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
+        Utils.saveFile(save + File.separator + "K" + or.getK() + "-summary.txt", new Summary().html(or));
         //save optimumJava
         try {
-            String s = Globals.SAVEPATH + "support" + File.separator + "optimumJava";// + (bestK ? "" : K);
+            String s = save + File.separator + "optimumJava";// + (bestK ? "" : K);
             FileOutputStream fos = new FileOutputStream(s);
             try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
                 out.writeObject(or);
@@ -103,9 +104,9 @@ public class ModelSelection {
 
     private static void checkRho0(int K) {
         if (K == 1) {
-            Globals.NO_RECOMB = true;
+            Globals.getINSTANCE().setNO_RECOMB(true);
         } else {
-            Globals.NO_RECOMB = false;
+            Globals.getINSTANCE().setNO_RECOMB(false);
         }
     }
 

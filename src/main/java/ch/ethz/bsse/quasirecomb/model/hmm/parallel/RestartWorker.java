@@ -24,7 +24,6 @@ import ch.ethz.bsse.quasirecomb.model.hmm.SingleEM;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.RecursiveTask;
 
 /**
@@ -55,15 +54,15 @@ public class RestartWorker extends RecursiveTask<List<OptimalResult>> {
 
     @Override
     protected List<OptimalResult> compute() {
-        if (end - start <= Globals.PARALLEL_RESTARTS_UPPER_BOUND || !Globals.PARALLEL_RESTARTS) {
+        if (end - start <= Globals.getINSTANCE().getPARALLEL_RESTARTS_UPPER_BOUND() || !Globals.getINSTANCE().isPARALLEL_RESTARTS()) {
             final List<OptimalResult> list = new ArrayList<>();
-            Globals.log("+" + start + ":" + end);
+            Globals.getINSTANCE().log("+" + start + ":" + end);
             for (int i = start; i < end; i++) {
-                Globals.log("\tx:" + i);
+                Globals.getINSTANCE().log("\tx:" + i);
                 final SingleEM singleEm = new SingleEM(N, K, L, n, reads, delta);
                 list.add(singleEm.getOptimalResult());
             }
-            Globals.log("-" + start + ":" + end);
+            Globals.getINSTANCE().log("-" + start + ":" + end);
             return list;
         } else {
             final int mid = start + (end - start) / 2;

@@ -41,7 +41,7 @@ public class Cutter {
 
                     while ((strLine = br.readLine()) != null) {
                         if (strLine.startsWith(">")) {
-                            if (Globals.DEBUG) {
+                            if (Globals.getINSTANCE().isDEBUG()) {
                                 i++;
                                 if (i % 100 == 0) {
                                     System.out.println(i);

@@ -136,14 +136,17 @@ public class Startup {
                 this.output = System.getProperty("user.dir") + File.separator;
             } else if (this.output.endsWith(File.separator)
                     && !new File(this.output).exists()) {
-                new File(this.output).mkdirs();
+                if (!new File(this.output).mkdirs()) {
+                    System.out.println("Cannot create directory: " + this.output);
+                }
+
             }
-            
-            Globals.DEBUG = this.verbose;
-            Globals.LOGGING = this.log;
-            Globals.LOG_BIC = this.logBIC;
-            Globals.SAMPLING_NUMBER = this.samplingNumber;
-            Globals.PRINT = this.print;
+
+            Globals.getINSTANCE().setDEBUG(this.verbose);
+            Globals.getINSTANCE().setLOGGING(this.log);
+            Globals.getINSTANCE().setLOG_BIC(this.logBIC);
+            Globals.getINSTANCE().setSAMPLING_NUMBER(this.samplingNumber);
+            Globals.getINSTANCE().setPRINT(this.print);
 
             if (this.sample) {
                 ModelSampling simulation = new ModelSampling(input, output);
@@ -222,9 +225,9 @@ public class Startup {
                 Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), quasiInt);
                 System.out.println("q\tphi");
                 int i = 0;
-                for (Pair p : phi) {
-                    System.out.println(i++ + "\t" + p.getValue0());
-                    if (((double) p.getValue0()) == 1d) {
+                for (Pair phiLocal : phi) {
+                    System.out.println(i++ + "\t" + phiLocal.getValue0());
+                    if (((double) phiLocal.getValue0()) == 1d) {
                         break;
                     }
                 }
@@ -244,22 +247,22 @@ public class Startup {
                     Kmax = Integer.parseInt(K);
                 }
 
-                Globals.FLAT_EPSILON_PRIOR = this.flatEpsilonPrior;
-                Globals.PCHANGE = this.p;
-                Globals.ALPHA_Z = this.alphaz;
-                Globals.ALPHA_H = this.alphah;
-                Globals.BETA_Z = this.betaz;
-                Globals.PARALLEL_JHMM = !this.singleCore;
-                Globals.PARALLEL_RESTARTS = this.parallelRestarts;
-                Globals.ESTIMATION_EPSILON = this.e;
-                Globals.SAMPLING_EPSILON = this.ee;
-                Globals.DELTA_LLH = this.d;
-                Globals.REPEATS = this.m;
-                Globals.DESIRED_REPEATS = this.t;
-                Globals.DEBUG = this.verbose;
-                Globals.SAVEPATH = output + File.separator;
-                new File(Globals.SAVEPATH).mkdirs();
-                Globals.NO_RECOMB = this.noRecomb;
+                Globals.getINSTANCE().setFLAT_EPSILON_PRIOR(this.flatEpsilonPrior);
+                Globals.getINSTANCE().setPCHANGE(this.p);
+                Globals.getINSTANCE().setALPHA_Z(this.alphaz);
+                Globals.getINSTANCE().setALPHA_H(this.alphah);
+                Globals.getINSTANCE().setBETA_Z(this.betaz);
+                Globals.getINSTANCE().setPARALLEL_JHMM(!this.singleCore);
+                Globals.getINSTANCE().setPARALLEL_RESTARTS(this.parallelRestarts);
+                Globals.getINSTANCE().setESTIMATION_EPSILON(this.e);
+                Globals.getINSTANCE().setSAMPLING_EPSILON(this.ee);
+                Globals.getINSTANCE().setDELTA_LLH(this.d);
+                Globals.getINSTANCE().setREPEATS(this.m);
+                Globals.getINSTANCE().setDESIRED_REPEATS(this.t);
+                Globals.getINSTANCE().setDEBUG(this.verbose);
+                Globals.getINSTANCE().setSAVEPATH(output + File.separator);
+                new File(Globals.getINSTANCE().getSAVEPATH()).mkdirs();
+                Globals.getINSTANCE().setNO_RECOMB(this.noRecomb);
                 Preprocessing.workflow(this.input, Kmin, Kmax, N);
             }
 

@@ -30,38 +30,46 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class Globals {
 
-    public static int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
-    public static int ALIGNMENT_END = Integer.MIN_VALUE;
-    public static boolean FLAT_EPSILON_PRIOR;
-    public static double PCHANGE;
-    public static double BETA_Z;
-    public static double ALPHA_Z;
-    public static double ALPHA_H;
-    public static String[] HAPLOTYPE_ARRAY_EMPIRICAL;
-    public static String SAVEPATH;
-    public static double ESTIMATION_EPSILON;
-    public static double SAMPLING_EPSILON;
-    public static double DELTA_LLH = 1e-8;
-    public static final ForkJoinPool fjPool = new ForkJoinPool();
-    public static boolean DEBUG;
-    public static List<Integer> runtime = new LinkedList<>();
-    public static boolean NO_RECOMB = false;
-    public static int REPEATS;
-    public static int DESIRED_REPEATS;
-    public static int STEPSIZE = 50;
-    public static int PARALLEL_RESTARTS_UPPER_BOUND = 10;
-    public static boolean PARALLEL_JHMM = true;
-    public static boolean PARALLEL_RESTARTS = false;
-    public static double MAX_LLH = Double.NEGATIVE_INFINITY;
-    public static boolean LOG_BIC = false;
-    public static boolean LOGGING = false;
-    public static boolean PRINT = true;
-    public static boolean MODELSELECTION;
-    public static int SAMPLING_NUMBER;
-    public static StringBuilder LOG = new StringBuilder();
-    private static final long start = System.currentTimeMillis();
+    private static final Globals INSTANCE = new Globals();
 
-    public static void log(Object o) {
+    public Globals getInstance() {
+        return INSTANCE;
+    }
+
+    private Globals() {
+    }
+    private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
+    private int ALIGNMENT_END = Integer.MIN_VALUE;
+    private boolean FLAT_EPSILON_PRIOR;
+    private double PCHANGE;
+    private double BETA_Z;
+    private double ALPHA_Z;
+    private double ALPHA_H;
+    private String[] HAPLOTYPE_ARRAY_EMPIRICAL;
+    private String SAVEPATH;
+    private double ESTIMATION_EPSILON;
+    private double SAMPLING_EPSILON;
+    private double DELTA_LLH = 1e-8;
+    private final ForkJoinPool fjPool = new ForkJoinPool();
+    private boolean DEBUG;
+    private List<Integer> runtime = new LinkedList<>();
+    private boolean NO_RECOMB = false;
+    private int REPEATS;
+    private int DESIRED_REPEATS;
+    private int STEPSIZE = 50;
+    private int PARALLEL_RESTARTS_UPPER_BOUND = 10;
+    private boolean PARALLEL_JHMM = true;
+    private boolean PARALLEL_RESTARTS = false;
+    private double MAX_LLH = Double.NEGATIVE_INFINITY;
+    private boolean LOG_BIC = false;
+    private boolean LOGGING = false;
+    private boolean PRINT = true;
+    private boolean MODELSELECTION;
+    private int SAMPLING_NUMBER;
+    private StringBuilder LOG = new StringBuilder();
+    private long start = System.currentTimeMillis();
+
+    public synchronized void log(Object o) {
         if (PRINT) {
             System.out.print(o);
         } else {
@@ -70,13 +78,13 @@ public class Globals {
             }
         }
     }
-    public static double PERCENTAGE = 0;
+    private double PERCENTAGE = 0;
 
-    public static void incPercentage() {
-        PERCENTAGE += 100d / Globals.REPEATS;
+    public void incPercentage() {
+        PERCENTAGE += 100d / REPEATS;
     }
 
-    public static void printBIC(int K, int bic) {
+    public void printBIC(int K, int bic) {
         if (MODELSELECTION) {
             System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
         } else {
@@ -84,27 +92,269 @@ public class Globals {
         }
     }
 
-    public static void print(String s) {
+    public void print(String s) {
         System.out.print("\r" + time() + " " + s);
     }
-    public static void printPercentage(int K) {
-        if (!DEBUG)
-        if (MODELSELECTION) {
-            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " +  MAX_LLH + "]                 ");
-        } else {
-            System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " +  MAX_LLH + "]                 ");
+
+    public void printPercentage(int K) {
+        if (!DEBUG) {
+            if (MODELSELECTION) {
+                System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + MAX_LLH + "]                 ");
+            } else {
+                System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + MAX_LLH + "]                 ");
+            }
         }
     }
 
-    private static String time() {
+    public String time() {
         return new SimpleDateFormat("hh:mm:ss:SSS").format(new Date(System.currentTimeMillis() - start));
     }
 
-    public static synchronized double getMAX_LLH() {
+    public synchronized double getMAX_LLH() {
         return MAX_LLH;
     }
 
-    public static synchronized void maxMAX_LLH(double llh) {
+    public synchronized void maxMAX_LLH(double llh) {
         MAX_LLH = Math.max(MAX_LLH, llh);
+    }
+
+    public static Globals getINSTANCE() {
+        return INSTANCE;
+    }
+
+    public int getALIGNMENT_BEGIN() {
+        return ALIGNMENT_BEGIN;
+    }
+
+    public int getALIGNMENT_END() {
+        return ALIGNMENT_END;
+    }
+
+    public boolean isFLAT_EPSILON_PRIOR() {
+        return FLAT_EPSILON_PRIOR;
+    }
+
+    public double getPCHANGE() {
+        return PCHANGE;
+    }
+
+    public double getBETA_Z() {
+        return BETA_Z;
+    }
+
+    public double getALPHA_Z() {
+        return ALPHA_Z;
+    }
+
+    public double getALPHA_H() {
+        return ALPHA_H;
+    }
+
+    public String[] getHAPLOTYPE_ARRAY_EMPIRICAL() {
+        return HAPLOTYPE_ARRAY_EMPIRICAL;
+    }
+
+    public String getSAVEPATH() {
+        return SAVEPATH;
+    }
+
+    public double getESTIMATION_EPSILON() {
+        return ESTIMATION_EPSILON;
+    }
+
+    public double getSAMPLING_EPSILON() {
+        return SAMPLING_EPSILON;
+    }
+
+    public double getDELTA_LLH() {
+        return DELTA_LLH;
+    }
+
+    public ForkJoinPool getFjPool() {
+        return fjPool;
+    }
+
+    public boolean isDEBUG() {
+        return DEBUG;
+    }
+
+    public List<Integer> getRuntime() {
+        return runtime;
+    }
+
+    public boolean isNO_RECOMB() {
+        return NO_RECOMB;
+    }
+
+    public int getREPEATS() {
+        return REPEATS;
+    }
+
+    public int getDESIRED_REPEATS() {
+        return DESIRED_REPEATS;
+    }
+
+    public int getSTEPSIZE() {
+        return STEPSIZE;
+    }
+
+    public int getPARALLEL_RESTARTS_UPPER_BOUND() {
+        return PARALLEL_RESTARTS_UPPER_BOUND;
+    }
+
+    public boolean isPARALLEL_JHMM() {
+        return PARALLEL_JHMM;
+    }
+
+    public boolean isPARALLEL_RESTARTS() {
+        return PARALLEL_RESTARTS;
+    }
+
+    public boolean isLOG_BIC() {
+        return LOG_BIC;
+    }
+
+    public boolean isLOGGING() {
+        return LOGGING;
+    }
+
+    public boolean isPRINT() {
+        return PRINT;
+    }
+
+    public boolean isMODELSELECTION() {
+        return MODELSELECTION;
+    }
+
+    public int getSAMPLING_NUMBER() {
+        return SAMPLING_NUMBER;
+    }
+
+    public StringBuilder getLOG() {
+        return LOG;
+    }
+
+    public long getStart() {
+        return start;
+    }
+
+    public double getPERCENTAGE() {
+        return PERCENTAGE;
+    }
+
+    public void setALIGNMENT_BEGIN(int ALIGNMENT_BEGIN) {
+        this.ALIGNMENT_BEGIN = ALIGNMENT_BEGIN;
+    }
+
+    public void setALIGNMENT_END(int ALIGNMENT_END) {
+        this.ALIGNMENT_END = ALIGNMENT_END;
+    }
+
+    public void setFLAT_EPSILON_PRIOR(boolean FLAT_EPSILON_PRIOR) {
+        this.FLAT_EPSILON_PRIOR = FLAT_EPSILON_PRIOR;
+    }
+
+    public void setPCHANGE(double PCHANGE) {
+        this.PCHANGE = PCHANGE;
+    }
+
+    public void setBETA_Z(double BETA_Z) {
+        this.BETA_Z = BETA_Z;
+    }
+
+    public void setALPHA_Z(double ALPHA_Z) {
+        this.ALPHA_Z = ALPHA_Z;
+    }
+
+    public void setALPHA_H(double ALPHA_H) {
+        this.ALPHA_H = ALPHA_H;
+    }
+
+    public void setHAPLOTYPE_ARRAY_EMPIRICAL(String[] HAPLOTYPE_ARRAY_EMPIRICAL) {
+        this.HAPLOTYPE_ARRAY_EMPIRICAL = HAPLOTYPE_ARRAY_EMPIRICAL;
+    }
+
+    public void setSAVEPATH(String SAVEPATH) {
+        this.SAVEPATH = SAVEPATH;
+    }
+
+    public void setESTIMATION_EPSILON(double ESTIMATION_EPSILON) {
+        this.ESTIMATION_EPSILON = ESTIMATION_EPSILON;
+    }
+
+    public void setSAMPLING_EPSILON(double SAMPLING_EPSILON) {
+        this.SAMPLING_EPSILON = SAMPLING_EPSILON;
+    }
+
+    public void setDELTA_LLH(double DELTA_LLH) {
+        this.DELTA_LLH = DELTA_LLH;
+    }
+
+    public void setDEBUG(boolean DEBUG) {
+        this.DEBUG = DEBUG;
+    }
+
+    public void setRuntime(List<Integer> runtime) {
+        this.runtime = runtime;
+    }
+
+    public void setNO_RECOMB(boolean NO_RECOMB) {
+        this.NO_RECOMB = NO_RECOMB;
+    }
+
+    public void setREPEATS(int REPEATS) {
+        this.REPEATS = REPEATS;
+    }
+
+    public void setDESIRED_REPEATS(int DESIRED_REPEATS) {
+        this.DESIRED_REPEATS = DESIRED_REPEATS;
+    }
+
+    public void setSTEPSIZE(int STEPSIZE) {
+        this.STEPSIZE = STEPSIZE;
+    }
+
+    public void setPARALLEL_RESTARTS_UPPER_BOUND(int PARALLEL_RESTARTS_UPPER_BOUND) {
+        this.PARALLEL_RESTARTS_UPPER_BOUND = PARALLEL_RESTARTS_UPPER_BOUND;
+    }
+
+    public void setPARALLEL_JHMM(boolean PARALLEL_JHMM) {
+        this.PARALLEL_JHMM = PARALLEL_JHMM;
+    }
+
+    public void setPARALLEL_RESTARTS(boolean PARALLEL_RESTARTS) {
+        this.PARALLEL_RESTARTS = PARALLEL_RESTARTS;
+    }
+
+    public void setMAX_LLH(double MAX_LLH) {
+        this.MAX_LLH = MAX_LLH;
+    }
+
+    public void setLOG_BIC(boolean LOG_BIC) {
+        this.LOG_BIC = LOG_BIC;
+    }
+
+    public void setLOGGING(boolean LOGGING) {
+        this.LOGGING = LOGGING;
+    }
+
+    public void setPRINT(boolean PRINT) {
+        this.PRINT = PRINT;
+    }
+
+    public void setMODELSELECTION(boolean MODELSELECTION) {
+        this.MODELSELECTION = MODELSELECTION;
+    }
+
+    public void setSAMPLING_NUMBER(int SAMPLING_NUMBER) {
+        this.SAMPLING_NUMBER = SAMPLING_NUMBER;
+    }
+
+    public void setLOG(StringBuilder LOG) {
+        this.LOG = LOG;
+    }
+
+    public void setPERCENTAGE(double PERCENTAGE) {
+        this.PERCENTAGE = PERCENTAGE;
     }
 }

@@ -57,7 +57,7 @@ public class ReadHMM {
         this.mu = mu;
         this.eps = eps;
         this.antieps = antieps;
-        this.begin = read.getBegin() - Globals.ALIGNMENT_BEGIN;
+        this.begin = read.getBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         this.length = this.read.getSequence().length;
         this.end = this.begin + this.length;
         this.length = end - begin;

@@ -27,10 +27,10 @@ public class Random {
 
     public static double[][][] generateInitRho(int Ldec, int K) {
         double[][][] rho = new double[Ldec][K][K];
-        if (!Globals.NO_RECOMB) {
+        if (!Globals.getINSTANCE().isNO_RECOMB()) {
             for (int j = 0; j < Ldec; j++) {
                 for (int k = 0; k < K; k++) {
-                    rho[j][k] = new Dirichlet(K, Globals.BETA_Z).nextDistribution();
+                    rho[j][k] = new Dirichlet(K, Globals.getINSTANCE().getBETA_Z()).nextDistribution();
                     int maxIndex = 0;
                     double max = 0;
                     for (int l = 0; l < K; l++) {
@@ -56,7 +56,7 @@ public class Random {
     }
 
     public static double[] generateInitPi(int L, int K) {
-        if (Globals.NO_RECOMB) {
+        if (Globals.getINSTANCE().isNO_RECOMB()) {
             return new Dirichlet(K, 2).nextDistribution();
         } else {
             double[] pi = new double[K];
@@ -72,7 +72,7 @@ public class Random {
 
         for (int j = L - 1; j >= 0; j--) {
             for (int k = K - 1; k >= 0; k--) {
-                if (Globals.NO_RECOMB) {
+                if (Globals.getINSTANCE().isNO_RECOMB()) {
                     mu[j][k] = new Dirichlet(n, 2).nextDistribution();
                 } else {
                     for (int i = n - 1; i >= 0; i--) {

@@ -34,17 +34,12 @@ public class Recombinator {
 
     public static void recombine(String path, int[] spots, String output) {
         Map<String, String> haplotypes = Utils.parseHaplotypeFile(path);
-        if (Globals.DEBUG) {
+        if (Globals.getINSTANCE().isDEBUG()) {
             System.out.println(Arrays.toString(spots));
             for (String s : haplotypes.keySet()) {
                 System.out.println(s);
             }
         }
-//        haplotypes = new HashMap<>();
-//        haplotypes.put("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","a");
-//        haplotypes.put("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG","g");
-//        haplotypes.put("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC","c");
-//        haplotypes.put("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT","t");
 
         List<Integer> spotsList = new LinkedList<>();
         spotsList.add(0);

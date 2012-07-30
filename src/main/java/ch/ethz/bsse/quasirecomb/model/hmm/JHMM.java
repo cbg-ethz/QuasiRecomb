@@ -108,10 +108,10 @@ public class JHMM {
     private void start() {
         readHMMArray = new ReadHMM[reads.length];
         this.readCount = this.reads.length;
-        if (Globals.PARALLEL_JHMM) {
-            Globals.PARALLEL_RESTARTS_UPPER_BOUND = Integer.MAX_VALUE;
+        if (Globals.getINSTANCE().isPARALLEL_JHMM()) {
+            Globals.getINSTANCE().setPARALLEL_RESTARTS_UPPER_BOUND(Integer.MAX_VALUE);
         }
-        Pair<List<ReadHMM>, EInfo> invoke = Globals.fjPool.invoke(new ReadHMMWorker(this, reads, rho, pi, mu, eps, antieps, K, L, n, 0, this.readCount));
+        Pair<List<ReadHMM>, EInfo> invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorker(this, reads, rho, pi, mu, eps, antieps, K, L, n, 0, this.readCount));
         this.readHMMArray = invoke.getValue0().toArray(new ReadHMM[this.readCount]);
         calculate(invoke.getValue1());
     }
@@ -119,7 +119,7 @@ public class JHMM {
     public void restart() {
         this.restart++;
         this.parametersChanged = 0;
-        EInfo invoke = Globals.fjPool.invoke(new ReadHMMWorkerRecalc(K, L, n, this.readHMMArray, rho, pi, mu, eps, antieps, 0, this.readCount));
+        EInfo invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorkerRecalc(K, L, n, this.readHMMArray, rho, pi, mu, eps, antieps, 0, this.readCount));
         this.calculate(invoke);
     }
 
@@ -146,7 +146,7 @@ public class JHMM {
     }
 
     private void changed(double a, double b) {
-        if (Math.abs(a - b) > Globals.PCHANGE) {
+        if (Math.abs(a - b) > Globals.getINSTANCE().getPCHANGE()) {
             this.parametersChanged++;
         }
     }
@@ -155,7 +155,7 @@ public class JHMM {
         double[] muJKV = new double[n];
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double AH = Globals.ALPHA_H;
+                double AH = Globals.getINSTANCE().getALPHA_H();
                 double divisor;
                 double sum;
                 do {
@@ -194,7 +194,7 @@ public class JHMM {
         double[] rhoJKL = new double[K];
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double AZ = Globals.ALPHA_Z;
+                double AZ = Globals.getINSTANCE().getALPHA_Z();
                 double divisor;
                 double sum;
                 do {
@@ -264,13 +264,13 @@ public class JHMM {
     }
 
     private void mStep() {
-        if (!Globals.NO_RECOMB) {
+        if (!Globals.getINSTANCE().isNO_RECOMB()) {
             this.calcRho();
         }
         this.calcPi();
         this.calcMu();
 
-        if (!Globals.FLAT_EPSILON_PRIOR) {
+        if (!Globals.getINSTANCE().isFLAT_EPSILON_PRIOR()) {
             double ew = 0d;
             int nonzero = 0;
             for (int j = 0; j < L; j++) {

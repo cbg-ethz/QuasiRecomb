@@ -41,19 +41,19 @@ public class EM extends Utils {
     }
 
     private void blackbox(Read[] reads,int N, int L, int K, int n) {
-        Globals.LOG = new StringBuilder();
-        Globals.MAX_LLH = Double.NEGATIVE_INFINITY;
-        if (Globals.PARALLEL_RESTARTS) {
-            ors = Globals.fjPool.invoke(new RestartWorker(N, K, L, n, reads, Globals.DELTA_LLH, 0, Globals.REPEATS));
+        Globals.getINSTANCE().setLOG(new StringBuilder());
+        Globals.getINSTANCE().setMAX_LLH(Double.NEGATIVE_INFINITY);
+        if (Globals.getINSTANCE().isPARALLEL_RESTARTS()) {
+            ors = Globals.getINSTANCE().getFjPool().invoke(new RestartWorker(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), 0, Globals.getINSTANCE().getREPEATS()));
         } else {
             ors = new ArrayList<>();
-            for (int i = 0; i < Globals.REPEATS; i++) {
-                SingleEM sem = new SingleEM(N, K, L, n, reads, Globals.DELTA_LLH);
+            for (int i = 0; i < Globals.getINSTANCE().getREPEATS(); i++) {
+                SingleEM sem = new SingleEM(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH());
                 ors.add(sem.getOptimalResult());
             }
         }
 
-        Globals.PARALLEL_JHMM = true;
+        Globals.getINSTANCE().setPARALLEL_JHMM(true);
         double maxLLH = Double.NEGATIVE_INFINITY;
         StringBuilder restarts = new StringBuilder();
         for (OptimalResult tmp : ors) {
@@ -65,16 +65,16 @@ public class EM extends Utils {
         }
 
 //        System.out.println("\tBIC: " + (int) or.getBIC());
-        Globals.printBIC(K, (int)or.getBIC());
+        Globals.getINSTANCE().printBIC(K, (int)or.getBIC());
         System.out.print("\n");
 //        if (!Globals.NO_REFINE) {
 //            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);
 //            this.or = bestEM.getOptimalResult();
 //        }
-        Globals.log("\n" + new Summary().print(or));
-        if (Globals.LOGGING) {
-            Utils.saveFile(Globals.SAVEPATH + "log_K" + K, Globals.LOG.toString());
-            Utils.saveFile(Globals.SAVEPATH + "restarts_K" + K, restarts.toString());
+        Globals.getINSTANCE().log("\n" + new Summary().print(or));
+        if (Globals.getINSTANCE().isLOGGING()) {
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "log_K" + K, Globals.getINSTANCE().getLOG().toString());
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "restarts_K" + K, restarts.toString());
         }
     }
 

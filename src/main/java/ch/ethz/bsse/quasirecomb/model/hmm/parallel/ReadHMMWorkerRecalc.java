@@ -54,7 +54,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
 
     @Override
     protected EInfo compute() {
-        if (end - start < Globals.STEPSIZE) {
+        if (end - start < Globals.getINSTANCE().getSTEPSIZE()) {
             EInfo einfo = new EInfo(K, L, n);
             for (int i = start; i < end; i++) {
                 ReadHMM r = this.readHMMArray[i];

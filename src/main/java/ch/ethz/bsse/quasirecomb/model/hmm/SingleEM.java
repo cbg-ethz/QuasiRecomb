@@ -54,49 +54,49 @@ public class SingleEM {
     }
 
     private void start() {
-        this.llh_opt = Globals.getMAX_LLH();
+        this.llh_opt = Globals.getINSTANCE().getMAX_LLH();
         time(false);
-        jhmm = new JHMM(reads, N, L, K, n, Globals.ESTIMATION_EPSILON);
+        jhmm = new JHMM(reads, N, L, K, n, Globals.getINSTANCE().getESTIMATION_EPSILON());
 
         double llh = Double.MIN_VALUE;
         double oldllh;
         List<Double> history = new ArrayList<>();
         do {
             if (iterations % 10 == 0 && iterations > 0) {
-                Globals.maxMAX_LLH(llh);
-                this.llh_opt = Math.max(Globals.getMAX_LLH(), this.llh_opt);
+                Globals.getINSTANCE().maxMAX_LLH(llh);
+                this.llh_opt = Math.max(Globals.getINSTANCE().getMAX_LLH(), this.llh_opt);
             }
             history.add(llh);
             oldllh = llh;
             llh = jhmm.getLoglikelihood();
             if (iterations > 500) {
                 if (history.get(iterations - 500) - llh > -1) {
-                    Globals.log("break 500;\t");
+                    Globals.getINSTANCE().log("break 500;\t");
                     break;
                 }
             }
             log(llh);
 
-            if (Globals.DEBUG) {
+            if (Globals.getINSTANCE().isDEBUG()) {
                 if ((oldllh - llh) / llh == -1) {
-                    Globals.log("0\t");
+                    Globals.getINSTANCE().log("0\t");
                 } else {
-                    Globals.log((oldllh - llh) / llh + "\t" + jhmm.getParametersChanged() + "\t");
+                    Globals.getINSTANCE().log((oldllh - llh) / llh + "\t" + jhmm.getParametersChanged() + "\t");
                 }
-                Globals.log(llh + "\n");
+                Globals.getINSTANCE().log(llh + "\n");
             }
             jhmm.restart();
             iterations++;
-            Globals.printPercentage(K);
+            Globals.getINSTANCE().printPercentage(K);
         } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
-        Globals.log("###\t" + jhmm.getParametersChanged() + "\n");
-        Utils.appendFile(Globals.SAVEPATH + "p.txt", jhmm.getParametersChanged() + "\n");
+        Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
+        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "p.txt", jhmm.getParametersChanged() + "\n");
 
-        Globals.incPercentage();
+        Globals.getINSTANCE().incPercentage();
         this.calcBic();
 
-        if (Globals.DEBUG) {
-            Globals.log("####");
+        if (Globals.getINSTANCE().isDEBUG()) {
+            Globals.getINSTANCE().log("####");
         }
     }
 
@@ -112,7 +112,7 @@ public class SingleEM {
         double[][][] mu = jhmm.getMu();
         double[] pi = jhmm.getPi();
         double[] eps = jhmm.getEps();
-        
+
         for (int j = 0; j < mu.length; j++) {
             for (int k = 0; k < mu[j].length; k++) {
 
@@ -133,18 +133,20 @@ public class SingleEM {
                 }
 
                 //rho
-                if (!Globals.NO_RECOMB) {
-                    different = false;
-                    for (int l = 1; l < rho[j][k].length; l++) {
-                        if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
-                            different = true;
-                            break;
+                if (j < L-1) {
+                    if (!Globals.getINSTANCE().isNO_RECOMB()) {
+                        different = false;
+                        for (int l = 1; l < rho[j][k].length; l++) {
+                            if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
+                                different = true;
+                                break;
+                            }
                         }
-                    }
-                    if (different) {
-                        for (int l = 0; l < rho[j][k].length; l++) {
-                            if (rho[j][k][l] > ERROR) {
-                                freeParameters++;
+                        if (different) {
+                            for (int l = 0; l < rho[j][k].length; l++) {
+                                if (rho[j][k][l] > ERROR) {
+                                    freeParameters++;
+                                }
                             }
                         }
                     }
@@ -161,8 +163,8 @@ public class SingleEM {
             }
         }
         BIC_current -= (freeParameters / 2d) * Math.log(N);
-        if (Globals.LOG_BIC) {
-            Utils.appendFile(Globals.SAVEPATH + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
+        if (Globals.getINSTANCE().isLOG_BIC()) {
+            Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
         }
         double[][][] muCopy = new double[L][K][n];
         for (int j = 0;
@@ -181,7 +183,7 @@ public class SingleEM {
 
         if (this.jhmm.getLoglikelihood()
                 >= llh_opt) {
-            Globals.maxMAX_LLH(this.jhmm.getLoglikelihood());
+            Globals.getINSTANCE().maxMAX_LLH(this.jhmm.getLoglikelihood());
         }
     }
 
@@ -193,8 +195,8 @@ public class SingleEM {
             t = (System.currentTimeMillis() - time);
             if (show) {
                 sb.append(t).append("\t\t");
-                if (Globals.DEBUG) {
-                    Globals.log(iterations + "\t" + t + "\t\t");
+                if (Globals.getINSTANCE().isDEBUG()) {
+                    Globals.getINSTANCE().log(iterations + "\t" + t + "\t\t");
                 }
             }
             time = System.currentTimeMillis();
@@ -203,7 +205,7 @@ public class SingleEM {
     }
 
     private void log(double llh) {
-        Globals.runtime.add((int) time(true));
+        Globals.getINSTANCE().getRuntime().add((int) time(true));
         sb.append(llh).append("\t\t").append("\n");
     }
 

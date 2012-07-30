@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Responsible for orchestrating parsing, proper read placement in alignment 
- * and forwards parameters to ModelSelection.
+ * Responsible for orchestrating parsing, proper read placement in alignment and
+ * forwards parameters to ModelSelection.
  *
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
@@ -48,30 +48,30 @@ public class Preprocessing {
      */
     public static void workflow(String input, int Kmin, int Kmax, int N) {
         Read[] reads = Utils.parseInput(input);
-        
+
         for (Read r : reads) {
-            Globals.ALIGNMENT_BEGIN = Math.min(r.getBegin(), Globals.ALIGNMENT_BEGIN);
-            Globals.ALIGNMENT_END = Math.max(r.getEnd(), Globals.ALIGNMENT_END);
+            Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
+            Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
         }
-        int L = Globals.ALIGNMENT_END-Globals.ALIGNMENT_BEGIN;
+        int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         StringBuilder sb = new StringBuilder();
         for (Read r : reads) {
             sb.append(r.getCount()).append("\t");
-            if (r.getCount()<1000) {
+            if (r.getCount() < 1000) {
                 sb.append("\t");
             }
-            for (int i = Globals.ALIGNMENT_BEGIN; i < r.getBegin(); i++) {
+            for (int i = Globals.getINSTANCE().getALIGNMENT_BEGIN(); i < r.getBegin(); i++) {
                 sb.append(" ");
             }
             sb.append(Utils.reverse(r.getSequence())).append("\n");
         }
-        Utils.saveFile(Globals.SAVEPATH+File.separator+"in.fasta", sb.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "in.fasta", sb.toString());
         int n = countChars(reads);
         Plot.plotCoverage(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, N, L, n);
-        ModelSampling modelSampling = new ModelSampling(L, n, ms.getOptimalResult().getK(), ms.getOptimalResult().getRho(), ms.getOptimalResult().getPi(), ms.getOptimalResult().getMu(), Globals.SAVEPATH);
+        ModelSampling modelSampling = new ModelSampling(L, n, ms.getOptimalResult().getK(), ms.getOptimalResult().getRho(), ms.getOptimalResult().getPi(), ms.getOptimalResult().getMu());
         modelSampling.save();
-        System.out.println("Quasispecies saved: " + Globals.SAVEPATH + "quasispecies.fasta");
+        System.out.println("Quasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
     }
 
     private static int countChars(Read[] rs) {

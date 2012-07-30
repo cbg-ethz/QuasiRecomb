@@ -49,7 +49,7 @@ public class Plot {
             }
         }
         XYSeries dataset = new XYSeries("Coverage");
-        for (int i = Globals.ALIGNMENT_BEGIN; i < Globals.ALIGNMENT_END; i++) {
+        for (int i = Globals.getINSTANCE().getALIGNMENT_BEGIN(); i < Globals.getINSTANCE().getALIGNMENT_END(); i++) {
             if (!coverage.contains(i)) {
                 dataset.add((double) i, 1.0);
             } else {
@@ -79,7 +79,7 @@ public class Plot {
         plot.setRangeGridlinePaint(Color.decode("0xadadad"));
 
         try {
-            ChartUtilities.saveChartAsPNG(new File(Globals.SAVEPATH + "coverage.png"),
+            ChartUtilities.saveChartAsPNG(new File(Globals.getINSTANCE().getSAVEPATH() + "coverage.png"),
                     chart, 1000, 500);
         } catch (IOException ex) {
             Logger.getLogger(Plot.class.getName()).log(Level.SEVERE, null, ex);
