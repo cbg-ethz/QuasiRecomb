@@ -108,7 +108,7 @@ public class Globals {
     }
 
     public String time() {
-        return new SimpleDateFormat("HH:mm:ss:SSS").format(new Date(System.currentTimeMillis() - start));
+        return new SimpleDateFormat("mm:ss:SSS").format(new Date(System.currentTimeMillis() - start));
     }
 
     public void setFORCE_NO_RECOMB(boolean FORCE_NO_RECOMB) {
