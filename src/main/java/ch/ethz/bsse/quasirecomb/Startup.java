@@ -280,9 +280,9 @@ public class Startup {
             System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
             System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
-            System.err.println("  -flatEpsPrior\t: Do not train epsilon, in combination with -e");
+            System.err.println("  -flatEpsPrior\t\t: Do not train epsilon, in combination with -e");
             System.err.println("  -e DOUBLE\t\t: Error rate of the sequencing machine (default: 0.0001)");
-            System.err.println("  -noRecomb\t: Do not allow recombination");
+            System.err.println("  -noRecomb\t\t: Do not allow recombination");
             System.err.println("  -parallelRestarts\t: Parallelize the EM restarts, use this only on machines with 10+ cores!");
             System.err.println("");
             System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -i input.fasta");
