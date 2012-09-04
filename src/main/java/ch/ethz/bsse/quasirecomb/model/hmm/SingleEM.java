@@ -90,7 +90,7 @@ public class SingleEM {
             Globals.getINSTANCE().printPercentage(K);
         } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
-        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "p.txt", jhmm.getParametersChanged() + "\n");
+//        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "p.txt", jhmm.getParametersChanged() + "\n");
 
         Globals.getINSTANCE().incPercentage();
         this.calcBic();
