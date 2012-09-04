@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.model;
+package ch.ethz.bsse.quasirecomb.informationholder;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -54,6 +54,7 @@ public class Globals {
     private boolean DEBUG;
     private List<Integer> runtime = new LinkedList<>();
     private boolean NO_RECOMB = false;
+    private boolean FORCE_NO_RECOMB = false;
     private int REPEATS;
     private int DESIRED_REPEATS;
     private int STEPSIZE = 50;
@@ -107,7 +108,15 @@ public class Globals {
     }
 
     public String time() {
-        return new SimpleDateFormat("hh:mm:ss:SSS").format(new Date(System.currentTimeMillis() - start));
+        return new SimpleDateFormat("HH:mm:ss:SSS").format(new Date(System.currentTimeMillis() - start));
+    }
+
+    public void setFORCE_NO_RECOMB(boolean FORCE_NO_RECOMB) {
+        this.FORCE_NO_RECOMB = FORCE_NO_RECOMB;
+    }
+
+    public boolean isFORCE_NO_RECOMB() {
+        return FORCE_NO_RECOMB;
     }
 
     public synchronized double getMAX_LLH() {

@@ -19,7 +19,7 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;

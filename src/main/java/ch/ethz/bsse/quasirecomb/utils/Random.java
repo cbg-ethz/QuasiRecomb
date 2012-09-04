@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
 import cc.mallet.types.Dirichlet;
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 
 /**
  * @author Armin Töpfer (armin.toepfer@bsse.ethz.ch)

@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb.modelsampling;
 
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;

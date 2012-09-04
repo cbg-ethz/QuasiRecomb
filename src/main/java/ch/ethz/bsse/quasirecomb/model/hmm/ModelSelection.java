@@ -19,7 +19,7 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -63,7 +63,7 @@ public class ModelSelection {
         if (kMin != kMax) {
             Globals.getINSTANCE().setMODELSELECTION(true);
             for (int k = kMin; k <= kMax; k++) {
-                if (!Globals.getINSTANCE().isNO_RECOMB() || k == 1) {
+                if (!Globals.getINSTANCE().isFORCE_NO_RECOMB()) {
                     checkRho0(k);
                 }
                 EM em = new EM(this.N, this.L, k, this.n, reads);
@@ -76,6 +76,8 @@ public class ModelSelection {
                     or = em.getOr();
                     optBIC = em.getOr().getBIC();
                     this.bestK = k;
+                } else {
+                    break;
                 }
                 Globals.getINSTANCE().setPERCENTAGE(0);
             }

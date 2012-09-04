@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb.simulation;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;

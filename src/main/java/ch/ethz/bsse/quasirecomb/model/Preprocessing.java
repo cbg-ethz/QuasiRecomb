@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.model;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;

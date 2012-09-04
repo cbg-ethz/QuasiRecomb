@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb;
 
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.model.Preprocessing;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
@@ -55,8 +55,6 @@ public class Startup {
     @Option(name = "-verbose")
     private boolean verbose;
     //TRAIN
-    @Option(name = "--train", usage = "Train model for given multiple alignment")
-    private boolean train;
     @Option(name = "-K")
     private String K = "1:5";
     @Option(name = "-m")
@@ -259,6 +257,7 @@ public class Startup {
                 Globals.getINSTANCE().setDEBUG(this.verbose);
                 Globals.getINSTANCE().setSAVEPATH(output + File.separator);
                 Globals.getINSTANCE().setNO_RECOMB(this.noRecomb);
+                Globals.getINSTANCE().setFORCE_NO_RECOMB(this.noRecomb);
                 Preprocessing.workflow(this.input, Kmin, Kmax, N);
             }
 

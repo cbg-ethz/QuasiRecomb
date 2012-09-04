@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import java.awt.Color;

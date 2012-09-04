@@ -17,7 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
 
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMM;
 import java.util.concurrent.RecursiveTask;
 

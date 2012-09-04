@@ -17,7 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.simulation;
 
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.collect.Sets;
 import java.util.*;

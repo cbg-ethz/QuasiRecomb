@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 
 /**
  * Calculates the forward / backward algorithm for a single read.
