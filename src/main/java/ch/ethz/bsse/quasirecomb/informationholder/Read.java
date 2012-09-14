@@ -31,7 +31,6 @@ public class Read {
     private byte[] crickSequence;
     private int crickBegin;
     private int crickEnd = -1;
-    private int end;
 
     public Read(byte[] sequence, int begin, int end) {
         this.watsonSequence = sequence;
@@ -61,10 +60,14 @@ public class Read {
     public int getCount() {
         return count;
     }
+    
+    public int getInsertSize() {
+        return this.crickBegin-this.watsonEnd;
+    }
 
     public int getEnd() {
         if (this.crickEnd == -1) {
-            return end;
+            return watsonEnd;
         } else {
             return this.crickEnd;
         }
@@ -72,6 +75,10 @@ public class Read {
 
     public byte[] getSequence() {
         return this.watsonSequence;
+    }
+
+    public byte[] getCrickSequence() {
+        return crickSequence;
     }
     
     public boolean isPaired() {

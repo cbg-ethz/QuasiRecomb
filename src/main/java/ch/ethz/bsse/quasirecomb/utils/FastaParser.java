@@ -17,19 +17,25 @@
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.biojava3.sequencing.io.fastq.Fastq;
+import org.biojava3.sequencing.io.fastq.FastqReader;
+import org.biojava3.sequencing.io.fastq.IlluminaFastqReader;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class FastaParser {
 
-    
     /**
      *
      * @param location
@@ -137,6 +143,54 @@ public class FastaParser {
             System.err.println("Error Far: " + e.getMessage());
         }
         return hapMap;
+    }
+
+    public static Read[] parseFastq(String location) {
+        FastqReader fastqReader = new IlluminaFastqReader();
+        Map<String, Read> pairedReads = new HashMap<>();
+        List<Read> hashing = new LinkedList<>();
+        try {
+            Iterable<Fastq> reads = fastqReader.read(new File(location));
+            for (Fastq f : reads) {
+                //@generator-0_0.25_899_1068_0:0:0_0:0:0_0/2
+                byte[] seq = Utils.splitReadIntoByteArray(f.getSequence());
+                String description = f.getDescription();
+                String tag = description.split(":")[0];
+                final String[] firstSplit = description.split("_");
+                //SAMPLED-0_100-300\1
+                int pairedNumber = Integer.parseInt(description.split("/")[1]);
+                switch (pairedNumber) {
+                    case 1:
+                        int begin = Integer.parseInt(firstSplit[1]);
+                        int end = begin + seq.length;
+                        pairedReads.put(tag, new Read(seq, begin, end));
+                        break;
+                    case 2:
+                        Read mate = pairedReads.get(tag);
+                        int end2 = Integer.parseInt(firstSplit[2]);
+                        int begin2 = end2-seq.length;
+                        mate.setPairedEnd(seq, begin2, end2);
+                        boolean missing = true;
+                        for (Read r : hashing) {
+                            if (r.equals(mate)) {
+                                r.incCount();
+                                missing = false;
+                                break;
+                            }
+                        }
+                        if (missing) {
+                            mate.setCount(1);
+                            hashing.add(mate);
+                        }
+                        break;
+                    default:
+                        throw new IllegalStateException("Do not know paired end number " + pairedNumber + " of read " + firstSplit[0]);
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(FastaParser.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return hashing.toArray(new Read[hashing.size()]);
     }
 
     public static Map<String, String> parseGlobalFarFile(String location) {

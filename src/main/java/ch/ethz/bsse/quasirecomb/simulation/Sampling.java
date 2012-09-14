@@ -44,6 +44,76 @@ public class Sampling {
 //    public static Map<String, Integer> fromHaplotypesGlobal(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
 //        return fromHaplotypesGlobal(Utils.parseBAMSAM(path), N, L, epsilon, hapProb, n, savePath);
 //    }
+//    public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, int insertSize, String savePath) {
+//        Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
+//        for (int i = 0; i < hapProb.length; i++) {
+//            freqMap.put(i, hapProb[i]);
+//        }
+//        Frequency<Integer> frequency = new Frequency<>(freqMap);
+//
+//        List<Read> reads = new ArrayList<>();
+//        String read;
+//        for (int i = 0; i < N; i++) {
+//            int hap = frequency.roll();
+//
+//            int start = 0;
+//            int length = 0;
+//            for (;;) {
+////                length = (int)(Math.random()*300);
+//                length = 150;
+//                if (Math.random() > .5) {
+//                    length *= -1;
+//                }
+//                start = (int) (Math.random() * (L + 150 + 150));
+//                start -= 300;
+//                if (start >= L) {
+//                    continue;
+//                }
+//                if (start + length <= L) {
+//                    if (start < 0) {
+//                        start = 0;
+//                    }
+//                    break;
+//                }
+//                if (start + length > L) {
+//                    length = L - start;
+//                    break;
+//                }
+//            }
+//            System.out.println(start);
+//            char[] readArray = new char[length];
+//
+//
+//            for (int j = 0; j < length; j++) {
+//                //error
+//                Map<Character, Double> baseMap = new ConcurrentHashMap<>();
+//                for (int v = 0; v < n; v++) {
+//                    char x = reverse(v);
+//                    if (haplotypes[hap].charAt(j + start) == x) {
+//                        baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
+//                    } else {
+//                        baseMap.put(x, epsilon);
+//                    }
+//                }
+//                Frequency<Character> errorF = new Frequency<>(baseMap);
+//                readArray[j] = errorF.roll();
+//            }
+//            StringBuilder sb = new StringBuilder(length);
+//            for (int j = 0; j < length; j++) {
+//                sb.append(readArray[j]);
+//            }
+//            read = sb.toString();
+//            reads.add(new Read(Utils.splitReadIntoByteArray(read), start, start + length));
+//        }
+//        int z = 0;
+//        StringBuilder sb = new StringBuilder();
+//        for (Read r : reads) {
+//            sb.append(">SAMPLED").append(z++).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("\n");
+//            sb.append(Utils.reverse(r.getSequence())).append("\n");
+//        }
+//        Utils.saveFile(savePath, sb.toString());
+//    }
+
     public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
         Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
@@ -164,7 +234,7 @@ public class Sampling {
         StringBuilder sb = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();
         int z = 0;
-        for (Map.Entry<String,Integer> readX : map.entrySet()) {
+        for (Map.Entry<String, Integer> readX : map.entrySet()) {
             sb.append(readX.getValue()).append("\t").append(readX.getKey()).append("\n");
             for (int i = 0; i < readX.getValue(); i++) {
                 sb2.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
@@ -214,7 +284,7 @@ public class Sampling {
         StringBuilder sb = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();
         int z = 0;
-        for (Map.Entry<String,Integer> readX : map.entrySet()) {
+        for (Map.Entry<String, Integer> readX : map.entrySet()) {
             sb.append(readX.getValue()).append("\t").append(readX.getKey()).append("\n");
             for (int i = 0; i < readX.getValue(); i++) {
                 sb2.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
