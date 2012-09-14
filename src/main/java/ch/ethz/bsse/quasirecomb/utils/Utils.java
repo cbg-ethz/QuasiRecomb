@@ -288,24 +288,63 @@ public class Utils extends FastaParser {
     public static Read[] parseFastaInput(String path) {
         List<Read> hashing = new ArrayList<>();
         if (isFastaGlobalFormat(path)) {
-            Map<String, String> haps = parseGlobalFarFile(path);
-            for (Map.Entry<String, String> head : haps.entrySet()) {
-                String[] split = head.getKey().split("_")[1].split("-");
-                int begin = Integer.parseInt(split[0]);
-                int end = Integer.parseInt(split[1]);
-                byte[] seq = splitReadIntoByteArray(head.getValue());
-                boolean missing = true;
-                for (Read r : hashing) {
-                    if (Arrays.equals(r.getSequence(), seq)
-                            && r.getBegin() == begin
-                            && r.getEnd() == end) {
-                        r.incCount();
-                        missing = false;
-                        break;
+            if (isFastaGlobalMatePairFormat(path)) {
+                Map<String, String> haps = parseGlobalFarFile(path);
+                Map<String, Read> pairedReads = new HashMap<>();
+                for (Map.Entry<String, String> head : haps.entrySet()) {
+                    final String[] firstSplit = head.getKey().split("_");
+                    //SAMPLED-0_100-300\1
+                    String[] secondSplit = firstSplit[1].split("-");
+                    int begin = Integer.parseInt(secondSplit[0]);
+                    String[] suffix = secondSplit[1].split("\\");
+                    int end = Integer.parseInt(suffix[0]);
+                    int pairedNumber = Integer.parseInt(suffix[1]);
+                    byte[] seq = splitReadIntoByteArray(head.getValue());
+                    switch (pairedNumber) {
+                        case 1:
+                            pairedReads.put(firstSplit[0], new Read(seq, begin, end));
+                            break;
+                        case 2:
+                            Read mate = pairedReads.get(firstSplit[0]);
+                            mate.setPairedEnd(seq, begin, end);
+                            boolean missing = true;
+                            for (Read r : hashing) {
+                                if (Arrays.equals(r.getSequence(), seq)
+                                        && r.getBegin() == begin
+                                        && r.getEnd() == end) {
+                                    r.incCount();
+                                    missing = false;
+                                    break;
+                                }
+                            }
+                            if (missing) {
+                                hashing.add(new Read(seq, begin, end, 1));
+                            }
+                            break;
+                        default:
+                            throw new IllegalStateException("Do not know paired end number " + pairedNumber + " of read " + firstSplit[0]);
                     }
                 }
-                if (missing) {
-                    hashing.add(new Read(seq, begin, end, 1));
+            } else {
+                Map<String, String> haps = parseGlobalFarFile(path);
+                for (Map.Entry<String, String> head : haps.entrySet()) {
+                    String[] split = head.getKey().split("_")[1].split("-");
+                    int begin = Integer.parseInt(split[0]);
+                    int end = Integer.parseInt(split[1]);
+                    byte[] seq = splitReadIntoByteArray(head.getValue());
+                    boolean missing = true;
+                    for (Read r : hashing) {
+                        if (Arrays.equals(r.getSequence(), seq)
+                                && r.getBegin() == begin
+                                && r.getEnd() == end) {
+                            r.incCount();
+                            missing = false;
+                            break;
+                        }
+                    }
+                    if (missing) {
+                        hashing.add(new Read(seq, begin, end, 1));
+                    }
                 }
             }
         } else {
@@ -359,6 +398,33 @@ public class Utils extends FastaParser {
                         try {
                             int begin = Integer.parseInt(split[0]);
                             int end = Integer.parseInt(split[1]);
+                        } catch (NumberFormatException e) {
+                            return false;
+                        }
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error identifying format of input file: " + e.getMessage());
+        }
+        return false;
+    }
+
+    private static boolean isFastaGlobalMatePairFormat(String path) {
+        try {
+            FileInputStream fstream = new FileInputStream(path);
+            try (DataInputStream in = new DataInputStream(fstream)) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String strLine;
+                while ((strLine = br.readLine()) != null) {
+                    if (strLine.startsWith(">") && strLine.contains("_") && strLine.contains("-") && (strLine.contains("\\2") || strLine.contains("\\1"))) {
+                        String[] split = strLine.split("_")[1].split("-");
+                        try {
+                            Integer.parseInt(split[0]);
+                            Integer.parseInt(split[1]);
                         } catch (NumberFormatException e) {
                             return false;
                         }

@@ -55,20 +55,7 @@ public class Preprocessing {
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-//        if (Globals.getINSTANCE().isDEBUG()) {
-//            StringBuilder sb = new StringBuilder();
-//            for (Read r : reads) {
-//                sb.append(r.getCount()).append("\t");
-//                if (r.getCount() < 1000) {
-//                    sb.append("\t");
-//                }
-//                for (int i = Globals.getINSTANCE().getALIGNMENT_BEGIN(); i < r.getBegin(); i++) {
-//                    sb.append(" ");
-//                }
-//                sb.append(Utils.reverse(r.getSequence())).append("\n");
-//            }
-//            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "in.fasta", sb.toString());
-//        }
+//        saveUnique(reads);
         int n = countChars(reads);
         Plot.plotCoverage(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, N, L, n);
@@ -85,5 +72,22 @@ public class Preprocessing {
             }
         }
         return map.keySet().size();
+    }
+
+    private static void saveUnique(Read[] reads) {
+        if (Globals.getINSTANCE().isDEBUG()) {
+            StringBuilder sb = new StringBuilder();
+            for (Read r : reads) {
+                sb.append(r.getCount()).append("\t");
+                if (r.getCount() < 1000) {
+                    sb.append("\t");
+                }
+                for (int i = Globals.getINSTANCE().getALIGNMENT_BEGIN(); i < r.getBegin(); i++) {
+                    sb.append(" ");
+                }
+                sb.append(Utils.reverse(r.getSequence())).append("\n");
+            }
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "in.fasta", sb.toString());
+        }
     }
 }

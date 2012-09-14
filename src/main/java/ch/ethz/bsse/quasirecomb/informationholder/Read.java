@@ -24,20 +24,25 @@ import java.util.Arrays;
  */
 public class Read {
 
-    private byte[] sequence;
-    private int begin;
-    private int end;
+    private byte[] watsonSequence;
+    private int watsonBegin;
+    private int watsonEnd;
     private int count;
+    private byte[] crickSequence;
+    private int crickBegin;
+    private int crickEnd = -1;
+    private int end;
 
     public Read(byte[] sequence, int begin, int end) {
-        this.sequence = sequence;
-        this.begin = begin;
-        this.end = end;
+        this.watsonSequence = sequence;
+        this.watsonBegin = begin;
+        this.watsonEnd = end;
     }
+
     public Read(byte[] sequence, int begin, int end, int count) {
-        this.sequence = sequence;
-        this.begin = begin;
-        this.end = end;
+        this.watsonSequence = sequence;
+        this.watsonBegin = begin;
+        this.watsonEnd = end;
         this.count = count;
     }
 
@@ -46,30 +51,48 @@ public class Read {
     }
 
     public int getBegin() {
-        return begin;
+        return this.watsonBegin;
     }
 
     public void incCount() {
         count++;
     }
+
     public int getCount() {
         return count;
     }
 
     public int getEnd() {
-        return end;
+        if (this.crickEnd == -1) {
+            return end;
+        } else {
+            return this.crickEnd;
+        }
     }
 
     public byte[] getSequence() {
-        return sequence;
+        return this.watsonSequence;
+    }
+    
+    public boolean isPaired() {
+        return this.crickSequence != null;
+    }
+    
+    public void setPairedEnd(byte[] sequence, int begin, int end) {
+        this.crickSequence = sequence;
+        this.crickBegin = begin;
+        this.crickEnd = end;
     }
 
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 29 * hash + Arrays.hashCode(this.sequence);
-        hash = 29 * hash + this.begin;
-        hash = 29 * hash + this.end;
+        hash = 29 * hash + Arrays.hashCode(this.watsonSequence);
+        hash = 29 * hash + Arrays.hashCode(this.crickSequence);
+        hash = 29 * hash + this.watsonBegin;
+        hash = 29 * hash + this.watsonEnd;
+        hash = 29 * hash + this.crickBegin;
+        hash = 29 * hash + this.crickEnd;
         return hash;
     }
 
