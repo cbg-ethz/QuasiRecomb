@@ -20,6 +20,10 @@ package ch.ethz.bsse.quasirecomb.utils;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
 import java.util.*;
+import net.sf.samtools.AlignmentBlock;
+import net.sf.samtools.CigarElement;
+import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMRecord;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -136,9 +140,131 @@ public class Utils extends FastaParser {
         if (isFastaFormat(path)) {
             return parseFastaInput(path);
         } else {
-//            return parseBAMSAM(path);
-            return null;
+            return parseBAMSAM(path);
+//            return null;
         }
+    }
+
+    public static Read[] parseBAMSAM(String location) {
+        List<Read> readList = new LinkedList<>();
+        File bam = new File(location);
+        SAMFileReader sfr = new SAMFileReader(bam);
+        for (final SAMRecord samRecord : sfr) {
+            List<AlignmentBlock> alignmentBlocks = samRecord.getAlignmentBlocks();
+            if (alignmentBlocks.isEmpty()) {
+                continue;
+            }
+            int refStart = alignmentBlocks.get(0).getReferenceStart() + alignmentBlocks.get(0).getReadStart() - 1;
+            int readStart = alignmentBlocks.get(0).getReadStart() - 1;
+//            boolean ignore = false;
+            List<Byte> buildRead = new ArrayList<>();
+            boolean d = false;
+            for (CigarElement c : samRecord.getCigar().getCigarElements()) {
+                switch (c.getOperator()) {
+                    case M:
+                        for (int i = 0; i < c.getLength(); i++) {
+                            if (readStart >= samRecord.getReadBases().length) {
+                                System.out.println("U1");
+                                System.exit(9);
+                            }
+                            buildRead.add(samRecord.getReadBases()[readStart++]);
+                        }
+                        break;
+                    case I:
+//                        for (int i = 0; i < c.getLength(); i++) {
+//                            buildRead.add((byte) "-".charAt(0));
+                        readStart++;
+//                        }
+                        break;
+                    case D:
+                        d = true;
+                        for (int i = 0; i < c.getLength(); i++) {
+                            buildRead.add((byte) "-".charAt(0));
+//                            readStart++;
+                        }
+                        break;
+                    case S:
+                        break;
+                    case H:
+                        System.out.println("H");
+                        System.exit(9);
+                        break;
+                    case P:
+                        System.out.println("P");
+                        System.exit(9);
+                        break;
+                    case EQ:
+                        System.out.println("EQ");
+                        System.exit(9);
+                        break;
+                    case X:
+                        System.out.println("X");
+                        System.exit(9);
+                        break;
+                    case N:
+                        System.out.println("N");
+                        System.exit(9);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            byte[] readBases = convertRead(buildRead.toArray(new Byte[buildRead.size()]));
+            Read r = new Read(readBases, refStart, refStart + readBases.length);
+            if (r.getSequence().length != r.getEnd() - r.getBegin()) {
+                System.out.println("U2");
+                System.exit(9);
+            }
+            readList.add(r);
+        }
+        List<Read> hashing = new ArrayList<>();
+        for (Read r0 : readList) {
+            boolean missing = true;
+            for (Read r : hashing) {
+                if (Arrays.equals(r.getSequence(), r0.getSequence())
+                        && r.getBegin() == r0.getBegin()
+                        && r.getEnd() == r0.getEnd()) {
+                    r.incCount();
+                    missing = false;
+                    break;
+                }
+            }
+            if (missing) {
+                hashing.add(new Read(r0.getSequence(), r0.getBegin(), r0.getEnd(), 1));
+            }
+        }
+        return hashing.toArray(new Read[hashing.size()]);
+    }
+
+    private static byte[] convertRead(Byte[] readSplit) {
+        byte[] rs = new byte[readSplit.length];
+        int length = readSplit.length;
+        for (int i = 0; i < length; i++) {
+            switch ((short) readSplit[i]) {
+                case 65:
+                    rs[i] = 0;
+                    break;
+                case 67:
+                    rs[i] = 1;
+                    break;
+                case 71:
+                    rs[i] = 2;
+                    break;
+                case 84:
+                    rs[i] = 3;
+                    break;
+                case 45:
+                    rs[i] = 4;
+                    break;
+                case 78:
+                    rs[i] = 5;
+                    break;
+                default:
+                    System.out.println("Unknown " + (char) ((byte) readSplit[i]) + " " + readSplit[i]);
+                    break;
+            }
+        }
+        return rs;
     }
 
 //    public static Read[] parseInput(String path) {
