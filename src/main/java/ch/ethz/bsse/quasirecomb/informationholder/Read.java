@@ -60,9 +60,29 @@ public class Read {
     public int getCount() {
         return count;
     }
-    
+
     public int getInsertSize() {
-        return this.crickBegin-this.watsonEnd;
+        return this.crickBegin - (this.watsonEnd - 1);
+    }
+
+    public boolean isHit(int j) {
+        if (j < this.watsonSequence.length) {
+            return true;
+        } else if (this.isPaired() && j >= this.watsonSequence.length && j < this.watsonSequence.length+this.getInsertSize()) {
+            return false;
+        } else if (this.isPaired() && j >= this.watsonSequence.length+this.getInsertSize() && j < this.watsonSequence.length+this.getInsertSize()+this.crickSequence.length) {
+            return true;
+        } else {
+            throw new IllegalAccessError("No such sequence space for hit. j="+j);
+        }
+    }
+
+    public int getLength() {
+        if (this.crickSequence != null) {
+            return this.crickEnd - this.watsonBegin;
+        } else {
+            return this.watsonEnd - this.watsonBegin;
+        }
     }
 
     public int getEnd() {
@@ -77,18 +97,44 @@ public class Read {
         return this.watsonSequence;
     }
 
+    public byte getBase(int j) {
+        if (j < this.watsonSequence.length) {
+            return this.watsonSequence[j];
+        } else if (this.isPaired() && j >= this.watsonSequence.length+this.getInsertSize() && j < this.watsonSequence.length+this.getInsertSize()+this.crickSequence.length) {
+            return this.crickSequence[j-this.watsonSequence.length-this.getInsertSize()];
+        } else {
+            throw new IllegalAccessError("No such sequence space. j="+j);
+        }
+    }
+
     public byte[] getCrickSequence() {
         return crickSequence;
     }
-    
+
     public boolean isPaired() {
         return this.crickSequence != null;
     }
-    
+
     public void setPairedEnd(byte[] sequence, int begin, int end) {
         this.crickSequence = sequence;
         this.crickBegin = begin;
         this.crickEnd = end;
+    }
+
+    public int getCrickEnd() {
+        return crickEnd-1;
+    }
+
+    public int getWatsonEnd() {
+        return watsonEnd-1;
+    }
+
+    public int getWatsonBegin() {
+        return watsonBegin;
+    }
+
+    public int getCrickBegin() {
+        return crickBegin;
     }
 
     @Override
@@ -106,5 +152,19 @@ public class Read {
     @Override
     public boolean equals(Object obj) {
         return obj != null && obj.getClass() == this.getClass() && obj.hashCode() == this.hashCode();
+    }
+    
+    public void rearrange() {
+        if (this.watsonBegin > this.crickBegin) {
+            int beginTmp = this.watsonBegin;
+            int endTmp = this.watsonEnd;
+            byte[] seqTmp = this.watsonSequence;
+            this.watsonBegin = this.crickBegin;
+            this.watsonEnd = this.crickEnd;
+            this.watsonSequence = this.crickSequence;
+            this.crickBegin = beginTmp;
+            this.crickEnd = endTmp;
+            this.crickSequence = seqTmp;
+        }
     }
 }

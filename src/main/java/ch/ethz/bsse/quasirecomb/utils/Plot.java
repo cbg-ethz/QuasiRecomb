@@ -84,4 +84,41 @@ public class Plot {
             Logger.getLogger(Plot.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    public static void plot(double[] data, String name) {
+        Multiset<Integer> coverage = HashMultiset.create();
+        XYSeries dataset = new XYSeries(name);
+        for (int i = 0; i < data.length; i++) {
+            dataset.add((double) i, data[i]);
+        }
+        XYSeriesCollection collection = new XYSeriesCollection(dataset);
+//        collection.addSeries(dataset);
+        final JFreeChart chart = ChartFactory.createXYLineChart(
+                name,
+                "Position",
+                "Coverage",
+                collection,
+                PlotOrientation.VERTICAL,
+                false,
+                false,
+                false);
+
+        final XYPlot plot = chart.getXYPlot();
+//        final NumberAxis domainAxis = new NumberAxis("Position");
+//        final NumberAxis rangeAxis = new LogarithmicAxis("Coverage (log)");
+//        plot.setDomainAxis(domainAxis);
+//        plot.setRangeAxis(rangeAxis);
+        chart.setBackgroundPaint(Color.white);
+        plot.setOutlinePaint(Color.black);
+        plot.setBackgroundPaint(Color.white);
+//        plot.setDomainGridlinePaint(Color.gray);
+        plot.setRangeGridlinePaint(Color.decode("0xadadad"));
+
+        try {
+            ChartUtilities.saveChartAsPNG(new File(Globals.getINSTANCE().getSAVEPATH() + name +".png"),
+                    chart, 1000, 500);
+        } catch (IOException ex) {
+            Logger.getLogger(Plot.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }

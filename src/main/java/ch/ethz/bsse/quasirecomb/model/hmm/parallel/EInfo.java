@@ -29,7 +29,7 @@ public class EInfo {
     public double[] nneqPos;
     public double[] nJeq;
     public double[] nJneq;
-    public int[] coverage;
+//    public int[] coverage;
     private int L;
     private int K;
     private int n;
@@ -42,7 +42,7 @@ public class EInfo {
         this.nJneq = new double[L];
         this.neqPos = new double[L];
         this.nneqPos = new double[L];
-        this.coverage = new int[L];
+//        this.coverage = new int[L];
         this.L = L;
         this.K = K;
         this.n = n;
@@ -54,7 +54,7 @@ public class EInfo {
             this.nJneq[j] += e.nJneq[j];
             this.neqPos[j] += e.neqPos[j];
             this.nneqPos[j] += e.nneqPos[j];
-            this.coverage[j] += e.coverage[j];
+//            this.coverage[j] += e.coverage[j];
             for (int k = 0; k < K; k++) {
                 this.nJK[j][k] += e.nJK[j][k];
                 for (int l = 0; l < K; l++) {

@@ -93,7 +93,7 @@ public class ModelSelection {
         }
 
         Utils.saveFile(save + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
-        Utils.saveFile(save + File.separator + "K" + or.getK() + "-summary.txt", new Summary().html(or));
+        Utils.saveFile(save + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
         //save optimumJava
         try {
             String s = save + File.separator + "optimumJava";// + (bestK ? "" : K);

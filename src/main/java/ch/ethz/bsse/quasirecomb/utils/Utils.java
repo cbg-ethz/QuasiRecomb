@@ -137,10 +137,10 @@ public class Utils extends FastaParser {
     }
 
     public static Read[] parseInput(String path) {
-        if (isFastaFormat(path)) {
+        if (isFastaGlobalMatePairFormat(path)) {
+            return FastaParser.parseFastaPairedEnd(path);
+        } else if (isFastaFormat(path)) {
             return parseFastaInput(path);
-        } else if (isFastaGlobalMatePairFormat(path)) {
-            return FastaParser.parseFastq(path);
         } else {
             return parseBAMSAM(path);
 //            return null;
@@ -290,9 +290,6 @@ public class Utils extends FastaParser {
     public static Read[] parseFastaInput(String path) {
         List<Read> hashing = new ArrayList<>();
         if (isFastaGlobalFormat(path)) {
-//            if (isFastaGlobalMatePairFormat(path)) {
-
-//            } else {
             Map<String, String> haps = parseGlobalFarFile(path);
             for (Map.Entry<String, String> head : haps.entrySet()) {
                 String[] split = head.getKey().split("_")[1].split("-");
@@ -313,7 +310,6 @@ public class Utils extends FastaParser {
                     hashing.add(new Read(seq, begin, end, 1));
                 }
             }
-//            }
         } else {
             byte[][] haplotypesArray = splitReadsIntoByteArrays(parseFarFile(path));
             for (byte[] b : haplotypesArray) {
@@ -387,7 +383,7 @@ public class Utils extends FastaParser {
                 BufferedReader br = new BufferedReader(new InputStreamReader(in));
                 String strLine;
                 while ((strLine = br.readLine()) != null) {
-                    if (strLine.startsWith("@") ) {
+                    if (strLine.startsWith(">") && strLine.contains("/")) {
                         return true;
                     } else {
                         return false;

@@ -19,6 +19,7 @@ package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -145,6 +146,58 @@ public class FastaParser {
         return hapMap;
     }
 
+    public static Read[] parseFastaPairedEnd(String location) {
+        Map<String, Read> pairedReads1 = new HashMap<>();
+        Map<String, Read> pairedReads2 = new HashMap<>();
+        Map<String, String> haps = parseGlobalFarFile(location);
+        for (Map.Entry<String, String> head : haps.entrySet()) {
+            String[] firstsplit = head.getKey().split("\\|");
+            String[] split = firstsplit[0].split("_")[1].split("-");
+            int begin = Integer.parseInt(split[0]);
+            int end = Integer.parseInt(split[1]);
+            byte[] seq = Utils.splitReadIntoByteArray(head.getValue());
+            String[] secondsplit = firstsplit[1].split("/");
+            String tag = secondsplit[0];
+            int pairedNumber = Integer.parseInt(secondsplit[1]);
+            if (pairedNumber == 1) {
+                if (pairedReads1.containsKey(tag)) {
+                    pairedReads1.get(tag).incCount();
+                } else {
+                    pairedReads1.put(tag, new Read(seq, begin, end, 1));
+                }
+            } else {
+                if (pairedReads2.containsKey(tag)) {
+                    pairedReads2.get(tag).incCount();
+                } else {
+                    pairedReads2.put(tag, new Read(seq, begin, end, 1));
+                }
+            }
+        }
+
+        for (Map.Entry<String, Read> r : pairedReads1.entrySet()) {
+            String tag = r.getKey();
+            if (pairedReads2.containsKey(tag)) {
+                Read r2 = pairedReads2.get(tag);
+                r.getValue().setPairedEnd(r2.getSequence().clone(), r2.getBegin(), r2.getEnd());
+                r.getValue().rearrange();
+            } else {
+//                System.out.println("");
+//                pairedReads1.remove(tag);
+            }
+        }
+        Read[] reads = pairedReads1.values().toArray(new Read[pairedReads1.size()]);
+        List<Read> uniqueReads = new ArrayList<>();
+        for (Read r1 : reads) {
+            if (uniqueReads.contains(r1)) {
+                r1.incCount();
+            } else {
+                uniqueReads.add(r1);
+            }
+        }
+        
+        return uniqueReads.toArray(new Read[uniqueReads.size()]);
+    }
+
     public static Read[] parseFastq(String location) {
         FastqReader fastqReader = new IlluminaFastqReader();
         Map<String, Read> pairedReads = new HashMap<>();
@@ -168,7 +221,7 @@ public class FastaParser {
                     case 2:
                         Read mate = pairedReads.get(tag);
                         int end2 = Integer.parseInt(firstSplit[2]);
-                        int begin2 = end2-seq.length;
+                        int begin2 = end2 - seq.length;
                         mate.setPairedEnd(seq, begin2, end2);
                         boolean missing = true;
                         for (Read r : hashing) {

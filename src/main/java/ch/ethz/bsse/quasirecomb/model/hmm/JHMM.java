@@ -17,12 +17,14 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.EInfo;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorker;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
 import ch.ethz.bsse.quasirecomb.utils.Random;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.math.BigDecimal;
 import java.util.List;
 import org.javatuples.Pair;
 
@@ -38,6 +40,7 @@ public class JHMM {
     private final int K;
     private final int n;
     //rho[j][k][l] := transition prob. at position j, for l given k
+    private double[][] tauOmega;
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
@@ -57,6 +60,7 @@ public class JHMM {
     private int readCount;
     private int coverage[];
     private int parametersChanged = 0;
+    private boolean paired;
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
@@ -92,8 +96,59 @@ public class JHMM {
                 this.antieps[j] = antieps;
             }
         }
+        for (Read r : reads) {
+            if (r.isPaired()) {
+                this.paired = true;
+                break;
+            }
+        }
+        if (this.paired) {
+            this.tauOmega = new double[4][L];
+        } else {
+            this.tauOmega = new double[2][L];
 
+        }
+        this.init();
         this.start();
+    }
+
+    private void init() {
+        int[] tau1 = new int[L];
+        int[] tau2 = new int[L];
+        int[] omega1 = new int[L];
+        int[] omega2 = new int[L];
+        for (Read r : reads) {
+            for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
+                this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+            }
+            tau1[r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+            omega1[r.getWatsonEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+            if (r.isPaired()) {
+                for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
+                    this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+                }
+                tau2[r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+                omega2[r.getCrickEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < L; i++) {
+            this.tauOmega[0][i] = tau1[i] / (double) N;
+            this.tauOmega[1][i] = omega1[i] / (double) N;
+            if (this.paired) {
+                this.tauOmega[2][i] = tau2[i] / (double) N;
+                this.tauOmega[3][i] = omega2[i] / (double) N;
+            }
+            sb.append(this.tauOmega[0][i]);
+            sb.append("\t");
+            sb.append(this.tauOmega[1][i]);
+            sb.append("\t");
+            sb.append(this.tauOmega[2][i]);
+            sb.append("\t");
+            sb.append(this.tauOmega[3][i]);
+            sb.append("\n");
+        }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "twtw", sb.toString());
     }
 
     private void calculateLoglikelihood() {
@@ -111,7 +166,7 @@ public class JHMM {
         if (Globals.getINSTANCE().isPARALLEL_JHMM()) {
             Globals.getINSTANCE().setPARALLEL_RESTARTS_UPPER_BOUND(Integer.MAX_VALUE);
         }
-        Pair<List<ReadHMM>, EInfo> invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorker(this, reads, rho, pi, mu, eps, antieps, K, L, n, 0, this.readCount));
+        Pair<List<ReadHMM>, EInfo> invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorker(this, reads, rho, pi, mu, eps, antieps, K, L, n, this.tauOmega, 0, this.readCount));
         this.readHMMArray = invoke.getValue0().toArray(new ReadHMM[this.readCount]);
         calculate(invoke.getValue1());
     }
@@ -135,7 +190,7 @@ public class JHMM {
         System.arraycopy(e.nJneq, 0, this.nJneq, 0, L);
         System.arraycopy(e.neqPos, 0, this.neqPos, 0, L);
         System.arraycopy(e.nneqPos, 0, this.nneqPos, 0, L);
-        System.arraycopy(e.coverage, 0, this.coverage, 0, L);
+//        System.arraycopy(e.coverage, 0, this.coverage, 0, L);
         for (int j = 0; j < L; j++) {
             System.arraycopy(e.nJK[j], 0, this.nJK[j], 0, K);
             for (int k = 0; k < K; k++) {
@@ -158,7 +213,22 @@ public class JHMM {
                 double AH = Globals.getINSTANCE().getALPHA_H();
                 double divisor;
                 double sum;
+                boolean equality;
+                boolean repeat;
+                double[] orig = this.nJKV[j][k];
+                double preSum = 0d;
+                for (int v = 0; v < n; v++) {
+                    preSum = orig[v];
+                }
+                if (preSum == 0d) {
+                    for (int v = 0; v < n; v++) {
+                        mu[j][k][v] = 1d / n;
+                    }
+                    continue;
+                }
                 do {
+                    repeat = false;
+                    equality = true;
                     sum = 0d;
                     divisor = 0d;
                     for (int v = 0; v < n; v++) {
@@ -176,12 +246,34 @@ public class JHMM {
                                 muJKV[v] /= divisor;
                             }
                         } else {
-                            AH *= 10;
+                            AH *= 2;
                         }
                     } else {
-                        AH *= 10;
+                        AH *= 2;
                     }
-                } while (sum == 0 || divisor == 0);
+                    if (divisor > 0) {
+                        for (int v = 1; v < n; v++) {
+                            if (muJKV[v - 1] != muJKV[v]) {
+                                equality = false;
+                                break;
+                            }
+                        }
+                        if (equality) {
+                            double min = Double.MAX_VALUE;
+                            for (int v = 1; v < n; v++) {
+                                if (this.nJKV[j][k][v] > 0) {
+                                    min = Math.min(min, this.nJKV[j][k][v]);
+                                }
+                            }
+                            for (int v = 0; v < n; v++) {
+                                this.nJKV[j][k][v] /= min;
+                            }
+                            AH = Globals.getINSTANCE().getALPHA_H();
+                            repeat = true;
+                        }
+                    }
+                } while (sum == 0 || divisor == 0 || repeat);
+
                 for (int v = 0; v < n; v++) {
                     this.changed(mu[j][k][v], muJKV[v]);
                     mu[j][k][v] = muJKV[v];
@@ -221,6 +313,31 @@ public class JHMM {
                         AZ *= 10;
                     }
                 } while (sum == 0 || divisor == 0);
+
+                boolean equality = true;
+                for (int l = 1; l < K; l++) {
+                    if (rhoJKL[l - 1] != rhoJKL[l]) {
+                        equality = false;
+                    }
+                }
+                if (equality) {
+                    double max = -1;
+                    int maxV = -1;
+                    for (int l = 0; l < K; l++) {
+                        if (this.nJKL[j][k][l] > max) {
+                            max = this.nJKL[j][k][l];
+                            maxV = l;
+                        }
+                    }
+                    for (int l = 0; l < K; l++) {
+                        if (l == maxV) {
+                            rhoJKL[l] = 1;
+                        } else {
+                            rhoJKL[l] = 0;
+                        }
+                    }
+                }
+
                 for (int l = 0; l < K; l++) {
                     this.changed(rho[j - 1][k][l], rhoJKL[l]);
                     rho[j - 1][k][l] = rhoJKL[l];
@@ -279,18 +396,25 @@ public class JHMM {
                     nonzero++;
                 }
             }
-            ew /= nonzero;
-            double a = 20;
-            double b = (-a * ew + a + 2 * ew - 1) / ew;
-
+            double a = 0d, b = 0d;
+            if (ew != 0d) {
+                ew /= nonzero;
+                a = 20;
+                b = (-a * ew + a + 2 * ew - 1) / ew;
+            }
 //        if (!Globals.FIX_EPSILON) {
 //            for (int j = 0; j < L; j++) {
 //                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
 //            }
 //        } else {
             for (int j = 0; j < L; j++) {
-                this.eps[j] = f(ew + a) / f((coverage[j] * (n - 1)) + a + b);
-                this.antieps[j] = 1 - (n - 1) * eps[j];
+                if (ew == 0d) {
+                    this.eps[j] = 0;
+                    this.antieps[j] = 1;
+                } else {
+                    this.eps[j] = f(ew + a) / f((coverage[j] * (n - 1)) + a + b);
+                    this.antieps[j] = 1 - (n - 1) * eps[j];
+                }
             }
 //    }
         }

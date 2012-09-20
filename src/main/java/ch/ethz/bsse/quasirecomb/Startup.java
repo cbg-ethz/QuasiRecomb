@@ -115,6 +115,8 @@ public class Startup {
     private String haplotypes;
     @Option(name = "--simulate")
     private boolean simulate;
+    @Option(name = "-paired")
+    private boolean paired;
     @Option(name = "-f")
     private String f;
     @Option(name = "-L")
@@ -166,7 +168,11 @@ public class Startup {
                 if (this.output.endsWith(File.separator)) {
                     this.output += "reads.fasta";
                 }
-                Sampling.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
+                if (paired) {
+                    Sampling.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
+                } else {
+                    Sampling.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
+                }
 //                Sampling.fromHaplotypesGlobal(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
             } else if (this.recombine) {
                 if (this.spots != null) {
@@ -258,7 +264,7 @@ public class Startup {
                 Globals.getINSTANCE().setSAVEPATH(output + File.separator);
                 Globals.getINSTANCE().setNO_RECOMB(this.noRecomb);
                 Globals.getINSTANCE().setFORCE_NO_RECOMB(this.noRecomb);
-                Preprocessing.workflow(this.input, Kmin, Kmax, N);
+                Preprocessing.workflow(this.input, Kmin, Kmax);
             }
 
         } catch (CmdLineException cmderror) {

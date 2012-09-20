@@ -88,7 +88,8 @@ public class SingleEM {
             jhmm.restart();
             iterations++;
             Globals.getINSTANCE().printPercentage(K);
-        } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
+//        } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
+        } while (Math.abs((oldllh - llh) / llh) > this.delta);
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
 //        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "p.txt", jhmm.getParametersChanged() + "\n");
 

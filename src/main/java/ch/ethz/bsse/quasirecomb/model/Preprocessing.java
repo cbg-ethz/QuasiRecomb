@@ -47,7 +47,7 @@ public class Preprocessing {
      * @param f distribution of the haplotypes if sampling has to be done
      * @param N amount of reads in case exp is false
      */
-    public static void workflow(String input, int Kmin, int Kmax, int N) {
+    public static void workflow(String input, int Kmin, int Kmax) {
         Read[] reads = Utils.parseInput(input);
 
         for (Read r : reads) {
@@ -55,10 +55,33 @@ public class Preprocessing {
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+
+        int[][] alignment = new int[L][4];
+        for (Read r : reads) {
+            int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+            for (int i = 0; i < r.getSequence().length; i++) {
+                alignment[i + begin][r.getSequence()[i]]++;
+            }
+            begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+            for (int i = 0; i < r.getCrickSequence().length; i++) {
+                alignment[i + begin][r.getCrickSequence()[i]]++;
+            }
+        }
 //        saveUnique(reads);
+        for (int i = 0; i < L; i++) {
+            int hits = 0;
+            for (int v = 0; v < 4; v++) {
+                if (alignment[i][v] != 0) {
+                    hits++;
+                }
+            }
+            if (hits == 0) {
+                System.out.println("Position "+i+" is not covered.");
+            }
+        }
         int n = countChars(reads);
         Plot.plotCoverage(reads);
-        ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, N, L, n);
+        ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
         ModelSampling modelSampling = new ModelSampling(L, n, ms.getOptimalResult().getK(), ms.getOptimalResult().getRho(), ms.getOptimalResult().getPi(), ms.getOptimalResult().getMu());
         modelSampling.save();
         System.out.println("Quasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");

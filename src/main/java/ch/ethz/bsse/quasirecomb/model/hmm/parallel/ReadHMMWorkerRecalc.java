@@ -64,31 +64,35 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
                 int times = r.getCount();
                 //CONTINUE
                 for (int j = 0; j < r.getLength(); j++) {
-                    int jGlobal = offset + j;
-                    einfo.coverage[jGlobal] += times;
-                    for (int k = 0; k < K; k++) {
-                        einfo.nJK[jGlobal][k] += r.gamma(j, k) * times;
-                        if (j > 0) {
-                            for (int l = 0; l < K; l++) {
-                                einfo.nJKL[jGlobal][k][l] += r.xi(j, k, l) * times;
-                                if (k == l) {
-                                    einfo.nJeq[jGlobal] += r.xi(j, k, l) * times;
-                                } else {
-                                    einfo.nJneq[jGlobal] += r.xi(j, k, l) * times;
+                    if (r.getRead().isHit(j)) {
+                        int jGlobal = offset + j;
+                        for (int k = 0; k < K; k++) {
+                            einfo.nJK[jGlobal][k] += r.gamma(j, k) * times;
+                            if (j > 0) {
+                                for (int l = 0; l < K; l++) {
+                                    einfo.nJKL[jGlobal][k][l] += r.xi(j, k, l) * times;
+                                    if (k == l) {
+                                        einfo.nJeq[jGlobal] += r.xi(j, k, l) * times;
+                                    } else {
+                                        einfo.nJneq[jGlobal] += r.xi(j, k, l) * times;
+                                    }
+                                }
+                            }
+                            for (int v = 0; v < n; v++) {
+                                einfo.nJKV[jGlobal][k][v] += r.gamma(j, k, v) * times;
+                                if (Double.isNaN(einfo.nJKV[jGlobal][k][v])) {
+                                    System.out.println("");
                                 }
                             }
                         }
                         for (int v = 0; v < n; v++) {
-                            einfo.nJKV[jGlobal][k][v] += r.gamma(j, k, v) * times;
-                        }
-                    }
-                    for (int v = 0; v < n; v++) {
-                        byte b = r.getSequence()[j];
-                        for (int k = 0; k < K; k++) {
-                            if (v != b) {
-                                einfo.nneqPos[jGlobal] += r.gamma(j, k, v) * times;
-                            } else {
-                                einfo.neqPos[jGlobal] += r.gamma(j, k, v) * times;
+                            byte b = r.getSequence(j);
+                            for (int k = 0; k < K; k++) {
+                                if (v != b) {
+                                    einfo.nneqPos[jGlobal] += r.gamma(j, k, v) * times;
+                                } else {
+                                    einfo.neqPos[jGlobal] += r.gamma(j, k, v) * times;
+                                }
                             }
                         }
                     }
