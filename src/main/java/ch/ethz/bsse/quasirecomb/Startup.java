@@ -68,7 +68,7 @@ public class Startup {
     @Option(name = "-e")
     private double e = .001;
     @Option(name = "-ee")
-    private double ee = .001;
+    private double ee = .0001;
     @Option(name = "-d")
     private double d = 1e-8;
     @Option(name = "-p")
@@ -82,9 +82,9 @@ public class Startup {
     @Option(name = "-noRecomb")
     private boolean noRecomb;
     @Option(name = "-alphah")
-    private double alphah = 0.00001;
+    private double alphah = 0.0000001;
     @Option(name = "-alphaz")
-    private double alphaz = 0.001;
+    private double alphaz = 0.0000001;
     @Option(name = "-betaz")
     private double betaz = 0.01;
     @Option(name = "-logBic")
@@ -137,9 +137,11 @@ public class Startup {
             } else {
                 Globals.getINSTANCE().setSAVEPATH(this.output);
             }
-            if (!new File(this.output).exists()) {
-                if (!new File(this.output).mkdirs()) {
-                    System.out.println("Cannot create directory: " + this.output);
+            if (output.endsWith("/") || output.endsWith("\\")) {
+                if (!new File(this.output).exists()) {
+                    if (!new File(this.output).mkdirs()) {
+                        System.out.println("Cannot create directory: " + this.output);
+                    }
                 }
             }
 
@@ -148,6 +150,7 @@ public class Startup {
             Globals.getINSTANCE().setLOG_BIC(this.logBIC);
             Globals.getINSTANCE().setSAMPLING_NUMBER(this.samplingNumber);
             Globals.getINSTANCE().setPRINT(this.print);
+            Globals.getINSTANCE().setPAIRED(this.paired);
 
             if (this.sample) {
                 ModelSampling simulation = new ModelSampling(input, output);

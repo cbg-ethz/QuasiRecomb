@@ -25,6 +25,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.distribution.BetaDistributionImpl;
+import org.apache.commons.math.distribution.GammaDistributionImpl;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -43,31 +48,53 @@ public class Sampling {
             freqMap.put(i, hapProb[i]);
         }
         Frequency<Integer> frequency = new Frequency<>(freqMap);
+        BetaDistributionImpl beta = new BetaDistributionImpl(1, 5);
+
+        double[] sample = null;
+        try {
+            sample = beta.sample(N);
+            double max = 0;
+            for (int i = 0; i < N; i++) {
+                max = Math.max(sample[i], max);
+            }
+            for (int i = 0; i < N; i++) {
+                sample[i] /= max;
+            }
+        } catch (MathException ex) {
+            Logger.getLogger(Sampling.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
 
         Read[] reads1 = new Read[N];
         Read[] reads2 = new Read[N];
+
         for (int i = 0; i < N; i++) {
             int hap = frequency.roll();
 
             int start = 0;
             int length = 0;
 //                length = (int)(Math.random()*300);
-            length = 150;
+            length = readLength;
 //            if (Math.random() > .5) {
 //                length -= (int) (Math.random() * 100);
 //            } else {
 //                length += (int) (Math.random() * 100);
 //            }
-            start = (int) (Math.random() * (L - insertSize + 3* readLength));
-            start -= 3*readLength;
-            for (;;) {
-                if (start < 0) {
-                    start += readLength;
-                } else if (start + 2 * readLength + insertSize >= L) {
-                    start -= readLength;
-                } else {
-                    break;
+            if (i > N / 10) {
+                start = (int) (Math.random() * (L - insertSize + 3 * readLength));
+                start -= 3 * readLength;
+                for (;;) {
+                    if (start < 0) {
+                        start += readLength;
+                    } else if (start + 2 * readLength + insertSize >= L) {
+                        start -= readLength;
+                    } else {
+                        break;
+                    }
                 }
+            }
+            if (i > 9 * N / 10) {
+                start = L - insertSize - 2 * readLength;
             }
             System.out.println(start);
             char[] readArray = new char[length];
@@ -75,17 +102,21 @@ public class Sampling {
 
             for (int j = 0; j < length; j++) {
                 //error
-                Map<Character, Double> baseMap = new ConcurrentHashMap<>();
-                for (int v = 0; v < n; v++) {
-                    char x = reverse(v);
-                    if (haplotypes[hap].charAt(j + start) == x) {
-                        baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
-                    } else {
-                        baseMap.put(x, epsilon);
+                if (epsilon > 0d) {
+                    Map<Character, Double> baseMap = new ConcurrentHashMap<>();
+                    for (int v = 0; v < n; v++) {
+                        char x = reverse(v);
+                        if (haplotypes[hap].charAt(j + start) == x) {
+                            baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
+                        } else {
+                            baseMap.put(x, epsilon);
+                        }
                     }
+                    Frequency<Character> errorF = new Frequency<>(baseMap);
+                    readArray[j] = errorF.roll();
+                } else {
+                    readArray[j] = haplotypes[hap].charAt(j + start);
                 }
-                Frequency<Character> errorF = new Frequency<>(baseMap);
-                readArray[j] = errorF.roll();
             }
             StringBuilder sb = new StringBuilder(length);
             for (int j = 0; j < length; j++) {
@@ -98,17 +129,21 @@ public class Sampling {
 
             for (int j = 0; j < length; j++) {
                 //error
-                Map<Character, Double> baseMap = new ConcurrentHashMap<>();
-                for (int v = 0; v < n; v++) {
-                    char x = reverse(v);
-                    if (haplotypes[hap].charAt(j + start) == x) {
-                        baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
-                    } else {
-                        baseMap.put(x, epsilon);
+                if (epsilon > 0d) {
+                    Map<Character, Double> baseMap = new ConcurrentHashMap<>();
+                    for (int v = 0; v < n; v++) {
+                        char x = reverse(v);
+                        if (haplotypes[hap].charAt(j + start) == x) {
+                            baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
+                        } else {
+                            baseMap.put(x, epsilon);
+                        }
                     }
+                    Frequency<Character> errorF = new Frequency<>(baseMap);
+                    readArray[j] = errorF.roll();
+                } else {
+                    readArray[j] = haplotypes[hap].charAt(j + start);
                 }
-                Frequency<Character> errorF = new Frequency<>(baseMap);
-                readArray[j] = errorF.roll();
             }
             StringBuilder sb2 = new StringBuilder(length);
             for (int j = 0; j < length; j++) {
@@ -355,10 +390,11 @@ public class Sampling {
             hapFreq.put(i, 0d);
         }
         Map<String, Integer> map = new ConcurrentHashMap<>();
+        L = haplotypes[0].length();
         String read;
         for (int i = 0; i < N; i++) {
             int hap = frequency.roll();
-            hapFreq.put(hap, hapFreq.get(hap) + 1);
+//            hapFreq.put(hap, hapFreq.get(hap) + 1);
             char[] readArray = new char[L];
             for (int j = 0; j < L; j++) {
                 //error
@@ -386,11 +422,11 @@ public class Sampling {
         for (Map.Entry<String, Integer> readX : map.entrySet()) {
             sb.append(readX.getValue()).append("\t").append(readX.getKey()).append("\n");
             for (int i = 0; i < readX.getValue(); i++) {
-                sb2.append(">SAMPLED-").append(z++).append(newline).append(readX).append("\n");
+                sb2.append(">SAMPLED-").append(z++).append(newline).append(readX.getKey()).append("\n");
             }
         }
-        Utils.saveFile(savePath + "sampledReadDistribution.txt", sb.toString());
-        Utils.saveFile(savePath + "reads.fasta", sb2.toString());
+        Utils.saveFile(savePath + "_dist", sb.toString());
+        Utils.saveFile(savePath, sb2.toString());
         return map;
     }
 

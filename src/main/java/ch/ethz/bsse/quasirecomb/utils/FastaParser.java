@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
 import java.util.ArrayList;
@@ -174,28 +175,44 @@ public class FastaParser {
             }
         }
 
-        for (Map.Entry<String, Read> r : pairedReads1.entrySet()) {
-            String tag = r.getKey();
-            if (pairedReads2.containsKey(tag)) {
-                Read r2 = pairedReads2.get(tag);
-                r.getValue().setPairedEnd(r2.getSequence().clone(), r2.getBegin(), r2.getEnd());
-                r.getValue().rearrange();
-            } else {
+        if (Globals.getINSTANCE().isPAIRED()) {
+            for (Map.Entry<String, Read> r : pairedReads1.entrySet()) {
+                String tag = r.getKey();
+                if (pairedReads2.containsKey(tag)) {
+                    Read r2 = pairedReads2.get(tag);
+                    r.getValue().setPairedEnd(r2.getSequence().clone(), r2.getBegin(), r2.getEnd());
+                    r.getValue().rearrange();
+                } else {
 //                System.out.println("");
 //                pairedReads1.remove(tag);
+                }
+            }
+        } else {
+            for (Map.Entry<String, Read> r : pairedReads2.entrySet()) {
+                pairedReads1.put(r.getKey()+"-", r.getValue());
             }
         }
-        Read[] reads = pairedReads1.values().toArray(new Read[pairedReads1.size()]);
-        List<Read> uniqueReads = new ArrayList<>();
-        for (Read r1 : reads) {
-            if (uniqueReads.contains(r1)) {
-                r1.incCount();
+        Map<Integer,Read> hashed = new HashMap<>();
+        int i = 0;
+        for (Read r1 : pairedReads1.values()) {
+            int hash = r1.hashCode();
+            if (hashed.containsKey(hash)){
+                hashed.get(hash).incCount();
             } else {
-                uniqueReads.add(r1);
+                hashed.put(hash, r1);
             }
         }
-        
-        return uniqueReads.toArray(new Read[uniqueReads.size()]);
+        StringBuilder sb = new StringBuilder();
+        for (Read unique : hashed.values()) {
+            sb.append(Utils.reverse(unique.getSequence())).append("");
+            if (unique.isPaired()) {
+                sb.append(Utils.reverse(unique.getCrickSequence()));
+            }
+            sb.append("\n");
+        }
+
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "uniques.txt", sb.toString());
+        return hashed.values().toArray(new Read[hashed.size()]);
     }
 
     public static Read[] parseFastq(String location) {

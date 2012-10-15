@@ -64,7 +64,7 @@ public class ReadHMM {
         this.begin = read.getBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         this.paired = this.read.isPaired();
         this.tauOmega = tauOmega;
-        this.watsonEndLocal = this.read.getWatsonEnd() - this.begin;
+        this.watsonEndLocal = this.read.getWatsonEnd() - this.begin - 1;
         if (this.paired) {
             this.length = this.read.getLength();
             this.crickBeginLocal = this.read.getCrickBegin() - this.begin;
@@ -129,28 +129,66 @@ public class ReadHMM {
         this.fJK = new double[length][K];
 
         for (int j = 0; j < length; j++) {
-            int jGlobal = j + this.read.getBegin();
+            int jGlobal = j + begin;
             for (int k = 0; k < K; k++) {
                 for (int v = 0; v < n; v++) {
                     if (j == 0) {
+//                        System.out.println("w_in");
                         fJKV[j][k][v] = tauOmega[0][j + begin];
-                        fJKV[j][k][v] *= pi[k];
+                        fJKV[j][k][v] = pi[k];
                     } else {
                         double sumL = 0d;
                         for (int l = 0; l < K; l++) {
                             sumL += fJK[j - 1][l] * rho[begin + j - 1][l][k];
                         }
+                        try {
+                            switch (this.read.getPosition(j)) {
+                                case WATSON_HIT:
+//                                System.out.println("w_hit");
+                                    sumL *= 1 - this.tauOmega[1][jGlobal];
+                                    break;
+                                case WATSON_OUT:
+//                                System.out.println("w_out");
+                                    sumL *= this.tauOmega[1][jGlobal];
+                                    break;
+                                case INSERTION:
+//                                System.out.println("insert");
+                                    sumL *= 1 - this.tauOmega[2][jGlobal];
+                                    break;
+                                case CRICK_IN:
+//                                System.out.println("c_in");
+                                    sumL *= this.tauOmega[2][jGlobal];
+                                    break;
+                                case CRICK_HIT:
+//                                System.out.println("c_hit");
+                                    sumL *= 1 - this.tauOmega[3][jGlobal];
+                                    break;
+                                case CRICK_OUT:
+//                                System.out.println("c_out");
+                                    break;
+                            }
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            System.out.println("w00t");
+                        }
                         fJKV[j][k][v] = sumL;
+                        if (Double.isNaN(fJKV[j][k][v])) {
+                            System.out.println("x");
+                        }
                     }
 
                     if (this.read.isHit(j)) {
                         fJKV[j][k][v] *= (this.getSequence(j) == v ? antieps[begin + j] : eps[begin + j]);
                         fJKV[j][k][v] *= mu[begin + j][k][v];
                     }
+                    if (Double.isNaN(fJKV[j][k][v])) {
+                        System.out.println("fJKV:\t" + fJKV[j][k][v]);
+                        System.out.println("mu:\t" + mu[begin + j][k][v]);
+                        System.exit(0);
+                    }
                     c[j] += fJKV[j][k][v];
                 }
             }
-            if (c[j] == 0) {
+            if (c[j] <= 0) {
                 System.out.println("R");
             }
             for (int k = 0; k < K; k++) {
@@ -164,6 +202,7 @@ public class ReadHMM {
 
     private void backward() {
         for (int j = length - 1; j >= 0; j--) {
+            int jGlobal = j + begin;
             for (int k = 0; k < K; k++) {
                 if (j == length - 1) {
                     bJK[j][k] = 1d / c[length - 1];
@@ -173,7 +212,32 @@ public class ReadHMM {
                         if (this.read.isHit(j + 1)) {
                             double sumV = 0d;
                             for (int v = 0; v < n; v++) {
-                                sumV += (this.getSequence(j + 1) == v ? antieps[begin + j + 1] : eps[begin + j + 1]) * mu[begin + j + 1][l][v];
+                                sumV += (this.getSequence(j + 1) == v ? antieps[jGlobal + 1] : eps[jGlobal + 1]) * mu[jGlobal + 1][l][v];
+                            }
+                            switch (this.read.getPosition(j)) {
+                                case WATSON_HIT:
+//                                System.out.println("w_hit");
+                                    sumV *= 1 - this.tauOmega[1][jGlobal];
+                                    break;
+                                case WATSON_OUT:
+//                                System.out.println("w_out");
+                                    sumV *= this.tauOmega[1][jGlobal];
+                                    break;
+                                case INSERTION:
+//                                System.out.println("insert");
+                                    sumV *= 1 - this.tauOmega[2][jGlobal];
+                                    break;
+                                case CRICK_IN:
+//                                System.out.println("c_in");
+                                    sumV *= this.tauOmega[2][jGlobal];
+                                    break;
+                                case CRICK_HIT:
+//                                System.out.println("c_hit");
+                                    sumV *= 1 - this.tauOmega[3][jGlobal];
+                                    break;
+                                case CRICK_OUT:
+//                                System.out.println("c_out");
+                                    break;
                             }
                             bJK[j][k] += sumV * rho[begin + j][k][l] * bJK[j + 1][l];
                         } else {
@@ -196,7 +260,7 @@ public class ReadHMM {
                         System.out.println("");
                     }
                 }
-                
+
             }
             if (j > 0) {
                 for (int k = 0; k < K; k++) {

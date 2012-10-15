@@ -31,7 +31,7 @@ public class Frequency<T> {
 
     public Frequency(Map<T, Double> frequency) {
         double total = 0;
-        
+
         for (Map.Entry<T, Double> e : frequency.entrySet()) {
             if (e.getValue() > 1E-6) {
                 total += e.getValue();
@@ -41,11 +41,16 @@ public class Frequency<T> {
         max = total;
     }
 
-    /** 
+    /**
      * Choose a random symbol. The choices are weighted by frequency.
      */
     public T roll() {
-        Double key = Math.random() * max;
-        return table.higherEntry(key).getValue();
+        try {
+            Double key = Math.random() * max;
+            return table.higherEntry(key).getValue();
+        } catch (Exception e) {
+            System.out.println("");
+            return null;
+        }
     }
 }

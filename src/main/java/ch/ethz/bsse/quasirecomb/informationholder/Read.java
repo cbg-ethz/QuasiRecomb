@@ -32,10 +32,29 @@ public class Read {
     private int crickBegin;
     private int crickEnd = -1;
 
+    public enum Position {
+
+        WATSON_IN,
+        WATSON_HIT,
+        WATSON_OUT,
+        INSERTION,
+        CRICK_IN,
+        CRICK_HIT,
+        CRICK_OUT;
+    }
+
     public Read(byte[] sequence, int begin, int end) {
         this.watsonSequence = sequence;
         this.watsonBegin = begin;
         this.watsonEnd = end;
+    }
+
+    public Read(byte[] sequence, int begin, int end, byte[] Csequence, int Cbegin, int Cend) {
+        this.watsonSequence = sequence;
+        this.watsonBegin = begin;
+        this.watsonEnd = end;
+        setPairedEnd(Csequence, Cbegin, Cend);
+        rearrange();
     }
 
     public Read(byte[] sequence, int begin, int end, int count) {
@@ -62,18 +81,39 @@ public class Read {
     }
 
     public int getInsertSize() {
-        return this.crickBegin - (this.watsonEnd - 1);
+        return this.crickBegin - this.watsonEnd;
+    }
+
+    public Position getPosition(int j) {
+        if (j == 0) {
+            return Position.WATSON_IN;
+        } else if (j < this.watsonEnd - this.watsonBegin) {
+            return Position.WATSON_HIT;
+        } else if (this.isPaired()) {
+            if (j == this.watsonSequence.length) {
+                return Position.WATSON_OUT;
+            } else if (j > this.watsonSequence.length && j < this.watsonSequence.length + this.getInsertSize()) {
+                return Position.INSERTION;
+            } else if (j == this.crickBegin - this.watsonBegin) {
+                return Position.CRICK_IN;
+            } else if (j > this.crickBegin - this.watsonBegin && j < this.crickBegin + this.crickSequence.length - this.watsonBegin) {
+                return Position.CRICK_HIT;
+            } else if (j == this.crickBegin + this.crickSequence.length - this.watsonBegin) {
+                return Position.CRICK_OUT;
+            }
+        }
+        throw new IllegalAccessError("No such sequence space for hit. j=" + j);
     }
 
     public boolean isHit(int j) {
         if (j < this.watsonSequence.length) {
             return true;
-        } else if (this.isPaired() && j >= this.watsonSequence.length && j < this.watsonSequence.length+this.getInsertSize()) {
+        } else if (this.isPaired() && j >= this.watsonSequence.length && j < this.watsonSequence.length + this.getInsertSize()) {
             return false;
-        } else if (this.isPaired() && j >= this.watsonSequence.length+this.getInsertSize() && j < this.watsonSequence.length+this.getInsertSize()+this.crickSequence.length) {
+        } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.crickSequence.length - this.watsonBegin) {
             return true;
         } else {
-            throw new IllegalAccessError("No such sequence space for hit. j="+j);
+            throw new IllegalAccessError("No such sequence space for hit. j=" + j);
         }
     }
 
@@ -100,10 +140,11 @@ public class Read {
     public byte getBase(int j) {
         if (j < this.watsonSequence.length) {
             return this.watsonSequence[j];
-        } else if (this.isPaired() && j >= this.watsonSequence.length+this.getInsertSize() && j < this.watsonSequence.length+this.getInsertSize()+this.crickSequence.length) {
-            return this.crickSequence[j-this.watsonSequence.length-this.getInsertSize()];
+        } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.crickSequence.length - this.watsonBegin) {
+            return this.crickSequence[j - this.watsonSequence.length - this.getInsertSize()];
         } else {
-            throw new IllegalAccessError("No such sequence space. j="+j);
+            return -1;
+//            throw new IllegalAccessError("No such sequence space. j=" + j);
         }
     }
 
@@ -122,11 +163,11 @@ public class Read {
     }
 
     public int getCrickEnd() {
-        return crickEnd-1;
+        return crickEnd;
     }
 
     public int getWatsonEnd() {
-        return watsonEnd-1;
+        return watsonEnd;
     }
 
     public int getWatsonBegin() {
@@ -153,7 +194,7 @@ public class Read {
     public boolean equals(Object obj) {
         return obj != null && obj.getClass() == this.getClass() && obj.hashCode() == this.hashCode();
     }
-    
+
     public void rearrange() {
         if (this.watsonBegin > this.crickBegin) {
             int beginTmp = this.watsonBegin;

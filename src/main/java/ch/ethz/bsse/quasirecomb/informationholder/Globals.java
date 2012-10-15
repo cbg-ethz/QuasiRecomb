@@ -17,10 +17,12 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.ForkJoinPool;
 
 /**
@@ -37,6 +39,7 @@ public class Globals {
     }
 
     private Globals() {
+        df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
@@ -69,6 +72,8 @@ public class Globals {
     private int SAMPLING_NUMBER;
     private StringBuilder LOG = new StringBuilder();
     private long start = System.currentTimeMillis();
+    private boolean PAIRED = false;
+    private final DateFormat df = new SimpleDateFormat("HH:mm:ss");
 
     public synchronized void log(Object o) {
         if (PRINT) {
@@ -108,7 +113,7 @@ public class Globals {
     }
 
     public String time() {
-        return new SimpleDateFormat("mm:ss:SSS").format(new Date(System.currentTimeMillis() - start));
+        return df.format(new Date(System.currentTimeMillis() - start));
     }
 
     public void setFORCE_NO_RECOMB(boolean FORCE_NO_RECOMB) {
@@ -365,5 +370,13 @@ public class Globals {
 
     public void setPERCENTAGE(double PERCENTAGE) {
         this.PERCENTAGE = PERCENTAGE;
+    }
+
+    public boolean isPAIRED() {
+        return PAIRED;
+    }
+
+    public void setPAIRED(boolean PAIRED) {
+        this.PAIRED = PAIRED;
     }
 }

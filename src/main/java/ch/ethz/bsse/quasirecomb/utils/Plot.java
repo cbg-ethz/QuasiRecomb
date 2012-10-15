@@ -43,7 +43,10 @@ public class Plot {
         Multiset<Integer> coverage = HashMultiset.create();
         for (Read r : reads) {
             int amount = r.getCount();
-            for (int i = r.getBegin(); i < r.getEnd(); i++) {
+            for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
+                coverage.add(i, amount);
+            }
+            for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
                 coverage.add(i, amount);
             }
         }

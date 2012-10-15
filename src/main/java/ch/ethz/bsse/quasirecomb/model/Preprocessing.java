@@ -56,29 +56,40 @@ public class Preprocessing {
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
 
-        int[][] alignment = new int[L][4];
+        int[][] alignment = new int[L][5];
+        int count = 0;
         for (Read r : reads) {
             int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
             for (int i = 0; i < r.getSequence().length; i++) {
-                alignment[i + begin][r.getSequence()[i]]++;
+                try {
+                alignment[i + begin][r.getSequence()[i]] += r.getCount();
+                } catch(ArrayIndexOutOfBoundsException e) {
+                    System.out.println(e);
+                }
             }
-            begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-            for (int i = 0; i < r.getCrickSequence().length; i++) {
-                alignment[i + begin][r.getCrickSequence()[i]]++;
+            if (r.isPaired()) {
+                begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+                for (int i = 0; i < r.getCrickSequence().length; i++) {
+                    alignment[i + begin][r.getCrickSequence()[i]] += r.getCount();
+                }
             }
+            count += r.getCount();
         }
 //        saveUnique(reads);
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < L; i++) {
             int hits = 0;
             for (int v = 0; v < 4; v++) {
+                sb.append(alignment[i][v]).append("\n");
                 if (alignment[i][v] != 0) {
                     hits++;
                 }
             }
             if (hits == 0) {
-                System.out.println("Position "+i+" is not covered.");
+                System.out.println("Position " + i + " is not covered.");
             }
         }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "hit_dist.txt", sb.toString());
         int n = countChars(reads);
         Plot.plotCoverage(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);

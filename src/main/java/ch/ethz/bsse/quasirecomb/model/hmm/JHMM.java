@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
+import cc.mallet.types.Dirichlet;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.EInfo;
@@ -61,6 +62,13 @@ public class JHMM {
     private int coverage[];
     private int parametersChanged = 0;
     private boolean paired;
+    private double a = 0d, b = 0d;
+
+    {
+        double ew = 0.003;
+        a = 20;
+        b = (-a * ew + a + 2 * ew - 1) / ew;
+    }
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
@@ -103,9 +111,9 @@ public class JHMM {
             }
         }
         if (this.paired) {
-            this.tauOmega = new double[4][L];
+            this.tauOmega = new double[4][L + 1];
         } else {
-            this.tauOmega = new double[2][L];
+            this.tauOmega = new double[2][L + 1];
 
         }
         this.init();
@@ -113,10 +121,10 @@ public class JHMM {
     }
 
     private void init() {
-        int[] tau1 = new int[L];
-        int[] tau2 = new int[L];
-        int[] omega1 = new int[L];
-        int[] omega2 = new int[L];
+        int[] tau1 = new int[L + 1];
+        int[] tau2 = new int[L + 1];
+        int[] omega1 = new int[L + 1];
+        int[] omega2 = new int[L + 1];
         for (Read r : reads) {
             for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
                 this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
@@ -132,20 +140,20 @@ public class JHMM {
             }
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < L; i++) {
+        for (int i = 0; i < L + 1; i++) {
             this.tauOmega[0][i] = tau1[i] / (double) N;
             this.tauOmega[1][i] = omega1[i] / (double) N;
-            if (this.paired) {
-                this.tauOmega[2][i] = tau2[i] / (double) N;
-                this.tauOmega[3][i] = omega2[i] / (double) N;
-            }
             sb.append(this.tauOmega[0][i]);
             sb.append("\t");
             sb.append(this.tauOmega[1][i]);
             sb.append("\t");
-            sb.append(this.tauOmega[2][i]);
-            sb.append("\t");
-            sb.append(this.tauOmega[3][i]);
+            if (this.paired) {
+                this.tauOmega[2][i] = tau2[i] / (double) N;
+                this.tauOmega[3][i] = omega2[i] / (double) N;
+                sb.append(this.tauOmega[2][i]);
+                sb.append("\t");
+                sb.append(this.tauOmega[3][i]);
+            }
             sb.append("\n");
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "twtw", sb.toString());
@@ -156,6 +164,9 @@ public class JHMM {
         for (ReadHMM r : this.readHMMArray) {
             for (int j = 0; j < L; j++) {
                 this.loglikelihood += Math.log(r.getC(j)) * r.getCount();
+                if (Double.isNaN(loglikelihood)) {
+                    System.out.println("LLH NaN");
+                }
             }
         }
     }
@@ -190,7 +201,6 @@ public class JHMM {
         System.arraycopy(e.nJneq, 0, this.nJneq, 0, L);
         System.arraycopy(e.neqPos, 0, this.neqPos, 0, L);
         System.arraycopy(e.nneqPos, 0, this.nneqPos, 0, L);
-//        System.arraycopy(e.coverage, 0, this.coverage, 0, L);
         for (int j = 0; j < L; j++) {
             System.arraycopy(e.nJK[j], 0, this.nJK[j], 0, K);
             for (int k = 0; k < K; k++) {
@@ -207,76 +217,91 @@ public class JHMM {
     }
 
     private void calcMu() {
-        double[] muJKV = new double[n];
+        double[] muJKV;
         for (int j = 0; j < L; j++) {
+            muJKV = new double[n];
             for (int k = 0; k < K; k++) {
-                double AH = Globals.getINSTANCE().getALPHA_H();
+
+//                double AH = Globals.getINSTANCE().getALPHA_H();
+                double AH = 1e-4;
                 double divisor;
-                double sum;
-                boolean equality;
-                boolean repeat;
-                double[] orig = this.nJKV[j][k];
-                double preSum = 0d;
+                double sum = 0d;
+
+                double max = Double.MIN_VALUE;
                 for (int v = 0; v < n; v++) {
-                    preSum = orig[v];
+                    max = Math.max(max, this.nJKV[j][k][v]);
                 }
-                if (preSum == 0d) {
+                if (max < 1) {
                     for (int v = 0; v < n; v++) {
-                        mu[j][k][v] = 1d / n;
-                    }
-                    continue;
-                }
-                do {
-                    repeat = false;
-                    equality = true;
-                    sum = 0d;
-                    divisor = 0d;
-                    for (int v = 0; v < n; v++) {
-                        muJKV[v] = this.f(this.nJKV[j][k][v] + AH);
                         sum += this.nJKV[j][k][v];
                     }
-                    sum = this.f(sum + n * AH);
                     if (sum > 0) {
                         for (int v = 0; v < n; v++) {
-                            muJKV[v] /= sum;
-                            divisor += muJKV[v];
-                        }
-                        if (divisor > 0) {
-                            for (int v = 0; v < n; v++) {
-                                muJKV[v] /= divisor;
-                            }
-                        } else {
-                            AH *= 2;
+                            muJKV[v] = this.nJKV[j][k][v] / sum;
                         }
                     } else {
-                        AH *= 2;
-                    }
-                    if (divisor > 0) {
-                        for (int v = 1; v < n; v++) {
-                            if (muJKV[v - 1] != muJKV[v]) {
-                                equality = false;
-                                break;
-                            }
+                        for (int v = 0; v < n; v++) {
+                            muJKV[v] = 1d / n;
                         }
-                        if (equality) {
-                            double min = Double.MAX_VALUE;
-                            for (int v = 1; v < n; v++) {
-                                if (this.nJKV[j][k][v] > 0) {
-                                    min = Math.min(min, this.nJKV[j][k][v]);
-                                }
+                    }
+                    for (int v = 0; v < n; v++) {
+                        this.changed(mu[j][k][v], muJKV[v]);
+                        mu[j][k][v] = muJKV[v];
+                        if (Double.isNaN(muJKV[v])) {
+                            System.out.println("R MU plain nan, j " + j + ", k " + k);
+                            for (int i = 0; i < n; i++) {
+                                System.out.println(this.nJKV[j][k][v] + "\t" + muJKV[i]);
                             }
+                            System.out.println("sum:\t" + sum);
+                        }
+                    }
+                } else {
+                    do {
+                        sum = 0d;
+                        divisor = 0d;
+                        for (int v = 0; v < n; v++) {
+                            muJKV[v] = this.f(this.nJKV[j][k][v] + AH);
+                            sum += this.nJKV[j][k][v];
+                        }
+                        sum = this.f(sum + n * AH);
+                        if (sum > 0) {
                             for (int v = 0; v < n; v++) {
-                                this.nJKV[j][k][v] /= min;
+                                muJKV[v] /= sum;
+                                divisor += muJKV[v];
                             }
-                            AH = Globals.getINSTANCE().getALPHA_H();
-                            repeat = true;
+                            if (divisor > 0) {
+                                for (int v = 0; v < n; v++) {
+                                    muJKV[v] /= divisor;
+                                }
+                            } else {
+                                AH *= 10;
+                            }
+                        } else {
+                            AH *= 10;
+                        }
+                        if (Double.isNaN(sum) || Double.isNaN(divisor)) {
+                            System.out.println("a");
+                        }
+                    } while (sum == 0 || divisor == 0);
+                    max = Double.MIN_VALUE;
+                    for (int v = 0; v < n; v++) {
+                        max = Math.max(max, muJKV[v]);
+                    }
+                    if (max == 1d) {
+                        for (int v = 0; v < n; v++) {
+                            if (muJKV[v] < 1) {
+                                muJKV[v] = 0d;
+                            }
                         }
                     }
-                } while (sum == 0 || divisor == 0 || repeat);
-
-                for (int v = 0; v < n; v++) {
-                    this.changed(mu[j][k][v], muJKV[v]);
-                    mu[j][k][v] = muJKV[v];
+                    for (int v = 0; v < n; v++) {
+                        this.changed(mu[j][k][v], muJKV[v]);
+                        mu[j][k][v] = muJKV[v];
+                        if (Double.isNaN(muJKV[v])) {
+                            System.out.println("R MU reg nan");
+                            System.exit(0);
+                        }
+                    }
                 }
             }
         }
@@ -286,61 +311,73 @@ public class JHMM {
         double[] rhoJKL = new double[K];
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double AZ = Globals.getINSTANCE().getALPHA_Z();
+                double AZ = 0.001;
                 double divisor;
-                double sum;
-                do {
-                    sum = 0d;
-                    divisor = 0d;
+                double sum = 0d;
+
+                double max = Double.MIN_VALUE;
+                for (int l = 0; l < K; l++) {
+                    max = Math.max(max, this.nJKL[j][k][l]);
+                }
+                if (max < 1e-10) {
                     for (int l = 0; l < K; l++) {
-                        rhoJKL[l] = this.f(this.nJKL[j][k][l] + AZ);
                         sum += this.nJKL[j][k][l];
                     }
-                    sum = this.f(sum + K * AZ);
                     if (sum > 0) {
                         for (int l = 0; l < K; l++) {
-                            rhoJKL[l] /= sum;
-                            divisor += rhoJKL[l];
+                            rhoJKL[l] = this.nJKL[j][k][l] / sum;
                         }
-                        if (divisor > 0) {
+//                    } else {
+//                        for (int l = 0; l < K; l++) {
+//                            if (k == l) {
+//                                rhoJKL[l] = 1d;
+//                            } else {
+//                                rhoJKL[l] = 0d;
+//                            }
+//                        }
+                    }
+                    for (int l = 0; l < K; l++) {
+                        this.changed(rho[j - 1][k][l], rhoJKL[l]);
+                        rho[j - 1][k][l] = rhoJKL[l];
+                        if (Double.isNaN(rhoJKL[l])) {
+                            System.out.println("R RHO plain nan, j " + j + ", k " + k);
+                            for (int i = 0; i < n; i++) {
+                                System.out.println(this.nJKV[j - 1][k][l] + "\t" + rhoJKL[i]);
+                            }
+                            System.out.println("sum:\t" + sum);
+                            System.exit(0);
+                        }
+                    }
+                } else {
+                    do {
+                        sum = 0d;
+                        divisor = 0d;
+                        for (int l = 0; l < K; l++) {
+                            rhoJKL[l] = this.f(this.nJKL[j][k][l] + AZ);
+                            sum += this.nJKL[j][k][l];
+                        }
+                        sum = this.f(sum + K * AZ);
+                        if (sum > 0) {
                             for (int l = 0; l < K; l++) {
-                                rhoJKL[l] /= divisor;
+                                rhoJKL[l] /= sum;
+                                divisor += rhoJKL[l];
+                            }
+                            if (divisor > 0) {
+                                for (int l = 0; l < K; l++) {
+                                    rhoJKL[l] /= divisor;
+                                }
+                            } else {
+                                AZ *= 10;
                             }
                         } else {
                             AZ *= 10;
                         }
-                    } else {
-                        AZ *= 10;
-                    }
-                } while (sum == 0 || divisor == 0);
+                    } while (sum == 0 || divisor == 0);
 
-                boolean equality = true;
-                for (int l = 1; l < K; l++) {
-                    if (rhoJKL[l - 1] != rhoJKL[l]) {
-                        equality = false;
-                    }
-                }
-                if (equality) {
-                    double max = -1;
-                    int maxV = -1;
                     for (int l = 0; l < K; l++) {
-                        if (this.nJKL[j][k][l] > max) {
-                            max = this.nJKL[j][k][l];
-                            maxV = l;
-                        }
+                        this.changed(rho[j - 1][k][l], rhoJKL[l]);
+                        rho[j - 1][k][l] = rhoJKL[l];
                     }
-                    for (int l = 0; l < K; l++) {
-                        if (l == maxV) {
-                            rhoJKL[l] = 1;
-                        } else {
-                            rhoJKL[l] = 0;
-                        }
-                    }
-                }
-
-                for (int l = 0; l < K; l++) {
-                    this.changed(rho[j - 1][k][l], rhoJKL[l]);
-                    rho[j - 1][k][l] = rhoJKL[l];
                 }
             }
         }
@@ -354,26 +391,16 @@ public class JHMM {
     }
 
     private double rho_phi(double upsilon) {
-        double x = -1d;
-        try {
-            x = (upsilon > 7) ? rho_g(upsilon - .5) : (rho_phi(upsilon + 1) - 1 / upsilon);
-
-        } catch (StackOverflowError e) {
-            System.err.println(upsilon);
-            System.err.println(e);
-        }
-        return x;
-    }
-
-    private double rho_g(double x) {
-        return Math.log(x) + .04167 * Math.pow(x, -2) - .00729 * Math.pow(x, -4) + .00384 * Math.pow(x, -6) - .00413 * Math.pow(x, -8);
+        return Dirichlet.digamma(upsilon);
     }
 
     private void calcPi() {
         double sumK = 0d;
-        for (int k = 0; k < K; k++) {
-            pi[k] = this.nJK[0][k];
-            sumK += pi[k];
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                pi[k] += this.nJK[j][k];
+                sumK += this.nJK[j][k];
+            }
         }
         for (int k = 0; k < K; k++) {
             pi[k] /= sumK;
@@ -393,30 +420,26 @@ public class JHMM {
             for (int j = 0; j < L; j++) {
                 if (this.nneqPos[j] != 0d) {
                     ew += this.nneqPos[j] / N;
-                    nonzero++;
                 }
             }
             double a = 0d, b = 0d;
             if (ew != 0d) {
-                ew /= nonzero;
+                ew /= L;
                 a = 20;
                 b = (-a * ew + a + 2 * ew - 1) / ew;
             }
-//        if (!Globals.FIX_EPSILON) {
-//            for (int j = 0; j < L; j++) {
-//                this.eps[j] = this.nneqPos[j] / (N * (n - 1));
-//            }
-//        } else {
             for (int j = 0; j < L; j++) {
                 if (ew == 0d) {
                     this.eps[j] = 0;
                     this.antieps[j] = 1;
                 } else {
-                    this.eps[j] = f(ew + a) / f((coverage[j] * (n - 1)) + a + b);
+                    this.eps[j] = f(this.nneqPos[j] + a) / f((coverage[j] * (n - 1)) + a + b);
+                    if (this.eps[j] > 1d/n) {
+                        this.eps[j] = 0.05;
+                    }
                     this.antieps[j] = 1 - (n - 1) * eps[j];
                 }
             }
-//    }
         }
     }
 
@@ -458,5 +481,79 @@ public class JHMM {
 
     public int getParametersChanged() {
         return parametersChanged;
+    }
+
+    public int getMuFlats() {
+        int flats = 0;
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int v = 0; v < n; v++) {
+                    max = Math.max(this.mu[j][k][v], max);
+                    sum += this.mu[j][k][v];
+//                    max = Math.max(this.nJKV[j][k][v], max);
+//                    sum += this.nJKV[j][k][v];
+                }
+                if (max != sum) {
+                    flats++;
+                }
+            }
+        }
+        return flats;
+    }
+
+    public int getNjkvFlats() {
+        int flats = 0;
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int v = 0; v < n; v++) {
+                    max = Math.max(this.nJKV[j][k][v], max);
+                    sum += this.nJKV[j][k][v];
+                }
+                if (max != sum) {
+                    flats++;
+                }
+            }
+        }
+        return flats;
+    }
+
+    public int getRhoFlats() {
+        int flats = 0;
+        for (int j = 0; j < L - 1; j++) {
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int l = 0; l < K; l++) {
+                    max = Math.max(this.rho[j][k][l], max);
+                    sum += this.rho[j][k][l];
+                }
+                if (max != sum) {
+                    flats++;
+                }
+            }
+        }
+        return flats;
+    }
+
+    public int getNjklFlats() {
+        int flats = 0;
+        for (int j = 0; j < L - 1; j++) {
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int l = 0; l < K; l++) {
+                    max = Math.max(this.nJKL[j][k][l], max);
+                    sum += this.nJKL[j][k][l];
+                }
+                if (max != sum) {
+                    flats++;
+                }
+            }
+        }
+        return flats;
     }
 }

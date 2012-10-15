@@ -80,9 +80,6 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
                             }
                             for (int v = 0; v < n; v++) {
                                 einfo.nJKV[jGlobal][k][v] += r.gamma(j, k, v) * times;
-                                if (Double.isNaN(einfo.nJKV[jGlobal][k][v])) {
-                                    System.out.println("");
-                                }
                             }
                         }
                         for (int v = 0; v < n; v++) {

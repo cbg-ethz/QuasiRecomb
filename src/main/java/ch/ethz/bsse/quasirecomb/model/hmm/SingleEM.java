@@ -17,9 +17,9 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,6 +62,7 @@ public class SingleEM {
         double oldllh;
         List<Double> history = new ArrayList<>();
         do {
+//            System.out.println("FLATS:"+flats);
             if (iterations % 10 == 0 && iterations > 0) {
                 Globals.getINSTANCE().maxMAX_LLH(llh);
                 this.llh_opt = Math.max(Globals.getINSTANCE().getMAX_LLH(), this.llh_opt);
@@ -78,11 +79,7 @@ public class SingleEM {
             log(llh);
 
             if (Globals.getINSTANCE().isDEBUG()) {
-                if (Math.abs((oldllh - llh) / llh - 1d) > 1e-15) {
-                    Globals.getINSTANCE().log("0\t");
-                } else {
-                    Globals.getINSTANCE().log((oldllh - llh) / llh + "\t" + jhmm.getParametersChanged() + "\t");
-                }
+                Globals.getINSTANCE().log((oldllh - llh) / llh + "\tm("+jhmm.getMuFlats()+ "|"+jhmm.getNjkvFlats()+ ")\tr("+jhmm.getRhoFlats()+ "|"+jhmm.getNjklFlats()+")\t" + jhmm.getParametersChanged() + "\t");
                 Globals.getINSTANCE().log(llh + "\n");
             }
             jhmm.restart();
@@ -90,6 +87,7 @@ public class SingleEM {
             Globals.getINSTANCE().printPercentage(K);
 //        } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
         } while (Math.abs((oldllh - llh) / llh) > this.delta);
+        
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
 //        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "p.txt", jhmm.getParametersChanged() + "\n");
 
