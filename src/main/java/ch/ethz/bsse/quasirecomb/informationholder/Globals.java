@@ -60,7 +60,7 @@ public class Globals {
     private boolean FORCE_NO_RECOMB = false;
     private int REPEATS;
     private int DESIRED_REPEATS;
-    private int STEPSIZE = 50;
+    private int STEPSIZE = 100;
     private int PARALLEL_RESTARTS_UPPER_BOUND = 10;
     private boolean PARALLEL_JHMM = true;
     private boolean PARALLEL_RESTARTS = false;
@@ -97,9 +97,17 @@ public class Globals {
             System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
         }
     }
+    private String oldOut = "";
 
     public void print(String s) {
-        System.out.print("\r" + time() + " " + s);
+        if (!oldOut.equals(s)) {
+            this.oldOut = s;
+            System.out.print("\r" + time() + " " + s);
+        }
+    }
+
+    public void println(String s) {
+        System.out.print("\n" + time() + " " + s);
     }
 
     public void printPercentage(int K) {
@@ -111,9 +119,24 @@ public class Globals {
             }
         }
     }
+    private double hammingCount = 0;
+    private int hammingMax = 0;
+
+    public synchronized void incHamming(int inc) {
+        hammingCount += inc * (100d / hammingMax);
+    }
+
+    public synchronized void printHamming(int inc) {
+        incHamming(inc);
+        System.out.print("\r" + time() + " Computing:\t" + Math.round(hammingCount * 1000) / 1000 + "%");
+    }
 
     public String time() {
         return df.format(new Date(System.currentTimeMillis() - start));
+    }
+
+    public void setHammingMax(int hammingMax) {
+        this.hammingMax = hammingMax;
     }
 
     public void setFORCE_NO_RECOMB(boolean FORCE_NO_RECOMB) {

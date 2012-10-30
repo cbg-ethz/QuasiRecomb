@@ -79,7 +79,7 @@ public class SingleEM {
             log(llh);
 
             if (Globals.getINSTANCE().isDEBUG()) {
-                Globals.getINSTANCE().log((oldllh - llh) / llh + "\tm("+jhmm.getMuFlats()+ "|"+jhmm.getNjkvFlats()+ ")\tr("+jhmm.getRhoFlats()+ "|"+jhmm.getNjklFlats()+")\t" + jhmm.getParametersChanged() + "\t");
+                Globals.getINSTANCE().log((oldllh - llh) / llh + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
                 Globals.getINSTANCE().log(llh + "\n");
             }
             jhmm.restart();
@@ -87,7 +87,6 @@ public class SingleEM {
             Globals.getINSTANCE().printPercentage(K);
 //        } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
         } while (Math.abs((oldllh - llh) / llh) > this.delta);
-        
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
 //        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "p.txt", jhmm.getParametersChanged() + "\n");
 
@@ -166,24 +165,35 @@ public class SingleEM {
             Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "BIC-" + K + ".txt", BIC_current + "\t" + freeParameters + "\n");
         }
         double[][][] muCopy = new double[L][K][n];
-        for (int j = 0;
-                j < L;
-                j++) {
+        for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
                 System.arraycopy(jhmm.getMu()[j][k], 0, muCopy[j][k], 0, n);
             }
+        }
+        double[][] tauOmegaCopy = new double[jhmm.getTauOmega().length][L + 1];
+        for (int j = 0; j < jhmm.getTauOmega().length; j++) {
+            System.arraycopy(jhmm.getTauOmega()[j], 0, tauOmegaCopy[j], 0, L + 1);
         }
         this.or = new OptimalResult(N, K, L, n,
                 Arrays.copyOf(jhmm.getRho(), jhmm.getRho().length),
                 Arrays.copyOf(jhmm.getPi(), jhmm.getPi().length),
                 muCopy,
                 this.jhmm.getLoglikelihood(),
-                BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart());
+                BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart(), tauOmegaCopy);
 
         if (this.jhmm.getLoglikelihood()
                 >= llh_opt) {
             Globals.getINSTANCE().maxMAX_LLH(this.jhmm.getLoglikelihood());
         }
+    }
+    private List<Long> times = new ArrayList<>();
+
+    public void printMeanTime() {
+        long sum = 0;
+        for (long l : times) {
+            sum += l;
+        }
+        System.out.println("Mean:" + ((double) sum) / times.size());
     }
 
     private long time(boolean show) {
@@ -192,6 +202,7 @@ public class SingleEM {
             time = System.currentTimeMillis();
         } else {
             t = (System.currentTimeMillis() - time);
+            times.add(t);
             if (show) {
                 sb.append(t).append("\t\t");
                 if (Globals.getINSTANCE().isDEBUG()) {

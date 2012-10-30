@@ -41,6 +41,8 @@ public class Plot {
 
     public static void plotCoverage(Read[] reads) {
         Multiset<Integer> coverage = HashMultiset.create();
+        int rLength = reads.length;
+        int j = 0;
         for (Read r : reads) {
             int amount = r.getCount();
             for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
@@ -49,14 +51,17 @@ public class Plot {
             for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
                 coverage.add(i, amount);
             }
+            Globals.getINSTANCE().print("Plotting\t" + Math.round(1000 * ++j * 50d / rLength) / 1000 + "%");
         }
         XYSeries dataset = new XYSeries("Coverage");
+        int alignmentLength = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         for (int i = Globals.getINSTANCE().getALIGNMENT_BEGIN(); i < Globals.getINSTANCE().getALIGNMENT_END(); i++) {
             if (!coverage.contains(i)) {
                 dataset.add((double) i, 1.0);
             } else {
                 dataset.add((double) i, (double) coverage.count(i));
             }
+            Globals.getINSTANCE().print("Plotting\t" + (50 + Math.round(1000 * (i - Globals.getINSTANCE().getALIGNMENT_BEGIN()) * 50d / alignmentLength) / 1000) + "%");
         }
         XYSeriesCollection collection = new XYSeriesCollection(dataset);
         final JFreeChart chart = ChartFactory.createXYLineChart(
@@ -86,6 +91,8 @@ public class Plot {
         } catch (IOException ex) {
             Logger.getLogger(Plot.class.getName()).log(Level.SEVERE, null, ex);
         }
+        Globals.getINSTANCE().print("Plotting\t100%");
+        System.out.println("");
     }
 
     public static void plot(double[] data, String name) {
@@ -118,7 +125,7 @@ public class Plot {
         plot.setRangeGridlinePaint(Color.decode("0xadadad"));
 
         try {
-            ChartUtilities.saveChartAsPNG(new File(Globals.getINSTANCE().getSAVEPATH() + name +".png"),
+            ChartUtilities.saveChartAsPNG(new File(Globals.getINSTANCE().getSAVEPATH() + name + ".png"),
                     chart, 1000, 500);
         } catch (IOException ex) {
             Logger.getLogger(Plot.class.getName()).log(Level.SEVERE, null, ex);

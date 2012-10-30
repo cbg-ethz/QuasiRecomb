@@ -39,8 +39,8 @@ public class Sampling {
     public final static String newline = System.getProperty("line.separator");
 
     public static void fromHaplotypesGlobalPaired(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        int insertSize = 200;
-        int readLength = 150;
+        int insertSize = 300;
+        int readLength = 250;
         int sumLength = insertSize + 2 * readLength;
         L = haplotypes[0].length();
         Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
@@ -80,7 +80,7 @@ public class Sampling {
 //            } else {
 //                length += (int) (Math.random() * 100);
 //            }
-            if (i > N / 10) {
+            if (i > N / 4) {
                 start = (int) (Math.random() * (L - insertSize + 3 * readLength));
                 start -= 3 * readLength;
                 for (;;) {
@@ -93,7 +93,7 @@ public class Sampling {
                     }
                 }
             }
-            if (i > 9 * N / 10) {
+            if (i > 6 * N / 8) {
                 start = L - insertSize - 2 * readLength;
             }
             System.out.println(start);

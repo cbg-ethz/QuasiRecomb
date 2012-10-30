@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
 import java.util.*;
@@ -146,6 +147,7 @@ public class Utils extends FastaParser {
             return parseBAMSAM(path);
 //            return null;
         }
+        
     }
 
     public static Read[] parseBAMSAM(String location) {

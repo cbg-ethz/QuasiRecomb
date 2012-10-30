@@ -25,7 +25,6 @@ import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorker;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
-import java.math.BigDecimal;
 import java.util.List;
 import org.javatuples.Pair;
 
@@ -62,13 +61,6 @@ public class JHMM {
     private int coverage[];
     private int parametersChanged = 0;
     private boolean paired;
-    private double a = 0d, b = 0d;
-
-    {
-        double ew = 0.003;
-        a = 20;
-        b = (-a * ew + a + 2 * ew - 1) / ew;
-    }
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
@@ -240,6 +232,7 @@ public class JHMM {
                             muJKV[v] = this.nJKV[j][k][v] / sum;
                         }
                     } else {
+//                        muJKV = new Dirichlet(n).nextDistribution();
                         for (int v = 0; v < n; v++) {
                             muJKV[v] = 1d / n;
                         }
@@ -555,5 +548,9 @@ public class JHMM {
             }
         }
         return flats;
+    }
+
+    public double[][] getTauOmega() {
+        return tauOmega;
     }
 }

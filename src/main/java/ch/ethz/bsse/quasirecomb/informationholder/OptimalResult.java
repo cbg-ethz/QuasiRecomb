@@ -24,11 +24,12 @@ import java.io.Serializable;
  */
 public class OptimalResult implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 11L;
     private int N;
     private int K;
     private int L;
     private int n;
+    private double[][] tauOmega;
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
@@ -37,7 +38,7 @@ public class OptimalResult implements Serializable {
     private double BIC;
     private int restarts;
 
-    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts) {
+    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts, double[][] tauOmega) {
         this.N = N;
         this.K = K;
         this.L = L;
@@ -49,6 +50,7 @@ public class OptimalResult implements Serializable {
         this.BIC = BIC;
         this.eps = eps;
         this.restarts = restarts;
+        this.tauOmega = tauOmega;
     }
 
     public int getK() {
@@ -93,5 +95,9 @@ public class OptimalResult implements Serializable {
 
     public int getRestarts() {
         return restarts;
+    }
+
+    public double[][] getTauOmega() {
+        return tauOmega;
     }
 }

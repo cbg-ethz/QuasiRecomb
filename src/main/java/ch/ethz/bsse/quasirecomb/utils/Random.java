@@ -26,21 +26,29 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 public class Random {
 
     public static double[][][] generateInitRho(int Ldec, int K) {
+        Dirichlet dirichlet = new Dirichlet(K, Globals.getINSTANCE().getBETA_Z());
         double[][][] rho = new double[Ldec][K][K];
         if (!Globals.getINSTANCE().isNO_RECOMB()) {
             for (int j = 0; j < Ldec; j++) {
                 for (int k = 0; k < K; k++) {
-                    rho[j][k] = new Dirichlet(K, Globals.getINSTANCE().getBETA_Z()).nextDistribution();
-                    int maxIndex = 0;
-                    double max = 0;
-                    for (int l = 0; l < K; l++) {
-                        if (rho[j][k][l] > max) {
-                            max = rho[j][k][l];
-                            maxIndex = l;
+                    boolean retry;
+                    do {
+                        retry = false;
+                        rho[j][k] = dirichlet.nextDistribution();
+                        int maxIndex = 0;
+                        double max = 0;
+                        for (int l = 0; l < K; l++) {
+                            if (rho[j][k][l] > max) {
+                                max = rho[j][k][l];
+                                maxIndex = l;
+                            }
                         }
-                    }
-                    rho[j][k][maxIndex] = rho[j][k][k];
-                    rho[j][k][k] = max;
+                        rho[j][k][maxIndex] = rho[j][k][k];
+                        rho[j][k][k] = max;
+                        if (max < 0.9) {
+                            retry = true;
+                        }
+                    } while (retry);
                 }
             }
         } else {

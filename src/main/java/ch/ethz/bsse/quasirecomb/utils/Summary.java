@@ -133,6 +133,10 @@ public class Summary extends Utils {
                             flat = true;
                             break;
                         }
+                        if (or.getRho()[j][k][l] == 1d && k!=l) {
+                            flat = true;
+                            break;
+                        }
                     }
                     if (flat) {
                         break;

@@ -48,22 +48,22 @@ public class Preprocessing {
      * @param N amount of reads in case exp is false
      */
     public static void workflow(String input, int Kmin, int Kmax) {
+        Globals.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
-
+        
         for (Read r : reads) {
             Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-
+        Globals.getINSTANCE().print("Parsing\t25%");
         int[][] alignment = new int[L][5];
-        int count = 0;
         for (Read r : reads) {
             int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
             for (int i = 0; i < r.getSequence().length; i++) {
                 try {
-                alignment[i + begin][r.getSequence()[i]] += r.getCount();
-                } catch(ArrayIndexOutOfBoundsException e) {
+                    alignment[i + begin][r.getSequence()[i]] += r.getCount();
+                } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println(e);
                 }
             }
@@ -73,9 +73,9 @@ public class Preprocessing {
                     alignment[i + begin][r.getCrickSequence()[i]] += r.getCount();
                 }
             }
-            count += r.getCount();
         }
 //        saveUnique(reads);
+        Globals.getINSTANCE().print("Parsing\t50%");
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < L; i++) {
             int hits = 0;
@@ -89,11 +89,15 @@ public class Preprocessing {
                 System.out.println("Position " + i + " is not covered.");
             }
         }
+        Globals.getINSTANCE().print("Parsing\t75%");
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "hit_dist.txt", sb.toString());
+        sb = null;
         int n = countChars(reads);
+        Globals.getINSTANCE().print("Parsing\t100%");
+        Globals.getINSTANCE().println("Plotting\t");
         Plot.plotCoverage(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
-        ModelSampling modelSampling = new ModelSampling(L, n, ms.getOptimalResult().getK(), ms.getOptimalResult().getRho(), ms.getOptimalResult().getPi(), ms.getOptimalResult().getMu());
+        ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
         modelSampling.save();
         System.out.println("Quasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
     }

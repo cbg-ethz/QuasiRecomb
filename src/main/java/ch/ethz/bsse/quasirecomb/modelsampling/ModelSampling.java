@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.modelsampling;
 
+import cc.mallet.types.Multinomial;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
@@ -39,7 +40,8 @@ public final class ModelSampling extends Utils {
     private final int K;
     private double[][][] rho;
     private double[] pi;
-    private double[][][] H;
+    private double[][][] mu;
+    private double[][] tauOmega;
     private Frequency<Integer>[][] rhoArray;
     private Frequency<Byte>[][] muArray;
     private Map<byte[], Integer> reads;
@@ -47,31 +49,22 @@ public final class ModelSampling extends Utils {
     private int[] recombPerObservation;
     private Map<String, Double> hexMap = new HashMap<>();
     private StringBuilder sb = new StringBuilder();
+    private StringBuilder startStopSB = new StringBuilder();
+    private int[] coverage;
 
-    public ModelSampling(int L, int n, int K, double[][][] rho, double[] pi, double[][][] mu) {
-        this.L = L;
-        this.n = n;
-        this.K = K;
-        this.rho = rho;
-        this.pi = pi;
-        this.H = mu;
-        this.rhoArray = new Frequency[L - 1][K];
-        this.muArray = new Frequency[L][K];
-        this.savePath = Globals.getINSTANCE().getSAVEPATH();
-        this.recombPerObservation = new int[amount];
-        this.start();
-    }
-
-    public ModelSampling(OptimalResult or) {
+    public ModelSampling(OptimalResult or, String savePath) {
         this.K = or.getK();
         this.L = or.getL();
         this.n = or.getn();
         this.rho = or.getRho();
         this.pi = or.getPi();
-        this.H = or.getMu();
+        this.mu = or.getMu();
         this.rhoArray = new Frequency[L - 1][K];
         this.muArray = new Frequency[L][K];
         this.recombPerObservation = new int[amount];
+        this.tauOmega = or.getTauOmega();
+        this.coverage = new int[L];
+        this.savePath = savePath;
         this.start();
     }
 
@@ -92,10 +85,12 @@ public final class ModelSampling extends Utils {
         this.n = or.getn();
         this.rho = or.getRho();
         this.pi = or.getPi();
-        this.H = or.getMu();
+        this.mu = or.getMu();
+        this.tauOmega = or.getTauOmega();
         this.rhoArray = new Frequency[L - 1][K];
         this.muArray = new Frequency[L][K];
         this.recombPerObservation = new int[amount];
+        this.coverage = new int[L];
         this.start();
     }
 
@@ -105,6 +100,7 @@ public final class ModelSampling extends Utils {
                 throw new RuntimeException("Cannot create directory: " + savePath);
             }
         }
+        startStopSB.append("start\tstop\n");
         this.reads = new HashMap<>();
         byte[][] readArray = new byte[amount][L];
         for (int i = 0; i < amount; i++) {
@@ -126,9 +122,7 @@ public final class ModelSampling extends Utils {
             }
         }
 
-//        sorted_map.putAll(reads);
         int i = 0;
-//        for (byte[] read : sorted_map.keySet()) {
         for (Object o : sortMapByValue(reads).keySet()) {
             byte[] read = (byte[]) o;
             sb.append(">read").append(i++).append("_").append(((double) reads.get(read)) / amount).append("\n");
@@ -141,6 +135,13 @@ public final class ModelSampling extends Utils {
 
     public void save() {
         Utils.saveFile(savePath + "quasispecies.fasta", sb.toString());
+        Utils.saveFile(savePath + "startStop.txt", startStopSB.toString());
+        StringBuilder coverageSB = new StringBuilder();
+        coverageSB.append("x\ty\n");
+        for (int i = 0; i < L; i++) {
+            coverageSB.append(i).append("\t").append(coverage[i]).append("\n");
+        }
+        Utils.saveFile(savePath + "simCov.txt", coverageSB.toString());
     }
 
     public byte[] single(int currentI) {
@@ -152,6 +153,26 @@ public final class ModelSampling extends Utils {
         Frequency<Integer> piF = new Frequency<>(piMap);
         int k = piF.roll();
         int oldk = k;
+
+        Map<Integer, Double> startMap = new HashMap<>();
+        for (int j = 0; j < L + 1; j++) {
+            startMap.put(j, tauOmega[0][j]);
+        }
+        Frequency<Integer> startF = new Frequency<>(startMap);
+        int start = startF.roll();
+        startStopSB.append(start).append("\t");
+
+        Map<Integer, Double> stopMap = new HashMap<>();
+        for (int j = start+1; j < L + 1; j++) {
+            stopMap.put(j, tauOmega[1][j]);
+        }
+        Frequency<Integer> stopF = new Frequency<>(stopMap);
+        int stop = stopF.roll();
+        startStopSB.append(stop).append("\n");
+        
+        for (int j = start; j < stop; j++) {
+            this.coverage[j]++;
+        }
 
         for (int j = 0; j < L; j++) {
             if (j > 0) {
@@ -170,7 +191,7 @@ public final class ModelSampling extends Utils {
             if (muArray[j][k] == null) {
                 Map<Byte, Double> muMap = new HashMap<>();
                 for (byte v = 0; v < n; v++) {
-                    muMap.put(v, H[j][k][v]);
+                    muMap.put(v, mu[j][k][v]);
                 }
                 Frequency<Byte> muF = new Frequency<>(muMap);
                 muArray[j][k] = muF;
@@ -223,7 +244,7 @@ public final class ModelSampling extends Utils {
     }
 }
 
-class ValueComparator implements Comparator,Serializable {
+class ValueComparator implements Comparator, Serializable {
 
     Map base;
     private static final long serialVersionUID = 1L;
@@ -234,9 +255,9 @@ class ValueComparator implements Comparator,Serializable {
 
     @Override
     public int compare(Object a, Object b) {
-        if ((Integer) base.get(a) < (Integer) base.get(b)) {
+        if (((Integer) base.get(a)).intValue() < ((Integer) base.get(b)).intValue()) {
             return 1;
-        } else if ((Integer) base.get(a) == (Integer) base.get(b)) {
+        } else if (((Integer) base.get(a)).intValue() == ((Integer) base.get(b)).intValue()) {
             return 0;
         } else {
             return -1;

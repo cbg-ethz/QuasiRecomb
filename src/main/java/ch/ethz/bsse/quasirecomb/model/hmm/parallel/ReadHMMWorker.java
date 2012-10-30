@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
 import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMM;
@@ -64,7 +65,7 @@ public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
 
     @Override
     protected Pair<List<ReadHMM>, EInfo> compute() {
-        if (end - start < 10000) {
+        if (end - start < Globals.getINSTANCE().getSTEPSIZE()) {
             List<ReadHMM> list = new LinkedList<>();
             EInfo einfo = new EInfo(K, L, n);
             for (int i = start; i < end; i++) {

@@ -20,6 +20,7 @@ package ch.ethz.bsse.quasirecomb;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.model.Preprocessing;
+import ch.ethz.bsse.quasirecomb.model.hmm.parallel.HammerWorker;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
 import ch.ethz.bsse.quasirecomb.simulation.Sampling;
@@ -27,12 +28,16 @@ import ch.ethz.bsse.quasirecomb.utils.Cutter;
 import ch.ethz.bsse.quasirecomb.utils.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.javatuples.Pair;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -190,7 +195,34 @@ public class Startup {
                     System.out.println("Please provide -spots, i.e. -spots 50,140,321");
                 }
             } else if (this.hamming) {
-                System.out.println(DistanceUtils.calcHamming(afile, bfile));
+                String[] fasta = FastaParser.parseFarFile(input);
+                Globals.getINSTANCE().setHammingMax((int) Math.pow(fasta.length, 2));
+                Map<String, Map<String, Integer>> invoke = Globals.getINSTANCE().getFjPool().invoke(new HammerWorker(fasta, 0, fasta.length));
+//                Map<String, Map<String, Integer>> invoke = new HashMap<>();
+//                for (int i = 0; i < fasta.length; i++) {
+//                    System.out.println("i");
+//                    invoke.put(fasta[i], Globals.getINSTANCE().getFjPool().invoke(new HammerInnerWorker(fasta, i, 0, fasta.length)));
+//                }
+                Globals.getINSTANCE().println("done");
+//                int max = 0;
+                int i = 0;
+                Utils.saveFile(output + "dist.txt", "");
+                StringBuilder sb = new StringBuilder();
+
+                for (Entry<String, Map<String, Integer>> entry : invoke.entrySet()) {
+
+                    for (Entry<String, Integer> inner : entry.getValue().entrySet()) {
+                        sb.append(inner.getValue());
+                        sb.append("\t ");
+//                        max = Math.max(max, inner.getValue());
+                    }
+                    sb.append("\n");
+                    sb = new StringBuilder();
+                    Globals.getINSTANCE().print("SB\t" + i++);
+                }
+                Utils.saveFile(output + "dist.txt", sb.toString());
+//                System.out.println("Max: " + max);
+                System.out.println("");
             } else if (this.summary) {
                 OptimalResult or = null;
                 try {
