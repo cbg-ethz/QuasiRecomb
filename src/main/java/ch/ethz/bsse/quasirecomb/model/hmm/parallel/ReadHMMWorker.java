@@ -34,42 +34,23 @@ public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
     private static final long serialVersionUID = 1L;
     private JHMM jhmm;
     private Read[] reads;
-    private double[][][] rho;
-    private double[] pi;
-    private double[][][] mu;
-    private double[] eps;
-    private double[] antieps;
-    private int K;
-    private int L;
-    private int n;
     private int start;
     private int end;
-    private double[][] tauOmega;
 
-    public ReadHMMWorker(JHMM jhmm, Read[] reads, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps,
-            int K, int L, int n, double[][] tauOmega, int start, int end) {
+    public ReadHMMWorker(JHMM jhmm, Read[] reads, int start, int end) {
         this.jhmm = jhmm;
         this.reads = reads;
-        this.rho = rho;
-        this.pi = pi;
-        this.mu = mu;
-        this.eps = eps;
-        this.antieps = antieps;
-        this.K = K;
-        this.L = L;
-        this.n = n;
         this.start = start;
         this.end = end;
-        this.tauOmega = tauOmega;
     }
 
     @Override
     protected Pair<List<ReadHMM>, EInfo> compute() {
         if (end - start < Globals.getINSTANCE().getSTEPSIZE()) {
             List<ReadHMM> list = new LinkedList<>();
-            EInfo einfo = new EInfo(K, L, n);
+            EInfo einfo = new EInfo(jhmm.getK(), jhmm.getL(), jhmm.getn());
             for (int i = start; i < end; i++) {
-                ReadHMM r = new ReadHMM(L, K, n, reads[i], rho, pi, mu, eps, antieps, tauOmega);
+                ReadHMM r = new ReadHMM(jhmm, reads[i]);
                 list.add(r);
                 int offset = r.getBegin();
                 int times = r.getCount();
@@ -77,10 +58,10 @@ public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
                 for (int j = 0; j < r.getLength(); j++) {
                     if (r.getRead().isHit(j)) {
                         int jGlobal = offset + j;
-                        for (int k = 0; k < K; k++) {
+                        for (int k = 0; k < jhmm.getK(); k++) {
                             einfo.nJK[jGlobal][k] += r.gamma(j, k) * times;
                             if (j > 0) {
-                                for (int l = 0; l < K; l++) {
+                                for (int l = 0; l < jhmm.getK(); l++) {
                                     einfo.nJKL[jGlobal][k][l] += r.xi(j, k, l) * times;
                                     if (k == l) {
                                         einfo.nJeq[jGlobal] += r.xi(j, k, l) * times;
@@ -89,14 +70,14 @@ public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
                                     }
                                 }
                             }
-                            for (int v = 0; v < n; v++) {
+                            for (int v = 0; v < jhmm.getn(); v++) {
                                 einfo.nJKV[jGlobal][k][v] += r.gamma(j, k, v) * times;
                             }
                         }
 
-                        for (int v = 0; v < n; v++) {
+                        for (int v = 0; v < jhmm.getn(); v++) {
                             byte b = r.getSequence(j);
-                            for (int k = 0; k < K; k++) {
+                            for (int k = 0; k < jhmm.getK(); k++) {
                                 if (v != b) {
                                     einfo.nneqPos[jGlobal] += r.gamma(j, k, v) * times;
                                 } else {
@@ -110,8 +91,8 @@ public class ReadHMMWorker extends RecursiveTask<Pair<List<ReadHMM>, EInfo>> {
             return Pair.with(list, einfo);
         } else {
             final int mid = start + (end - start) / 2;
-            ReadHMMWorker left = new ReadHMMWorker(jhmm, reads, rho, pi, mu, eps, antieps, K, L, n, tauOmega, start, mid);
-            ReadHMMWorker right = new ReadHMMWorker(jhmm, reads, rho, pi, mu, eps, antieps, K, L, n, tauOmega, mid, end);
+            ReadHMMWorker left = new ReadHMMWorker(jhmm, reads, start, mid);
+            ReadHMMWorker right = new ReadHMMWorker(jhmm, reads, mid, end);
             left.fork();
             List<ReadHMM> list = new LinkedList<>();
             Pair<List<ReadHMM>, EInfo> compute = right.compute();

@@ -27,15 +27,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Read;
  */
 public class ReadHMM {
 
-    private final int L;
-    private final int K;
-    private final int n;
     private final Read read;
-    private double[][][] rho;
-    private double[] pi;
-    private double[][][] mu;
-    private double[] eps;
-    private double[] antieps;
     private double[][] fJK;
     private double[][] bJK;
     private double[] c;
@@ -45,40 +37,20 @@ public class ReadHMM {
     private double[][][] fJKV;
     private int begin;
     private int length;
-    private double[][] tauOmega;
     private boolean paired;
-    private int watsonEndLocal;
-    private int crickBeginLocal;
-    private int crickEndLocal;
+    private JHMM jhmm;
 
-    public ReadHMM(int L, int K, int n, Read read, double[][][] rho, double[] pi, double[][][] mu, double[] eps, double[] antieps, double[][] tauOmega) {
-        this.L = L;
-        this.K = K;
-        this.n = n;
+    public ReadHMM(JHMM jhmm, Read read) {
         this.read = read;
-        this.rho = rho;
-        this.pi = pi;
-        this.mu = mu;
-        this.eps = eps;
-        this.antieps = antieps;
         this.begin = read.getBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-        this.paired = this.read.isPaired();
-        this.tauOmega = tauOmega;
-        this.watsonEndLocal = this.read.getWatsonEnd() - this.begin - 1;
-        if (this.paired) {
-            this.length = this.read.getLength();
-            this.crickBeginLocal = this.read.getCrickBegin() - this.begin;
-            this.crickEndLocal = this.read.getCrickEnd() - this.begin;
-        } else {
-            this.length = this.read.getLength();
-        }
-
-        this.fJKV = new double[length][K][n];
-        this.fJK = new double[length][K];
-        this.bJK = new double[length][K];
-        this.gJK = new double[length][K];
-        this.gJKV = new double[length][K][n];
-        this.xJKL = new double[length][K][K];
+        this.length = this.read.getLength();
+        this.jhmm = jhmm;
+        this.fJKV = new double[length][jhmm.getK()][jhmm.getn()];
+        this.fJK = new double[length][jhmm.getK()];
+        this.bJK = new double[length][jhmm.getK()];
+        this.gJK = new double[length][jhmm.getK()];
+        this.gJKV = new double[length][jhmm.getK()][jhmm.getn()];
+        this.xJKL = new double[length][jhmm.getK()][jhmm.getK()];
         this.c = new double[length];
         calculate();
     }
@@ -89,12 +61,12 @@ public class ReadHMM {
     }
 
     public boolean checkConsistency() {
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
+        for (int j = 0; j < jhmm.getL(); j++) {
+            for (int k = 0; k < jhmm.getK(); k++) {
                 if (Double.isNaN(this.fJK[j][k])) {
                     return true;
                 }
-                for (int v = 0; v < n; v++) {
+                for (int v = 0; v < jhmm.getn(); v++) {
                     if (Double.isNaN(this.fJKV[j][k][v])) {
                         return true;
                     }
@@ -104,8 +76,8 @@ public class ReadHMM {
                 return true;
             }
         }
-        for (int j = 0; j < L - 1; j++) {
-            for (int k = 0; k < K; k++) {
+        for (int j = 0; j < jhmm.getL() - 1; j++) {
+            for (int k = 0; k < jhmm.getK(); k++) {
                 if (Double.isNaN(this.bJK[j][k])) {
                     return true;
                 }
@@ -114,50 +86,45 @@ public class ReadHMM {
         return true;
     }
 
-    public void recalc(double[][][] rho, double[] pi, double[][][] mu, double[] epsilon, double[] antieps) {
-        this.rho = rho;
-        this.pi = pi;
-        this.mu = mu;
-        this.eps = epsilon;
-        this.antieps = antieps;
+    public void recalc() {
         this.calculate();
     }
 
     private void forward() {
         for (int j = 0; j < length; j++) {
             int jGlobal = j + begin;
-            for (int k = 0; k < K; k++) {
-                for (int v = 0; v < n; v++) {
+            for (int k = 0; k < jhmm.getK(); k++) {
+                for (int v = 0; v < jhmm.getn(); v++) {
                     if (j == 0) {
 //                        System.out.println("w_in");
-                        fJKV[j][k][v] = tauOmega[0][j + begin];
-                        fJKV[j][k][v] = pi[k];
+                        fJKV[j][k][v] = jhmm.getTauOmega()[0][j + begin];
+                        fJKV[j][k][v] = jhmm.getPi()[k];
                     } else {
                         double sumL = 0d;
-                        for (int l = 0; l < K; l++) {
-                            sumL += fJK[j - 1][l] * rho[begin + j - 1][l][k];
+                        for (int l = 0; l < jhmm.getK(); l++) {
+                            sumL += fJK[j - 1][l] * jhmm.getRho()[begin + j - 1][l][k];
                         }
                         try {
                             switch (this.read.getPosition(j)) {
                                 case WATSON_HIT:
 //                                System.out.println("w_hit");
-                                    sumL *= 1 - this.tauOmega[1][jGlobal];
+                                    sumL *= 1 - this.jhmm.getTauOmega()[1][jGlobal];
                                     break;
                                 case WATSON_OUT:
 //                                System.out.println("w_out");
-                                    sumL *= this.tauOmega[1][jGlobal];
+                                    sumL *= this.jhmm.getTauOmega()[1][jGlobal];
                                     break;
                                 case INSERTION:
 //                                System.out.println("insert");
-                                    sumL *= 1 - this.tauOmega[2][jGlobal];
+                                    sumL *= 1 - this.jhmm.getTauOmega()[2][jGlobal];
                                     break;
                                 case CRICK_IN:
 //                                System.out.println("c_in");
-                                    sumL *= this.tauOmega[2][jGlobal];
+                                    sumL *= this.jhmm.getTauOmega()[2][jGlobal];
                                     break;
                                 case CRICK_HIT:
 //                                System.out.println("c_hit");
-                                    sumL *= 1 - this.tauOmega[3][jGlobal];
+                                    sumL *= 1 - this.jhmm.getTauOmega()[3][jGlobal];
                                     break;
                                 case CRICK_OUT:
 //                                System.out.println("c_out");
@@ -173,12 +140,12 @@ public class ReadHMM {
                     }
 
                     if (this.read.isHit(j)) {
-                        fJKV[j][k][v] *= (this.getSequence(j) == v ? antieps[begin + j] : eps[begin + j]);
-                        fJKV[j][k][v] *= mu[begin + j][k][v];
+                        fJKV[j][k][v] *= (this.getSequence(j) == v ? jhmm.getAntieps()[begin + j] : jhmm.getEps()[begin + j]);
+                        fJKV[j][k][v] *= jhmm.getMu()[begin + j][k][v];
                     }
                     if (Double.isNaN(fJKV[j][k][v])) {
                         System.out.println("fJKV:\t" + fJKV[j][k][v]);
-                        System.out.println("mu:\t" + mu[begin + j][k][v]);
+                        System.out.println("mu:\t" + jhmm.getMu()[begin + j][k][v]);
                         System.exit(0);
                     }
                     if (k == 0 && v == 0) {
@@ -191,10 +158,10 @@ public class ReadHMM {
             if (c[j] <= 0) {
                 System.out.println("R");
             }
-            for (int k = 0; k < K; k++) {
+            for (int k = 0; k < jhmm.getK(); k++) {
                 fJKV[j][k][0] /= c[j];
                 fJK[j][k] = fJKV[j][k][0];
-                for (int v = 1; v < n; v++) {
+                for (int v = 1; v < jhmm.getn(); v++) {
                     fJKV[j][k][v] /= c[j];
                     fJK[j][k] += fJKV[j][k][v];
                 }
@@ -205,45 +172,45 @@ public class ReadHMM {
     private void backward() {
         for (int j = length - 1; j >= 0; j--) {
             int jGlobal = j + begin;
-            for (int k = 0; k < K; k++) {
+            for (int k = 0; k < jhmm.getK(); k++) {
                 if (j == length - 1) {
                     bJK[j][k] = 1d / c[length - 1];
                 } else {
                     bJK[j][k] = 0;
-                    for (int l = 0; l < K; l++) {
+                    for (int l = 0; l < jhmm.getK(); l++) {
                         if (this.read.isHit(j + 1)) {
                             double sumV = 0d;
-                            for (int v = 0; v < n; v++) {
-                                sumV += (this.getSequence(j + 1) == v ? antieps[jGlobal + 1] : eps[jGlobal + 1]) * mu[jGlobal + 1][l][v];
+                            for (int v = 0; v < jhmm.getn(); v++) {
+                                sumV += (this.getSequence(j + 1) == v ? jhmm.getAntieps()[jGlobal + 1] : jhmm.getEps()[jGlobal + 1]) * jhmm.getMu()[jGlobal + 1][l][v];
                             }
                             switch (this.read.getPosition(j)) {
                                 case WATSON_HIT:
 //                                System.out.println("w_hit");
-                                    sumV *= 1 - this.tauOmega[1][jGlobal];
+                                    sumV *= 1 - this.jhmm.getTauOmega()[1][jGlobal];
                                     break;
                                 case WATSON_OUT:
 //                                System.out.println("w_out");
-                                    sumV *= this.tauOmega[1][jGlobal];
+                                    sumV *= this.jhmm.getTauOmega()[1][jGlobal];
                                     break;
                                 case INSERTION:
 //                                System.out.println("insert");
-                                    sumV *= 1 - this.tauOmega[2][jGlobal];
+                                    sumV *= 1 - this.jhmm.getTauOmega()[2][jGlobal];
                                     break;
                                 case CRICK_IN:
 //                                System.out.println("c_in");
-                                    sumV *= this.tauOmega[2][jGlobal];
+                                    sumV *= this.jhmm.getTauOmega()[2][jGlobal];
                                     break;
                                 case CRICK_HIT:
 //                                System.out.println("c_hit");
-                                    sumV *= 1 - this.tauOmega[3][jGlobal];
+                                    sumV *= 1 - this.jhmm.getTauOmega()[3][jGlobal];
                                     break;
                                 case CRICK_OUT:
 //                                System.out.println("c_out");
                                     break;
                             }
-                            bJK[j][k] += sumV * rho[begin + j][k][l] * bJK[j + 1][l];
+                            bJK[j][k] += sumV * jhmm.getRho()[begin + j][k][l] * bJK[j + 1][l];
                         } else {
-                            bJK[j][k] += rho[begin + j][k][l] * bJK[j + 1][l];
+                            bJK[j][k] += jhmm.getRho()[begin + j][k][l] * bJK[j + 1][l];
                         }
                     }
                     if (c[j] != 0d) {
@@ -256,7 +223,7 @@ public class ReadHMM {
                     bJK[j][k] = 0d;
                 }
                 this.gJK[j][k] = this.fJK[j][k] * this.bJK[j][k] * c[j];
-                for (int v = 0; v < n; v++) {
+                for (int v = 0; v < jhmm.getn(); v++) {
                     this.gJKV[j][k][v] = this.fJKV[j][k][v] * this.bJK[j][k] * c[j];
                     if (Double.isNaN(gJKV[j][k][v])) {
                         System.out.println("");
@@ -265,13 +232,13 @@ public class ReadHMM {
 
             }
             if (j > 0) {
-                for (int k = 0; k < K; k++) {
-                    for (int l = 0; l < K; l++) {
-                        this.xJKL[j][k][l] = this.fJK[j - 1][k] * rho[begin + j - 1][k][l] * this.bJK[j][l];
+                for (int k = 0; k < jhmm.getK(); k++) {
+                    for (int l = 0; l < jhmm.getK(); l++) {
+                        this.xJKL[j][k][l] = this.fJK[j - 1][k] * jhmm.getRho()[begin + j - 1][k][l] * this.bJK[j][l];
                         if (this.read.isHit(j)) {
                             double marginalV = 0d;
-                            for (int v = 0; v < n; v++) {
-                                marginalV += (this.getSequence(j) == v ? antieps[begin + j] : eps[begin + j]) * mu[begin + j][l][v];
+                            for (int v = 0; v < jhmm.getn(); v++) {
+                                marginalV += (this.getSequence(j) == v ? jhmm.getAntieps()[begin + j] : jhmm.getEps()[begin + j]) * jhmm.getMu()[begin + j][l][v];
                             }
                             this.xJKL[j][k][l] *= marginalV;
                         }

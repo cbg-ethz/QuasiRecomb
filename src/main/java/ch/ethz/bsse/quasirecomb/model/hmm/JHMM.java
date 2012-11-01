@@ -169,7 +169,7 @@ public class JHMM {
         if (Globals.getINSTANCE().isPARALLEL_JHMM()) {
             Globals.getINSTANCE().setPARALLEL_RESTARTS_UPPER_BOUND(Integer.MAX_VALUE);
         }
-        Pair<List<ReadHMM>, EInfo> invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorker(this, reads, rho, pi, mu, eps, antieps, K, L, n, this.tauOmega, 0, this.readCount));
+        Pair<List<ReadHMM>, EInfo> invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorker(this, reads, 0, this.readCount));
         this.readHMMArray = invoke.getValue0().toArray(new ReadHMM[this.readCount]);
         calculate(invoke.getValue1());
     }
@@ -177,7 +177,10 @@ public class JHMM {
     public void restart() {
         this.restart++;
         this.parametersChanged = 0;
-        EInfo invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorkerRecalc(K, L, n, this.readHMMArray, rho, pi, mu, eps, antieps, 0, this.readCount));
+//        Pair<List<ReadHMM>, EInfo> invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorker(this, reads, 0, this.readCount));
+//        this.readHMMArray = invoke.getValue0().toArray(new ReadHMM[this.readCount]);
+//        this.calculate(invoke.getValue1());
+        EInfo invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorkerRecalc(this, this.readHMMArray, 0, this.readCount));
         this.calculate(invoke);
     }
 
@@ -446,11 +449,18 @@ public class JHMM {
     public int getN() {
         return N;
     }
+    public int getn() {
+        return n;
+    }
 
     public double[] getEps() {
         return eps;
     }
 
+    public double[] getAntieps() {
+        return antieps;
+    }
+    
     public double getLoglikelihood() {
         return loglikelihood;
     }
