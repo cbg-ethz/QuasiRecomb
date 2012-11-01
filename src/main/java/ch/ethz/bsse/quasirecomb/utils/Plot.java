@@ -55,14 +55,18 @@ public class Plot {
         }
         XYSeries dataset = new XYSeries("Coverage");
         int alignmentLength = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        StringBuilder sb = new StringBuilder();
         for (int i = Globals.getINSTANCE().getALIGNMENT_BEGIN(); i < Globals.getINSTANCE().getALIGNMENT_END(); i++) {
             if (!coverage.contains(i)) {
-                dataset.add((double) i, 1.0);
+                dataset.add((double) i, 0.0);
+                sb.append(0).append(" ");
             } else {
                 dataset.add((double) i, (double) coverage.count(i));
+                sb.append(coverage.count(i)).append(" ");
             }
             Globals.getINSTANCE().print("Plotting\t" + (50 + Math.round(1000 * (i - Globals.getINSTANCE().getALIGNMENT_BEGIN()) * 50d / alignmentLength) / 1000) + "%");
         }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH()+"coverage.txt", sb.toString());
         XYSeriesCollection collection = new XYSeriesCollection(dataset);
         final JFreeChart chart = ChartFactory.createXYLineChart(
                 "Coverage",

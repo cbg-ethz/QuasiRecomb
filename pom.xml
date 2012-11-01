@@ -129,11 +129,16 @@
             <artifactId>jfreechart</artifactId>
             <version>1.0.13</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>org.biojava</groupId>
             <artifactId>biojava3-sequencing</artifactId>
             <version>3.0.3</version>
             <type>jar</type>
+        </dependency>-->
+        <dependency>
+            <groupId>org.apfloat</groupId>
+            <artifactId>apfloat</artifactId>
+            <version>1.6.3</version>
         </dependency>
     </dependencies>
     <pluginRepositories>
@@ -151,10 +156,10 @@
             <id>snapshots</id>
             <url>https://repository.apache.org/content/repositories/snapshots</url>
         </repository>
-        <repository>
+<!--        <repository>
             <id>biojava-maven-repo</id>
             <name>BioJava repository</name>
             <url>http://www.biojava.org/download/maven/</url>			
-        </repository>
+        </repository>-->
     </repositories>
 </project>

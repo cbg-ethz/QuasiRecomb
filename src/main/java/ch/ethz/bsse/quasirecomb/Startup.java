@@ -126,6 +126,8 @@ public class Startup {
     private String f;
     @Option(name = "-L")
     private int L;
+    @Option(name = "-steps")
+    private int steps = 100;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -283,6 +285,7 @@ public class Startup {
                     Kmax = Integer.parseInt(K);
                 }
 
+                Globals.getINSTANCE().setSTEPSIZE(this.steps);
                 Globals.getINSTANCE().setFLAT_EPSILON_PRIOR(this.flatEpsilonPrior);
                 Globals.getINSTANCE().setPCHANGE(this.p);
                 Globals.getINSTANCE().setALPHA_Z(this.alphaz);

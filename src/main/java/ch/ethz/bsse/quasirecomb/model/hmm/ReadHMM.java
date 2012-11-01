@@ -17,8 +17,8 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 
 /**
  * Calculates the forward / backward algorithm for a single read.
@@ -79,7 +79,7 @@ public class ReadHMM {
         this.gJK = new double[length][K];
         this.gJKV = new double[length][K][n];
         this.xJKL = new double[length][K][K];
-
+        this.c = new double[length];
         calculate();
     }
 
@@ -124,10 +124,6 @@ public class ReadHMM {
     }
 
     private void forward() {
-        this.c = new double[length];
-        this.fJKV = new double[length][K][n];
-        this.fJK = new double[length][K];
-
         for (int j = 0; j < length; j++) {
             int jGlobal = j + begin;
             for (int k = 0; k < K; k++) {
@@ -185,14 +181,20 @@ public class ReadHMM {
                         System.out.println("mu:\t" + mu[begin + j][k][v]);
                         System.exit(0);
                     }
-                    c[j] += fJKV[j][k][v];
+                    if (k == 0 && v == 0) {
+                        c[j] = fJKV[j][k][v];
+                    } else {
+                        c[j] += fJKV[j][k][v];
+                    }
                 }
             }
             if (c[j] <= 0) {
                 System.out.println("R");
             }
             for (int k = 0; k < K; k++) {
-                for (int v = 0; v < n; v++) {
+                fJKV[j][k][0] /= c[j];
+                fJK[j][k] = fJKV[j][k][0];
+                for (int v = 1; v < n; v++) {
                     fJKV[j][k][v] /= c[j];
                     fJK[j][k] += fJKV[j][k][v];
                 }

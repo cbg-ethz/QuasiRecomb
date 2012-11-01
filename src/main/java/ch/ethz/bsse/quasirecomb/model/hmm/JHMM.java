@@ -209,9 +209,8 @@ public class JHMM {
     }
 
     private void calcMu() {
-        double[] muJKV;
+        double[] muJKV = new double[n];
         for (int j = 0; j < L; j++) {
-            muJKV = new double[n];
             for (int k = 0; k < K; k++) {
 
 //                double AH = Globals.getINSTANCE().getALPHA_H();
@@ -409,7 +408,7 @@ public class JHMM {
 
         if (!Globals.getINSTANCE().isFLAT_EPSILON_PRIOR()) {
             double ew = 0d;
-            int nonzero = 0;
+//            int nonzero = 0;
             for (int j = 0; j < L; j++) {
                 if (this.nneqPos[j] != 0d) {
                     ew += this.nneqPos[j] / N;
@@ -427,7 +426,7 @@ public class JHMM {
                     this.antieps[j] = 1;
                 } else {
                     this.eps[j] = f(this.nneqPos[j] + a) / f((coverage[j] * (n - 1)) + a + b);
-                    if (this.eps[j] > 1d/n) {
+                    if (this.eps[j] > 1d / n) {
                         this.eps[j] = 0.05;
                     }
                     this.antieps[j] = 1 - (n - 1) * eps[j];
@@ -488,7 +487,7 @@ public class JHMM {
 //                    max = Math.max(this.nJKV[j][k][v], max);
 //                    sum += this.nJKV[j][k][v];
                 }
-                if (max != sum) {
+                if (Math.abs(max-sum)<1e-8) {
                     flats++;
                 }
             }
@@ -506,7 +505,7 @@ public class JHMM {
                     max = Math.max(this.nJKV[j][k][v], max);
                     sum += this.nJKV[j][k][v];
                 }
-                if (max != sum) {
+                if (Math.abs(max-sum)<1e-8) {
                     flats++;
                 }
             }
@@ -524,7 +523,7 @@ public class JHMM {
                     max = Math.max(this.rho[j][k][l], max);
                     sum += this.rho[j][k][l];
                 }
-                if (max != sum) {
+                if (Math.abs(max-sum)<1e-8) {
                     flats++;
                 }
             }
