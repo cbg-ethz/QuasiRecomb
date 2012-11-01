@@ -25,7 +25,7 @@ import java.util.concurrent.RecursiveTask;
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
+public class ReadHMMWorkerRecalc extends RecursiveTask<Void> {
 
     private static final long serialVersionUID = 1L;
     private int start;
@@ -41,56 +41,20 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<EInfo> {
     }
 
     @Override
-    protected EInfo compute() {
+    protected Void compute() {
         if (end - start < Globals.getINSTANCE().getSTEPSIZE()) {
-            EInfo einfo = new EInfo(jhmm.getK(), jhmm.getL(), jhmm.getn());
             for (int i = start; i < end; i++) {
                 ReadHMM r = this.readHMMArray[i];
                 r.recalc();
-                int offset = r.getBegin();
-                int times = r.getCount();
-                //CONTINUE
-                for (int j = 0; j < r.getLength(); j++) {
-                    if (r.getRead().isHit(j)) {
-                        int jGlobal = offset + j;
-                        for (int k = 0; k < jhmm.getK(); k++) {
-                            einfo.nJK[jGlobal][k] += r.gamma(j, k) * times;
-                            if (j > 0) {
-                                for (int l = 0; l < jhmm.getK(); l++) {
-                                    einfo.nJKL[jGlobal][k][l] += r.xi(j, k, l) * times;
-                                    if (k == l) {
-                                        einfo.nJeq[jGlobal] += r.xi(j, k, l) * times;
-                                    } else {
-                                        einfo.nJneq[jGlobal] += r.xi(j, k, l) * times;
-                                    }
-                                }
-                            }
-                            for (int v = 0; v < jhmm.getn(); v++) {
-                                einfo.nJKV[jGlobal][k][v] += r.gamma(j, k, v) * times;
-                            }
-                        }
-                        for (int v = 0; v < jhmm.getn(); v++) {
-                            byte b = r.getSequence(j);
-                            for (int k = 0; k < jhmm.getK(); k++) {
-                                if (v != b) {
-                                    einfo.nneqPos[jGlobal] += r.gamma(j, k, v) * times;
-                                } else {
-                                    einfo.neqPos[jGlobal] += r.gamma(j, k, v) * times;
-                                }
-                            }
-                        }
-                    }
-                }
             }
-            return einfo;
+            return null;
         } else {
             final int mid = start + (end - start) / 2;
             ReadHMMWorkerRecalc left = new ReadHMMWorkerRecalc(jhmm, readHMMArray, start, mid);
             ReadHMMWorkerRecalc right = new ReadHMMWorkerRecalc(jhmm, readHMMArray, mid, end);
             left.fork();
-            EInfo einfo = right.compute();
-            einfo.add(left.join());
-            return einfo;
+            right.compute();
+            return null;
         }
     }
 }

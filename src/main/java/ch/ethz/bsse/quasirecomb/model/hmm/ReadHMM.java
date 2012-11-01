@@ -31,13 +31,9 @@ public class ReadHMM {
     private double[][] fJK;
     private double[][] bJK;
     private double[] c;
-    private double[][] gJK;
-    private double[][][] gJKV;
-    private double[][][] xJKL;
     private double[][][] fJKV;
     private int begin;
     private int length;
-    private boolean paired;
     private JHMM jhmm;
 
     public ReadHMM(JHMM jhmm, Read read) {
@@ -48,9 +44,6 @@ public class ReadHMM {
         this.fJKV = new double[length][jhmm.getK()][jhmm.getn()];
         this.fJK = new double[length][jhmm.getK()];
         this.bJK = new double[length][jhmm.getK()];
-        this.gJK = new double[length][jhmm.getK()];
-        this.gJKV = new double[length][jhmm.getK()][jhmm.getn()];
-        this.xJKL = new double[length][jhmm.getK()][jhmm.getK()];
         this.c = new double[length];
         calculate();
     }
@@ -222,45 +215,42 @@ public class ReadHMM {
                     //thus we divide 0 by a very small number, i.e. 1e-300.
                     bJK[j][k] = 0d;
                 }
-                this.gJK[j][k] = this.fJK[j][k] * this.bJK[j][k] * c[j];
-                for (int v = 0; v < jhmm.getn(); v++) {
-                    this.gJKV[j][k][v] = this.fJKV[j][k][v] * this.bJK[j][k] * c[j];
-                    if (Double.isNaN(gJKV[j][k][v])) {
-                        System.out.println("");
+                if (this.read.isHit(j)) {
+                    for (int v = 0; v < jhmm.getn(); v++) {
+                        double gamma = this.fJKV[j][k][v] * this.bJK[j][k] * c[j] * this.getCount();
+                        this.jhmm.addnJKV(jGlobal, k, v, gamma);
+                        if (Double.isNaN(gamma)) {
+                            System.out.println("#####");
+                        }
+                        if (this.read.getSequence()[j] != v) {
+                            this.jhmm.addnneqPos(k, gamma);
+                        } else {
+                            this.jhmm.addneqPos(k, gamma);
+                        }
                     }
                 }
-
             }
-            if (j > 0) {
-                for (int k = 0; k < jhmm.getK(); k++) {
-                    for (int l = 0; l < jhmm.getK(); l++) {
-                        this.xJKL[j][k][l] = this.fJK[j - 1][k] * jhmm.getRho()[begin + j - 1][k][l] * this.bJK[j][l];
-                        if (this.read.isHit(j)) {
+            if (this.read.isHit(j)) {
+                if (j > 0) {
+                    for (int k = 0; k < jhmm.getK(); k++) {
+                        for (int l = 0; l < jhmm.getK(); l++) {
+                            double xi = this.fJK[j - 1][k] * jhmm.getRho()[begin + j - 1][k][l] * this.bJK[j][l] * this.getCount();
                             double marginalV = 0d;
                             for (int v = 0; v < jhmm.getn(); v++) {
                                 marginalV += (this.getSequence(j) == v ? jhmm.getAntieps()[begin + j] : jhmm.getEps()[begin + j]) * jhmm.getMu()[begin + j][l][v];
                             }
-                            this.xJKL[j][k][l] *= marginalV;
+                            xi *= marginalV;
+                            this.jhmm.addnJKL(jGlobal, k, l, xi);
+                            if (k == l) {
+                                this.jhmm.addnJeq(jGlobal, xi);
+                            } else {
+                                this.jhmm.addnJneq(jGlobal, xi);
+                            }
                         }
                     }
                 }
             }
         }
-    }
-
-    public double gamma(int j, int k) {
-        return this.gJK[j][k];
-    }
-
-    final public double gamma(int j, int k, int v) {
-        return this.gJKV[j][k][v];
-    }
-
-    final public double xi(int j, int k, int l) {
-        if (j < 1) {
-            throw new IllegalStateException("J >= 1?");
-        }
-        return this.xJKL[j][k][l];
     }
 
     final public double getC(int j) {
