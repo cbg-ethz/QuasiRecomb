@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
+import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Arrays;
 
 /**
@@ -106,11 +107,11 @@ public class Read {
     }
 
     public boolean isHit(int j) {
-        if (j < this.watsonSequence.length) {
+        if (j < this.getWatsonLength()) {
             return true;
-        } else if (this.isPaired() && j >= this.watsonSequence.length && j < this.watsonSequence.length + this.getInsertSize()) {
+        } else if (this.isPaired() && j >= this.getWatsonLength() && j < this.getWatsonLength() + this.getInsertSize()) {
             return false;
-        } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.crickSequence.length - this.watsonBegin) {
+        } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
             return true;
         } else {
             throw new IllegalAccessError("No such sequence space for hit. j=" + j);
@@ -138,10 +139,10 @@ public class Read {
     }
 
     public byte getBase(int j) {
-        if (j < this.watsonSequence.length) {
-            return this.watsonSequence[j];
-        } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.crickSequence.length - this.watsonBegin) {
-            return this.crickSequence[j - this.watsonSequence.length - this.getInsertSize()];
+        if (j < this.getWatsonLength()) {
+            return Utils.getPosition(this.watsonSequence,j);
+        } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
+            return Utils.getPosition(this.crickSequence,j - this.getWatsonLength() - this.getInsertSize());
         } else {
             return -1;
 //            throw new IllegalAccessError("No such sequence space. j=" + j);
@@ -150,6 +151,13 @@ public class Read {
 
     public byte[] getCrickSequence() {
         return crickSequence;
+    }
+    
+    public int getCrickLength() {
+        return this.crickEnd-this.crickBegin;
+    }
+    public int getWatsonLength() {
+        return this.watsonEnd-this.watsonBegin;
     }
 
     public boolean isPaired() {

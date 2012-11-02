@@ -222,7 +222,7 @@ public class ReadHMM {
                         if (Double.isNaN(gamma)) {
                             System.out.println("#####");
                         }
-                        if (this.read.getSequence()[j] != v) {
+                        if (this.getSequence(j) != v) {
                             this.jhmm.addnneqPos(k, gamma);
                         } else {
                             this.jhmm.addneqPos(k, gamma);

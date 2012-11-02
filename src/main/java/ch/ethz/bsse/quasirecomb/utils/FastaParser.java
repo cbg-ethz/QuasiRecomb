@@ -149,7 +149,7 @@ public class FastaParser {
             String[] split = firstsplit[0].split("_")[1].split("-");
             int begin = Integer.parseInt(split[0]);
             int end = Integer.parseInt(split[1]);
-            byte[] seq = Utils.splitReadIntoByteArray(head.getValue());
+            byte[] seq = Utils.splitReadIntoBytes(head.getValue());
             String[] secondsplit = firstsplit[1].split("/");
             String tag = secondsplit[0];
             int pairedNumber = Integer.parseInt(secondsplit[1]);

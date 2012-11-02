@@ -596,7 +596,7 @@ public class JHMM {
 
     public void addneqPos(int l, double value) {
 //        synchronized (this.neqPos[l]) {
-        this.neqPos.addAndGet(l, value);
+        this.neqPos.getAndAdd(l, value);
 //        }
     }
 

@@ -29,7 +29,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.BetaDistributionImpl;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -149,7 +148,7 @@ public class Sampling {
             for (int j = 0; j < length; j++) {
                 sb2.append(readArray[j]);
             }
-            reads2[i] = new Read(Utils.splitReadIntoByteArray(sb2.toString()), start, start + length);
+            reads2[i] = new Read(Utils.splitReadIntoBytes(sb2.toString()), start, start + length);
         }
         int z = 0;
         StringBuilder sb = new StringBuilder();
@@ -158,10 +157,10 @@ public class Sampling {
                 i++) {
             Read r = reads1[i];
             sb.append(">SAMPLED").append(z).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(z).append("/1").append("\n");
-            sb.append(Utils.reverse(r.getSequence())).append("\n");
+            sb.append(Utils.reverse(r.getSequence(),r.getLength())).append("\n");
             r = reads2[i];
             sb.append(">SAMPLED").append(z).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(z).append("/2").append("\n");
-            sb.append(Utils.reverse(r.getSequence())).append("\n");
+            sb.append(Utils.reverse(r.getSequence(),r.getLength())).append("\n");
             z++;
         }
 
@@ -309,13 +308,13 @@ public class Sampling {
                 sb.append(readArray[j]);
             }
             read = sb.toString();
-            reads.add(new Read(Utils.splitReadIntoByteArray(read), start, start + length));
+            reads.add(new Read(Utils.splitReadIntoBytes(read), start, start + length));
         }
         int z = 0;
         StringBuilder sb = new StringBuilder();
         for (Read r : reads) {
             sb.append(">SAMPLED").append(z++).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("\n");
-            sb.append(Utils.reverse(r.getSequence())).append("\n");
+            sb.append(Utils.reverse(r.getSequence(),r.getLength())).append("\n");
         }
         Utils.saveFile(savePath, sb.toString());
     }

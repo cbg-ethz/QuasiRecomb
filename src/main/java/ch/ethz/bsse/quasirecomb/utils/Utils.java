@@ -17,7 +17,6 @@
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
-import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
 import java.util.*;
@@ -72,6 +71,89 @@ public class Utils extends FastaParser {
         return splitReadsIntoByteArrays(reads);
     }
 
+    private static int getBit(byte[] data, int pos) {
+        int posByte = pos / 8;
+        int posBit = pos % 8;
+        byte valByte = data[posByte];
+        int valInt = valByte >> (8 - (posBit + 1)) & 0x0001;
+        return valInt;
+    }
+
+    private static void setBit(byte[] data, int pos, int val) {
+        int posByte = pos / 8;
+        int posBit = pos % 8;
+        byte oldByte = data[posByte];
+        oldByte = (byte) (((0xFF7F >> posBit) & oldByte) & 0x00FF);
+        byte newByte = (byte) ((val << (8 - (posBit + 1))) | oldByte);
+        data[posByte] = newByte;
+    }
+
+    private static String byteToBits(byte b) {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            buf.append((int) (b >> (8 - (i + 1)) & 0x0001));
+        }
+        return buf.toString();
+    }
+
+    public static byte[] splitReadIntoBytes(String s) {
+        int l = s.length() * 3;
+        int byteCount = l / 8 + (l % 8 != 0 ? 1 : 0);
+        byte[] packed = new byte[byteCount];
+        int pos = 0;
+        for (char c : s.toCharArray()) {
+            switch ((short) c) {
+                case 65:
+                    break;
+                case 67:
+                    setBit(packed, pos * 3 + 2, 1);
+                    break;
+                case 71:
+                    setBit(packed, pos * 3 + 1, 1);
+                    break;
+                case 84:
+                    setBit(packed, pos * 3 + 1, 1);
+                    setBit(packed, pos * 3 + 2, 1);
+                    break;
+                case 45:
+                    setBit(packed, pos * 3 + 0, 1);
+                    break;
+                default:
+                    break;
+            }
+            pos++;
+//            for (int i = 0; i < packed.length; i++) {
+//                System.out.print(byteToBits(packed[i]) + " ");
+//            }
+//            System.out.println("");
+        }
+        return packed;
+    }
+
+    public static byte getPosition(byte[] packed, int i) {
+        if (getBit(packed, i * 3 + 0) == 1) {
+            return 4;
+        } else if (getBit(packed, i * 3 + 1) == 1) {
+            if (getBit(packed, i * 3 + 2) == 1) {
+                return 3;
+            } else {
+                return 2;
+            }
+        } else if (getBit(packed, i * 3 + 2) == 1) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    public static String reverse(byte[] packed, int length) {
+        StringBuilder sb = new StringBuilder();
+        for (int j = 0; j < length; j++) {
+            sb.append(reverse(getPosition(packed, j)));
+        }
+        return sb.toString();
+    }
+
     /**
      * Splits String consisting of {A,C,G,T,-} into corresponding byte array
      * with alphabet {0,1,2,3,4}.
@@ -82,7 +164,7 @@ public class Utils extends FastaParser {
     public static byte[][] splitReadsIntoByteArrays(String[] reads) {
         byte[][] Rs = new byte[reads.length][reads[0].length()];
         for (int x = 0; x < reads.length; x++) {
-            Rs[x] = splitReadIntoByteArray(reads[x]);
+            Rs[x] = splitReadIntoBytes(reads[x]);
         }
         return Rs;
     }
@@ -140,14 +222,13 @@ public class Utils extends FastaParser {
     public static Read[] parseInput(String path) {
         if (isFastaGlobalMatePairFormat(path)) {
             return FastaParser.parseFastaPairedEnd(path);
-        } else 
-            if (isFastaFormat(path)) {
+        } else if (isFastaFormat(path)) {
             return parseFastaInput(path);
         } else {
             return parseBAMSAM(path);
 //            return null;
         }
-        
+
     }
 
     public static Read[] parseBAMSAM(String location) {
@@ -216,7 +297,7 @@ public class Utils extends FastaParser {
             }
             byte[] readBases = convertRead(buildRead.toArray(new Byte[buildRead.size()]));
             Read r = new Read(readBases, refStart, refStart + readBases.length);
-            if (r.getSequence().length != r.getEnd() - r.getBegin()) {
+            if (r.getLength() != r.getEnd() - r.getBegin()) {
                 System.out.println("U2");
                 System.exit(9);
             }
@@ -314,20 +395,32 @@ public class Utils extends FastaParser {
                 }
             }
         } else {
-            byte[][] haplotypesArray = splitReadsIntoByteArrays(parseFarFile(path));
-            for (byte[] b : haplotypesArray) {
-                boolean missing = true;
-                for (Read r : hashing) {
-                    if (Arrays.equals(r.getSequence(), b)) {
-                        r.incCount();
-                        missing = false;
-                        break;
-                    }
-                }
-                if (missing) {
-                    hashing.add(new Read(b, 0, b.length, 1));
+            Map<Integer, Read> hashMap = new HashMap<>();
+            String[] parseFarFile = parseFarFile(path);
+            for (String s : parseFarFile) {
+                byte[] packed = Utils.splitReadIntoBytes(s);
+                Read r = new Read(packed, 0, s.length(), 1);
+                if (hashMap.containsKey(r.hashCode())) {
+                    hashMap.get(r.hashCode()).incCount();
+                } else {
+                    hashMap.put(r.hashCode(), new Read(packed, 0, s.length(), 1));
                 }
             }
+            hashing.addAll(hashMap.values());
+//            byte[][] haplotypesArray = splitReadsIntoByteArrays(parseFarFile(path));
+//            for (byte[] b : haplotypesArray) {
+//                boolean missing = true;
+//                for (Read r : hashing) {
+//                    if (Arrays.equals(r.getSequence(), b)) {
+//                        r.incCount();
+//                        missing = false;
+//                        break;
+//                    }
+//                }
+//                if (missing) {
+//                    hashing.add(new Read(b, 0, b.length, 1));
+//                }
+//            }
         }
         return hashing.toArray(new Read[hashing.size()]);
     }
@@ -399,18 +492,18 @@ public class Utils extends FastaParser {
         return false;
     }
 
-    public static Map<String, Integer> reverse(Map<byte[], Integer> src) {
-        Map<String, Integer> dest = new HashMap<>();
-        for (Map.Entry<byte[], Integer> bb : src.entrySet()) {
-            StringBuilder sb = new StringBuilder(bb.getKey().length);
-            for (byte b : bb.getKey()) {
-                sb.append(reverse(b));
-            }
-            dest.put(sb.toString(), bb.getValue());
-        }
-        return dest;
-    }
-
+//    public static Map<String, Integer> reverse(Map<byte[], Integer> src) {
+//        Map<String, Integer> dest = new HashMap<>();
+//        for (Map.Entry<byte[], Integer> bb : src.entrySet()) {
+//            StringBuilder sb = new StringBuilder(bb.getKey().length);
+//            
+//            for (byte b : bb.getKey()) {
+//                sb.append(reverse(b));
+//            }
+//            dest.put(sb.toString(), bb.getValue());
+//        }
+//        return dest;
+//    }
     public static String reverse(int[] intArray) {
         StringBuilder sb = new StringBuilder();
         for (int i : intArray) {

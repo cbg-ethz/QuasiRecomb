@@ -60,17 +60,17 @@ public class Preprocessing {
         int[][] alignment = new int[L][5];
         for (Read r : reads) {
             int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-            for (int i = 0; i < r.getSequence().length; i++) {
+            for (int i = 0; i < r.getWatsonLength(); i++) {
                 try {
-                    alignment[i + begin][r.getSequence()[i]] += r.getCount();
+                    alignment[i + begin][Utils.getPosition(r.getSequence(),i)] += r.getCount();
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println(e);
                 }
             }
             if (r.isPaired()) {
                 begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-                for (int i = 0; i < r.getCrickSequence().length; i++) {
-                    alignment[i + begin][r.getCrickSequence()[i]] += r.getCount();
+                for (int i = 0; i < r.getCrickLength(); i++) {
+                    alignment[i + begin][Utils.getPosition(r.getCrickSequence(),i)] += r.getCount();
                 }
             }
         }
@@ -105,8 +105,8 @@ public class Preprocessing {
     private static int countChars(Read[] rs) {
         Map<Byte, Boolean> map = new HashMap<>();
         for (Read r : rs) {
-            for (byte b : r.getSequence()) {
-                map.put(b, Boolean.TRUE);
+            for (int i = 0; i < r.getLength(); i++) {
+                map.put(r.getBase(i), Boolean.TRUE);
             }
         }
         return map.keySet().size();
