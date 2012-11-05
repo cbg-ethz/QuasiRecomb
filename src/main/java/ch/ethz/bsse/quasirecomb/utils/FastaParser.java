@@ -20,10 +20,13 @@ package ch.ethz.bsse.quasirecomb.utils;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -143,13 +146,13 @@ public class FastaParser {
     public static Read[] parseFastaPairedEnd(String location) {
         Map<String, Read> pairedReads1 = new HashMap<>();
         Map<String, Read> pairedReads2 = new HashMap<>();
-        Map<String, String> haps = parseGlobalFarFile(location);
-        for (Map.Entry<String, String> head : haps.entrySet()) {
+        Map<String, byte[]> haps = parseGlobalFarFile(location);
+        for (Map.Entry<String, byte[]> head : haps.entrySet()) {
             String[] firstsplit = head.getKey().split("\\|");
             String[] split = firstsplit[0].split("_")[1].split("-");
             int begin = Integer.parseInt(split[0]);
             int end = Integer.parseInt(split[1]);
-            byte[] seq = Utils.splitReadIntoBytes(head.getValue());
+            byte[] seq = head.getValue();
             String[] secondsplit = firstsplit[1].split("/");
             String tag = secondsplit[0];
             int pairedNumber = Integer.parseInt(secondsplit[1]);
@@ -182,14 +185,14 @@ public class FastaParser {
             }
         } else {
             for (Map.Entry<String, Read> r : pairedReads2.entrySet()) {
-                pairedReads1.put(r.getKey()+"-", r.getValue());
+                pairedReads1.put(r.getKey() + "-", r.getValue());
             }
         }
-        Map<Integer,Read> hashed = new HashMap<>();
+        Map<Integer, Read> hashed = new HashMap<>();
         int i = 0;
         for (Read r1 : pairedReads1.values()) {
             int hash = r1.hashCode();
-            if (hashed.containsKey(hash)){
+            if (hashed.containsKey(hash)) {
                 hashed.get(hash).incCount();
             } else {
                 hashed.put(hash, r1);
@@ -255,21 +258,24 @@ public class FastaParser {
 //        }
 //        return hashing.toArray(new Read[hashing.size()]);
 //    }
-
-    public static Map<String, String> parseGlobalFarFile(String location) {
-        Map<String, String> hapMap = new ConcurrentHashMap<>();
+    public static Map<String, byte[]> parseGlobalFarFile(String location) {
+        Map<String, byte[]> hapMap = new ConcurrentHashMap<>();
         try {
             FileInputStream fstream = new FileInputStream(location);
             StringBuilder sb;
             String head = null;
-            try (DataInputStream in = new DataInputStream(fstream)) {
-                BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                String strLine;
-                sb = new StringBuilder();
-                while ((strLine = br.readLine()) != null) {
+//            try (DataInputStream in = new DataInputStream(fstream)) {
+            sb = new StringBuilder();
+//                BufferedReader br = new BufferedReader(new InputStreamReader(in,StandardCharsets.UTF_8));
+//                while ((strLine = br.readLine()) != null) {
+
+            String strLine;
+            try (Scanner scanner = new Scanner(Paths.get(location), StandardCharsets.UTF_8.name())) {
+                while (scanner.hasNextLine()) {
+                    strLine = scanner.nextLine();
                     if (strLine.startsWith(">")) {
                         if (sb.length() > 0) {
-                            hapMap.put(head, sb.toString());
+                            hapMap.put(head, BitMagic.splitReadIntoBytes(sb.toString()));
                             sb.setLength(0);
                         }
                         head = strLine;
@@ -277,7 +283,7 @@ public class FastaParser {
                         sb.append(strLine);
                     }
                 }
-                hapMap.put(head, sb.toString());
+                hapMap.put(head, BitMagic.splitReadIntoBytes(sb.toString()));
 
             }
         } catch (IOException | NumberFormatException e) {

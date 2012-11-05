@@ -42,7 +42,7 @@ public class ReadHMMWorkerRecalc extends RecursiveTask<Void> {
 
     @Override
     protected Void compute() {
-        if (end - start < Globals.getINSTANCE().getSTEPSIZE()) {
+        if (end - start <= Globals.getINSTANCE().getSTEPSIZE()) {
             for (int i = start; i < end; i++) {
                 ReadHMM r = this.readHMMArray[i];
                 r.recalc();

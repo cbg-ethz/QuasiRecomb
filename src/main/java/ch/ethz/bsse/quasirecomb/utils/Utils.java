@@ -71,85 +71,10 @@ public class Utils extends FastaParser {
         return splitReadsIntoByteArrays(reads);
     }
 
-    private static int getBit(byte[] data, int pos) {
-        int posByte = pos / 8;
-        int posBit = pos % 8;
-        byte valByte = data[posByte];
-        int valInt = valByte >> (8 - (posBit + 1)) & 0x0001;
-        return valInt;
-    }
-
-    private static void setBit(byte[] data, int pos, int val) {
-        int posByte = pos / 8;
-        int posBit = pos % 8;
-        byte oldByte = data[posByte];
-        oldByte = (byte) (((0xFF7F >> posBit) & oldByte) & 0x00FF);
-        byte newByte = (byte) ((val << (8 - (posBit + 1))) | oldByte);
-        data[posByte] = newByte;
-    }
-
-    private static String byteToBits(byte b) {
-        StringBuilder buf = new StringBuilder();
-        for (int i = 0; i < 8; i++) {
-            buf.append((int) (b >> (8 - (i + 1)) & 0x0001));
-        }
-        return buf.toString();
-    }
-
-    public static byte[] splitReadIntoBytes(String s) {
-        int l = s.length() * 3;
-        int byteCount = l / 8 + (l % 8 != 0 ? 1 : 0);
-        byte[] packed = new byte[byteCount];
-        int pos = 0;
-        for (char c : s.toCharArray()) {
-            switch ((short) c) {
-                case 65:
-                    break;
-                case 67:
-                    setBit(packed, pos * 3 + 2, 1);
-                    break;
-                case 71:
-                    setBit(packed, pos * 3 + 1, 1);
-                    break;
-                case 84:
-                    setBit(packed, pos * 3 + 1, 1);
-                    setBit(packed, pos * 3 + 2, 1);
-                    break;
-                case 45:
-                    setBit(packed, pos * 3 + 0, 1);
-                    break;
-                default:
-                    break;
-            }
-            pos++;
-//            for (int i = 0; i < packed.length; i++) {
-//                System.out.print(byteToBits(packed[i]) + " ");
-//            }
-//            System.out.println("");
-        }
-        return packed;
-    }
-
-    public static byte getPosition(byte[] packed, int i) {
-        if (getBit(packed, i * 3 + 0) == 1) {
-            return 4;
-        } else if (getBit(packed, i * 3 + 1) == 1) {
-            if (getBit(packed, i * 3 + 2) == 1) {
-                return 3;
-            } else {
-                return 2;
-            }
-        } else if (getBit(packed, i * 3 + 2) == 1) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-
     public static String reverse(byte[] packed, int length) {
         StringBuilder sb = new StringBuilder();
         for (int j = 0; j < length; j++) {
-            sb.append(reverse(getPosition(packed, j)));
+            sb.append(reverse(BitMagic.getPosition(packed, j)));
         }
         return sb.toString();
     }
@@ -164,7 +89,7 @@ public class Utils extends FastaParser {
     public static byte[][] splitReadsIntoByteArrays(String[] reads) {
         byte[][] Rs = new byte[reads.length][reads[0].length()];
         for (int x = 0; x < reads.length; x++) {
-            Rs[x] = splitReadIntoBytes(reads[x]);
+            Rs[x] = BitMagic.splitReadIntoBytes(reads[x]);
         }
         return Rs;
     }
@@ -374,12 +299,12 @@ public class Utils extends FastaParser {
     public static Read[] parseFastaInput(String path) {
         List<Read> hashing = new ArrayList<>();
         if (isFastaGlobalFormat(path)) {
-            Map<String, String> haps = parseGlobalFarFile(path);
-            for (Map.Entry<String, String> head : haps.entrySet()) {
+            Map<String, byte[]> haps = parseGlobalFarFile(path);
+            for (Map.Entry<String, byte[]> head : haps.entrySet()) {
                 String[] split = head.getKey().split("_")[1].split("-");
                 int begin = Integer.parseInt(split[0]);
                 int end = Integer.parseInt(split[1]);
-                byte[] seq = splitReadIntoByteArray(head.getValue());
+                byte[] seq = head.getValue();
                 boolean missing = true;
                 for (Read r : hashing) {
                     if (Arrays.equals(r.getSequence(), seq)
@@ -398,7 +323,7 @@ public class Utils extends FastaParser {
             Map<Integer, Read> hashMap = new HashMap<>();
             String[] parseFarFile = parseFarFile(path);
             for (String s : parseFarFile) {
-                byte[] packed = Utils.splitReadIntoBytes(s);
+                byte[] packed = BitMagic.splitReadIntoBytes(s);
                 Read r = new Read(packed, 0, s.length(), 1);
                 if (hashMap.containsKey(r.hashCode())) {
                     hashMap.get(r.hashCode()).incCount();

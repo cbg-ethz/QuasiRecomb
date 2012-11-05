@@ -85,9 +85,12 @@ public class SingleEM {
             jhmm.restart();
             iterations++;
             Globals.getINSTANCE().printPercentage(K);
+            if (Double.isNaN(Math.abs((oldllh - llh) / llh))) {
+                System.err.println("adsflh");
+            }
 //        } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
-//        } while (Math.abs((oldllh - llh) / llh) > this.delta);
-        } while (iterations <= 500);
+        } while (Math.abs((oldllh - llh) / llh) > this.delta);
+//        } while (iterations <= 500);
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
 //        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "p.txt", jhmm.getParametersChanged() + "\n");
 

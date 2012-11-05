@@ -52,7 +52,7 @@ public class ReadTest {
     /**
      * Test of setCount method, of class Read.
      */
-    @Test
+//    @Test
     public void testInsertSize() {
 //        Read read1 = new Read(new byte[]{1,2,3}, 0, 12,new byte[]{4,5,6}, 50, 100);
 //        assertTrue(read1.equals(new Read(new byte[]{1,2,3}, 0, 12,new byte[]{4,5,6,1}, 50, 100)));

@@ -45,7 +45,7 @@ public class ReadHMMWorker extends RecursiveTask<List<ReadHMM>> {
 
     @Override
     protected List<ReadHMM> compute() {
-        if (end - start < Globals.getINSTANCE().getSTEPSIZE()) {
+        if (end - start <= Globals.getINSTANCE().getSTEPSIZE()) {
             List<ReadHMM> list = new LinkedList<>();
             for (int i = start; i < end; i++) {
                 ReadHMM r = new ReadHMM(jhmm, reads[i]);

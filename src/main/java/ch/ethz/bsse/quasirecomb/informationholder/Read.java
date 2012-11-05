@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
+import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Arrays;
 
@@ -55,6 +56,12 @@ public class Read {
         this.watsonBegin = begin;
         this.watsonEnd = end;
         setPairedEnd(Csequence, Cbegin, Cend);
+        if (end - begin != BitMagic.getLength(sequence)) {
+            throw new IllegalAccessError("length problen: watson");
+        }
+        if (Cend - Cbegin != BitMagic.getLength(Csequence)) {
+            throw new IllegalAccessError("length problen: crick");
+        }
         rearrange();
     }
 
@@ -140,9 +147,9 @@ public class Read {
 
     public byte getBase(int j) {
         if (j < this.getWatsonLength()) {
-            return Utils.getPosition(this.watsonSequence,j);
+            return BitMagic.getPosition(this.watsonSequence,j);
         } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
-            return Utils.getPosition(this.crickSequence,j - this.getWatsonLength() - this.getInsertSize());
+            return BitMagic.getPosition(this.crickSequence,j - this.getWatsonLength() - this.getInsertSize());
         } else {
             return -1;
 //            throw new IllegalAccessError("No such sequence space. j=" + j);

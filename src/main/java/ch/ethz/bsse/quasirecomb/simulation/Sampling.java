@@ -19,6 +19,7 @@ package ch.ethz.bsse.quasirecomb.simulation;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
@@ -148,7 +149,7 @@ public class Sampling {
             for (int j = 0; j < length; j++) {
                 sb2.append(readArray[j]);
             }
-            reads2[i] = new Read(Utils.splitReadIntoBytes(sb2.toString()), start, start + length);
+            reads2[i] = new Read(BitMagic.splitReadIntoBytes(sb2.toString()), start, start + length);
         }
         int z = 0;
         StringBuilder sb = new StringBuilder();
@@ -308,7 +309,7 @@ public class Sampling {
                 sb.append(readArray[j]);
             }
             read = sb.toString();
-            reads.add(new Read(Utils.splitReadIntoBytes(read), start, start + length));
+            reads.add(new Read(BitMagic.splitReadIntoBytes(read), start, start + length));
         }
         int z = 0;
         StringBuilder sb = new StringBuilder();

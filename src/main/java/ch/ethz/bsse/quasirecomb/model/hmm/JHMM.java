@@ -24,6 +24,7 @@ import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorker;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import com.google.common.util.concurrent.AtomicDouble;
 import com.google.common.util.concurrent.AtomicDoubleArray;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class JHMM {
     private AtomicDoubleArray nneqPos;
     private AtomicDoubleArray nJeq;
     private AtomicDoubleArray nJneq;
-    private double loglikelihood;
+    private AtomicDouble loglikelihood;
     private Read[] reads;
     private ReadHMM[] readHMMArray;
     private int restart = 0;
@@ -155,11 +156,35 @@ public class JHMM {
     }
 
     private void calculateLoglikelihood() {
-        this.loglikelihood = 0d;
+        this.loglikelihood = new AtomicDouble(0d);
         for (ReadHMM r : this.readHMMArray) {
             for (int j = 0; j < L; j++) {
-                this.loglikelihood += Math.log(r.getC(j)) * r.getCount();
-                if (Double.isNaN(loglikelihood)) {
+                double a = r.getC(j);
+                double x = r.getC(j);
+                double y = r.getC(j);
+                double b = Math.log(a);
+                double bc = Math.log(r.getC(j));
+                double c = b * r.getCount();
+                double cc = Math.log(r.getC(j)) * r.getCount();
+                if (Double.isInfinite(c)) {
+                    System.err.println(r.getC(j));
+                    System.err.println(Math.log(r.getC(j)));
+                    double aa = Math.log(r.getC(j));
+                    System.err.println(aa);
+                    Object xx = Math.log(r.getC(j));
+                    System.err.println(xx);
+                }
+                double update = (Math.log(r.getC(j)) * r.getCount());
+                if (Double.isInfinite(update)) {
+                    System.out.println(update);
+                    System.out.println("LLH oo");
+                }
+                this.loglikelihood.addAndGet(Math.log(r.getC(j)) * r.getCount());
+
+                if (Double.isInfinite(loglikelihood.doubleValue())) {
+                    System.out.println("LLH oo");
+                }
+                if (Double.isNaN(loglikelihood.doubleValue())) {
                     System.out.println("LLH NaN");
                 }
             }
@@ -469,7 +494,7 @@ public class JHMM {
     }
 
     public double getLoglikelihood() {
-        return loglikelihood;
+        return loglikelihood.get();
     }
 
     public double[][][] getMu() {

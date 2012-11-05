@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
+import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Plot;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -62,7 +63,7 @@ public class Preprocessing {
             int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
             for (int i = 0; i < r.getWatsonLength(); i++) {
                 try {
-                    alignment[i + begin][Utils.getPosition(r.getSequence(),i)] += r.getCount();
+                    alignment[i + begin][BitMagic.getPosition(r.getSequence(),i)] += r.getCount();
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println(e);
                 }
@@ -70,7 +71,7 @@ public class Preprocessing {
             if (r.isPaired()) {
                 begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
                 for (int i = 0; i < r.getCrickLength(); i++) {
-                    alignment[i + begin][Utils.getPosition(r.getCrickSequence(),i)] += r.getCount();
+                    alignment[i + begin][BitMagic.getPosition(r.getCrickSequence(),i)] += r.getCount();
                 }
             }
         }
