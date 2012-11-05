@@ -18,7 +18,6 @@
 package ch.ethz.bsse.quasirecomb.informationholder;
 
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
-import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Arrays;
 
 /**
@@ -42,7 +41,8 @@ public class Read {
         INSERTION,
         CRICK_IN,
         CRICK_HIT,
-        CRICK_OUT;
+        CRICK_OUT,
+        ERROR;
     }
 
     public Read(byte[] sequence, int begin, int end) {
@@ -98,19 +98,20 @@ public class Read {
         } else if (j < this.watsonEnd - this.watsonBegin) {
             return Position.WATSON_HIT;
         } else if (this.isPaired()) {
-            if (j == this.watsonSequence.length) {
+            if (j == this.getWatsonLength()) {
                 return Position.WATSON_OUT;
-            } else if (j > this.watsonSequence.length && j < this.watsonSequence.length + this.getInsertSize()) {
+            } else if (j > this.getWatsonLength() && j < this.getWatsonLength() + this.getInsertSize()) {
                 return Position.INSERTION;
             } else if (j == this.crickBegin - this.watsonBegin) {
                 return Position.CRICK_IN;
-            } else if (j > this.crickBegin - this.watsonBegin && j < this.crickBegin + this.crickSequence.length - this.watsonBegin) {
+            } else if (j > this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
                 return Position.CRICK_HIT;
-            } else if (j == this.crickBegin + this.crickSequence.length - this.watsonBegin) {
+            } else if (j == this.crickBegin + this.getCrickLength() - this.watsonBegin) {
                 return Position.CRICK_OUT;
             }
         }
-        throw new IllegalAccessError("No such sequence space for hit. j=" + j);
+        return Position.ERROR;
+//        throw new IllegalAccessError("No such sequence space for hit. j=" + j);
     }
 
     public boolean isHit(int j) {
@@ -147,9 +148,9 @@ public class Read {
 
     public byte getBase(int j) {
         if (j < this.getWatsonLength()) {
-            return BitMagic.getPosition(this.watsonSequence,j);
+            return BitMagic.getPosition(this.watsonSequence, j);
         } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
-            return BitMagic.getPosition(this.crickSequence,j - this.getWatsonLength() - this.getInsertSize());
+            return BitMagic.getPosition(this.crickSequence, j - this.getWatsonLength() - this.getInsertSize());
         } else {
             return -1;
 //            throw new IllegalAccessError("No such sequence space. j=" + j);
@@ -159,12 +160,13 @@ public class Read {
     public byte[] getCrickSequence() {
         return crickSequence;
     }
-    
+
     public int getCrickLength() {
-        return this.crickEnd-this.crickBegin;
+        return this.crickEnd - this.crickBegin;
     }
+
     public int getWatsonLength() {
-        return this.watsonEnd-this.watsonBegin;
+        return this.watsonEnd - this.watsonBegin;
     }
 
     public boolean isPaired() {

@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 
 /**
@@ -73,7 +75,8 @@ public class Globals {
     private StringBuilder LOG = new StringBuilder();
     private long start = System.currentTimeMillis();
     private boolean PAIRED = false;
-    private final DateFormat df = new SimpleDateFormat("HH:mm:ss");
+    private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
+    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     public synchronized void log(Object o) {
         if (PRINT) {
@@ -119,6 +122,20 @@ public class Globals {
             }
         }
     }
+
+    public void printPercentage(int K, double read) {
+        if (!DEBUG) {
+            if (MODELSELECTION) {
+                System.out.print("\r                                                                                                                             ");
+                System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[" + read + "]                 ");
+            } else {
+                System.out.print("\r                                                                                                                             ");
+                System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[" + read + "]                 ");
+            }
+        } else {
+            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[" + read + "]                 ");
+        }
+    }
     private double hammingCount = 0;
     private int hammingMax = 0;
 
@@ -133,6 +150,10 @@ public class Globals {
 
     public String time() {
         return df.format(new Date(System.currentTimeMillis() - start));
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
     public void setHammingMax(int hammingMax) {

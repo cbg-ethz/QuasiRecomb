@@ -15,10 +15,9 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
+package ch.ethz.bsse.quasirecomb.distance;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
-import ch.ethz.bsse.quasirecomb.utils.DistanceUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.RecursiveTask;

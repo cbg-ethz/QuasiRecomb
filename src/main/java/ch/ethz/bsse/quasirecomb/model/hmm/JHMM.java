@@ -20,13 +20,18 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import cc.mallet.types.Dirichlet;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorker;
-import ch.ethz.bsse.quasirecomb.model.hmm.parallel.ReadHMMWorkerRecalc;
+import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMM;
+import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMRestart;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.util.concurrent.AtomicDouble;
 import com.google.common.util.concurrent.AtomicDoubleArray;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Offers a HMM with the E and M step.
@@ -52,7 +57,7 @@ public class JHMM {
     private AtomicDoubleArray nneqPos;
     private AtomicDoubleArray nJeq;
     private AtomicDoubleArray nJneq;
-    private AtomicDouble loglikelihood;
+    private double loglikelihood;
     private Read[] reads;
     private ReadHMM[] readHMMArray;
     private int restart = 0;
@@ -156,35 +161,16 @@ public class JHMM {
     }
 
     private void calculateLoglikelihood() {
-        this.loglikelihood = new AtomicDouble(0d);
+        this.loglikelihood = 0d;
         for (ReadHMM r : this.readHMMArray) {
             for (int j = 0; j < L; j++) {
-                double a = r.getC(j);
-                double x = r.getC(j);
-                double y = r.getC(j);
-                double b = Math.log(a);
-                double bc = Math.log(r.getC(j));
-                double c = b * r.getCount();
-                double cc = Math.log(r.getC(j)) * r.getCount();
-                if (Double.isInfinite(c)) {
-                    System.err.println(r.getC(j));
-                    System.err.println(Math.log(r.getC(j)));
-                    double aa = Math.log(r.getC(j));
-                    System.err.println(aa);
-                    Object xx = Math.log(r.getC(j));
-                    System.err.println(xx);
-                }
-                double update = (Math.log(r.getC(j)) * r.getCount());
-                if (Double.isInfinite(update)) {
-                    System.out.println(update);
-                    System.out.println("LLH oo");
-                }
-                this.loglikelihood.addAndGet(Math.log(r.getC(j)) * r.getCount());
+//                double update = (Math.log(r.getC(j)) * r.getCount());
+                this.loglikelihood += r.getLikelihood();
 
-                if (Double.isInfinite(loglikelihood.doubleValue())) {
+                if (Double.isInfinite(loglikelihood)) {
                     System.out.println("LLH oo");
                 }
-                if (Double.isNaN(loglikelihood.doubleValue())) {
+                if (Double.isNaN(loglikelihood)) {
                     System.out.println("LLH NaN");
                 }
             }
@@ -197,7 +183,26 @@ public class JHMM {
         if (Globals.getINSTANCE().isPARALLEL_JHMM()) {
             Globals.getINSTANCE().setPARALLEL_RESTARTS_UPPER_BOUND(Integer.MAX_VALUE);
         }
-        List<ReadHMM> invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorker(this, reads, 0, this.readCount));
+
+        List<FutureTask<ReadHMM>> taskList = new ArrayList<>();
+
+        for (int i = 0; i < reads.length; i++) {
+            FutureTask<ReadHMM> futureTask_1 = new FutureTask<>(new CallableReadHMM(this, reads[i]));
+            taskList.add(futureTask_1);
+            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
+        }
+
+        List<ReadHMM> invoke = new ArrayList<>();
+        for (int j = 0; j < reads.length; j++) {
+            FutureTask<ReadHMM> futureTask = taskList.get(j);
+            try {
+                invoke.add(futureTask.get());
+                Globals.getINSTANCE().printPercentage(K, (double) j / reads.length);
+            } catch (InterruptedException | ExecutionException ex) {
+                Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+//        executor.shutdown();
         this.readHMMArray = invoke.toArray(new ReadHMM[this.readCount]);
         calculate();
     }
@@ -205,10 +210,26 @@ public class JHMM {
     public void restart() {
         this.restart++;
         this.parametersChanged = 0;
-//        Pair<List<ReadHMM>, EInfo> invoke = Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorker(this, reads, 0, this.readCount));
-//        this.readHMMArray = invoke.getValue0().toArray(new ReadHMM[this.readCount]);
-//        this.calculate(invoke.getValue1());
-        Globals.getINSTANCE().getFjPool().invoke(new ReadHMMWorkerRecalc(this, this.readHMMArray, 0, this.readCount));
+        List<FutureTask<Void>> taskList = new ArrayList<>();
+
+        for (ReadHMM r : this.readHMMArray) {
+            // Start thread for the first half of the numbers
+            FutureTask<Void> futureTask_1 = new FutureTask<>(new CallableReadHMMRestart(r));
+            taskList.add(futureTask_1);
+            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
+        }
+
+        List<ReadHMM> invoke = new ArrayList<>();
+        for (int j = 0; j < reads.length; j++) {
+            FutureTask<Void> futureTask = taskList.get(j);
+            try {
+                futureTask.get();
+                Globals.getINSTANCE().printPercentage(K, (double) j / reads.length);
+            } catch (InterruptedException | ExecutionException ex) {
+                Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+//        executor.shutdown();
         this.calculate();
     }
 
@@ -494,7 +515,7 @@ public class JHMM {
     }
 
     public double getLoglikelihood() {
-        return loglikelihood.get();
+        return loglikelihood;
     }
 
     public double[][][] getMu() {

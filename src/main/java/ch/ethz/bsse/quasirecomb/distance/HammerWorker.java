@@ -15,51 +15,56 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
+package ch.ethz.bsse.quasirecomb.distance;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
-import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
 import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMM;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.RecursiveTask;
+import org.javatuples.Pair;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class ReadHMMWorker extends RecursiveTask<List<ReadHMM>> {
+public class HammerWorker extends RecursiveTask<Map<String, Map<String, Integer>>> {
 
     private static final long serialVersionUID = 1L;
-    private JHMM jhmm;
-    private Read[] reads;
+    private String[] fasta;
     private int start;
     private int end;
 
-    public ReadHMMWorker(JHMM jhmm, Read[] reads, int start, int end) {
-        this.jhmm = jhmm;
-        this.reads = reads;
+    public HammerWorker(String[] fasta, int start, int end) {
         this.start = start;
         this.end = end;
+        this.fasta = fasta;
     }
 
     @Override
-    protected List<ReadHMM> compute() {
-        if (end - start <= Globals.getINSTANCE().getSTEPSIZE()) {
-            List<ReadHMM> list = new LinkedList<>();
+    protected Map<String, Map<String, Integer>> compute() {
+        if (end - start <= 1) {
+//            DistanceUtils.calcHamming(null, null);
+            Map<String, Map<String, Integer>> map = new HashMap<>();
             for (int i = start; i < end; i++) {
-                ReadHMM r = new ReadHMM(jhmm, reads[i]);
-                list.add(r);
+//                Map<String, Integer> mapInner = Globals.getINSTANCE().getFjPool().invoke(new HammerInnerWorker(fasta, i, 0, fasta.length));
+                Map<String, Integer> mapInner = new HashMap<>();
+                for (int j = 0; j < fasta.length; j++) {
+                    mapInner.put(fasta[j], DistanceUtils.calcHamming(fasta[i], fasta[j]));
+                }
+                Globals.getINSTANCE().printHamming(fasta.length);
+                map.put(fasta[i], mapInner);
             }
-            return list;
+            return map;
         } else {
             final int mid = start + (end - start) / 2;
-            ReadHMMWorker left = new ReadHMMWorker(jhmm, reads, start, mid);
-            ReadHMMWorker right = new ReadHMMWorker(jhmm, reads, mid, end);
+            HammerWorker left = new HammerWorker(fasta, start, mid);
+            HammerWorker right = new HammerWorker(fasta, mid, end);
             left.fork();
-            List<ReadHMM> list = right.compute();
-            list.addAll(left.join());
-            return list;
+            Map<String, Map<String, Integer>> compute = right.compute();
+            compute.putAll(left.join());
+            return compute;
         }
     }
 }

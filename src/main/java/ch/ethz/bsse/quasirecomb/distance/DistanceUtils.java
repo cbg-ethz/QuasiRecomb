@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.utils;
+package ch.ethz.bsse.quasirecomb.distance;
 
 import java.util.HashMap;
 import java.util.LinkedList;
