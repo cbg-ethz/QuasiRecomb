@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -43,6 +44,7 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean SNAPSHOTS;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
     private boolean FLAT_EPSILON_PRIOR;
@@ -77,6 +79,7 @@ public class Globals {
     private boolean PAIRED = false;
     private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
     private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+//    private final ExecutorService executor = Executors.newFixedThreadPool(1);
 
     public synchronized void log(Object o) {
         if (PRINT) {
@@ -122,19 +125,17 @@ public class Globals {
             }
         }
     }
+    private long oldTime = 0;
 
+    public void resetTimer() {
+        this.oldTime = 0;
+    }
     public void printPercentage(int K, double read) {
-        if (!DEBUG) {
-            if (MODELSELECTION) {
-                System.out.print("\r                                                                                                                             ");
-                System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[" + read + "]                 ");
-            } else {
-                System.out.print("\r                                                                                                                             ");
-                System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[" + read + "]                 ");
-            }
-        } else {
-            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[" + read + "]                 ");
+        if (oldTime == 0) {
+            oldTime = System.currentTimeMillis();
         }
+        long time = System.currentTimeMillis() - oldTime;
+        System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[ ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]");
     }
     private double hammingCount = 0;
     private int hammingMax = 0;
@@ -150,6 +151,18 @@ public class Globals {
 
     public String time() {
         return df.format(new Date(System.currentTimeMillis() - start));
+    }
+
+    public String getSnapshotDir() {
+        return Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "snapshots"+File.separator;
+    }
+    
+    public boolean isSNAPSHOTS() {
+        return SNAPSHOTS;
+    }
+
+    public void setSNAPSHOTS(boolean SNAPSHOTS) {
+        this.SNAPSHOTS = SNAPSHOTS;
     }
 
     public ExecutorService getExecutor() {

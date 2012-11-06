@@ -126,6 +126,8 @@ public class Startup {
     private int L;
     @Option(name = "-steps")
     private int steps = 100;
+    @Option(name = "-snapshots")
+    private boolean snapshots;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -150,6 +152,7 @@ public class Startup {
                 }
             }
 
+            Globals.getINSTANCE().setSNAPSHOTS(this.snapshots);
             Globals.getINSTANCE().setDEBUG(this.verbose);
             Globals.getINSTANCE().setLOGGING(this.log);
             Globals.getINSTANCE().setLOG_BIC(this.logBIC);
@@ -301,6 +304,7 @@ public class Startup {
                 Globals.getINSTANCE().setNO_RECOMB(this.noRecomb);
                 Globals.getINSTANCE().setFORCE_NO_RECOMB(this.noRecomb);
                 Preprocessing.workflow(this.input, Kmin, Kmax);
+                System.exit(9);
             }
 
         } catch (CmdLineException cmderror) {

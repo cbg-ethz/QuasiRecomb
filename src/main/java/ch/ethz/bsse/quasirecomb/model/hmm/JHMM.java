@@ -21,11 +21,10 @@ import cc.mallet.types.Dirichlet;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMM;
-import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMRestart;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
-import com.google.common.util.concurrent.AtomicDouble;
 import com.google.common.util.concurrent.AtomicDoubleArray;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -55,13 +54,10 @@ public class JHMM {
     private AtomicDoubleArray[][] nJKV;
     private AtomicDoubleArray neqPos;
     private AtomicDoubleArray nneqPos;
-    private AtomicDoubleArray nJeq;
-    private AtomicDoubleArray nJneq;
     private double loglikelihood;
     private Read[] reads;
-    private ReadHMM[] readHMMArray;
+//    private ReadHMM[] readHMMArray;
     private int restart = 0;
-    private int readCount;
     private int coverage[];
     private int parametersChanged = 0;
     private boolean paired;
@@ -86,8 +82,6 @@ public class JHMM {
 
         this.nJKL = new AtomicDoubleArray[L][K];
         this.nJKV = new AtomicDoubleArray[L][K];
-        this.nJeq = new AtomicDoubleArray(L);
-        this.nJneq = new AtomicDoubleArray(L);
         this.neqPos = new AtomicDoubleArray(L);
         this.nneqPos = new AtomicDoubleArray(L);
         for (int j = 0; j < L; j++) {
@@ -157,84 +151,46 @@ public class JHMM {
             }
             sb.append("\n");
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "twtw", sb.toString());
-    }
-
-    private void calculateLoglikelihood() {
-        this.loglikelihood = 0d;
-        for (ReadHMM r : this.readHMMArray) {
-            for (int j = 0; j < L; j++) {
-//                double update = (Math.log(r.getC(j)) * r.getCount());
-                this.loglikelihood += r.getLikelihood();
-
-                if (Double.isInfinite(loglikelihood)) {
-                    System.out.println("LLH oo");
-                }
-                if (Double.isNaN(loglikelihood)) {
-                    System.out.println("LLH NaN");
-                }
-            }
-        }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "twtw", sb.toString());
     }
 
     private void start() {
-        readHMMArray = new ReadHMM[reads.length];
-        this.readCount = this.reads.length;
         if (Globals.getINSTANCE().isPARALLEL_JHMM()) {
             Globals.getINSTANCE().setPARALLEL_RESTARTS_UPPER_BOUND(Integer.MAX_VALUE);
         }
-
-        List<FutureTask<ReadHMM>> taskList = new ArrayList<>();
-
-        for (int i = 0; i < reads.length; i++) {
-            FutureTask<ReadHMM> futureTask_1 = new FutureTask<>(new CallableReadHMM(this, reads[i]));
-            taskList.add(futureTask_1);
-            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
-        }
-
-        List<ReadHMM> invoke = new ArrayList<>();
-        for (int j = 0; j < reads.length; j++) {
-            FutureTask<ReadHMM> futureTask = taskList.get(j);
-            try {
-                invoke.add(futureTask.get());
-                Globals.getINSTANCE().printPercentage(K, (double) j / reads.length);
-            } catch (InterruptedException | ExecutionException ex) {
-                Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-//        executor.shutdown();
-        this.readHMMArray = invoke.toArray(new ReadHMM[this.readCount]);
         calculate();
     }
 
     public void restart() {
         this.restart++;
         this.parametersChanged = 0;
-        List<FutureTask<Void>> taskList = new ArrayList<>();
+        this.calculate();
+    }
 
-        for (ReadHMM r : this.readHMMArray) {
-            // Start thread for the first half of the numbers
-            FutureTask<Void> futureTask_1 = new FutureTask<>(new CallableReadHMMRestart(r));
+    private void compute() {
+        this.loglikelihood = 0d;
+        List<FutureTask<Double>> taskList = new ArrayList<>();
+
+        for (int i = 0; i < reads.length; i++) {
+            FutureTask<Double> futureTask_1 = new FutureTask<>(new CallableReadHMM(this, reads[i]));
             taskList.add(futureTask_1);
             Globals.getINSTANCE().getExecutor().execute(futureTask_1);
         }
 
-        List<ReadHMM> invoke = new ArrayList<>();
         for (int j = 0; j < reads.length; j++) {
-            FutureTask<Void> futureTask = taskList.get(j);
+            FutureTask<Double> futureTask = taskList.get(j);
             try {
-                futureTask.get();
+                loglikelihood += futureTask.get();
                 Globals.getINSTANCE().printPercentage(K, (double) j / reads.length);
             } catch (InterruptedException | ExecutionException ex) {
                 Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-//        executor.shutdown();
-        this.calculate();
     }
 
     private void calculate() {
-        this.calculateLoglikelihood();
+        Globals.getINSTANCE().resetTimer();
+        this.compute();
         this.mStep();
 
         this.nJKL = new AtomicDoubleArray[L][K];
@@ -245,14 +201,8 @@ public class JHMM {
                 this.nJKV[j][k] = new AtomicDoubleArray(n);
             }
         }
-        this.nJeq = new AtomicDoubleArray(L);
-        this.nJneq = new AtomicDoubleArray(L);
         this.neqPos = new AtomicDoubleArray(L);
         this.nneqPos = new AtomicDoubleArray(L);
-//        for (int j = 0; j < L; j++) {
-//            this.nneqPos[j] = 0d;
-//            this.neqPos[j] = 0d;
-//        }
     }
 
     private void changed(double a, double b) {
@@ -625,18 +575,6 @@ public class JHMM {
     public void addnJKL(int j, int k, int l, double value) {
 //        synchronized (this.nJKL[j][k]) {
         this.nJKL[j][k].addAndGet(l, value);
-//        }
-    }
-
-    public void addnJeq(int l, double value) {
-//        synchronized (this.nJeq) {
-        this.nJeq.addAndGet(l, value);
-//        }
-    }
-
-    public void addnJneq(int l, double value) {
-//        synchronized (this.nJneq) {
-        this.nJneq.addAndGet(l, value);
 //        }
     }
 

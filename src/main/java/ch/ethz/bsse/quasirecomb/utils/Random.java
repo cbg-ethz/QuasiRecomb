@@ -45,7 +45,7 @@ public class Random {
                         }
                         rho[j][k][maxIndex] = rho[j][k][k];
                         rho[j][k][k] = max;
-                        if (max < 0.9) {
+                        if (max < 0.95) {
                             retry = true;
                         }
                     } while (retry);

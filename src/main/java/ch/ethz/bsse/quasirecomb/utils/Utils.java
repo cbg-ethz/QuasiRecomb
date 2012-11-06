@@ -18,6 +18,7 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
 import java.util.*;
@@ -32,6 +33,25 @@ import net.sf.samtools.SAMRecord;
 public class Utils extends FastaParser {
 
     public final static String SAVEPATH = "";
+
+    public static void mkdir(String save) {
+        if (!new File(save).exists()) {
+            if (!new File(save).mkdirs()) {
+                throw new RuntimeException("Cannot create directory: " + save);
+            }
+        }
+    }
+
+    public static void saveOptimum(String save, OptimalResult or) {
+        try {
+            FileOutputStream fos = new FileOutputStream(save);
+            try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
+                out.writeObject(or);
+            }
+        } catch (IOException ex) {
+            System.out.println("Optimum Java saving\n" + ex.getMessage());
+        }
+    }
 
     public static void appendFile(String path, String sb) {
         try {
@@ -142,7 +162,7 @@ public class Utils extends FastaParser {
             }
             sb.append("\n");
         }
-        Utils.saveFile(SAVEPATH + "readsClustered.txt", sb.toString());
+        Utils.saveFile(SAVEPATH + "support" + File.separator + "readsClustered.txt", sb.toString());
     }
 
     public static Read[] parseInput(String path) {

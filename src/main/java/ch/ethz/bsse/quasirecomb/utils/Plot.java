@@ -66,7 +66,7 @@ public class Plot {
             }
             Globals.getINSTANCE().print("Plotting\t" + (50 + Math.round(1000 * (i - Globals.getINSTANCE().getALIGNMENT_BEGIN()) * 50d / alignmentLength) / 1000) + "%");
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH()+"coverage.txt", sb.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "coverage.txt", sb.toString());
         XYSeriesCollection collection = new XYSeriesCollection(dataset);
         final JFreeChart chart = ChartFactory.createXYLineChart(
                 "Coverage",

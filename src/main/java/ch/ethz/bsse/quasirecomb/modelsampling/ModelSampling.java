@@ -134,13 +134,13 @@ public final class ModelSampling extends Utils {
 
     public void save() {
         Utils.saveFile(savePath + "quasispecies.fasta", sb.toString());
-        Utils.saveFile(savePath + "startStop.txt", startStopSB.toString());
+        Utils.saveFile(savePath + "support" + File.separator + "startStop.txt", startStopSB.toString());
         StringBuilder coverageSB = new StringBuilder();
         coverageSB.append("x\ty\n");
         for (int i = 0; i < L; i++) {
             coverageSB.append(i).append("\t").append(coverage[i]).append("\n");
         }
-        Utils.saveFile(savePath + "simCov.txt", coverageSB.toString());
+        Utils.saveFile(savePath+"support"+File.separator + "simCov.txt", coverageSB.toString());
     }
 
     public byte[] single(int currentI) {
@@ -162,13 +162,13 @@ public final class ModelSampling extends Utils {
         startStopSB.append(start).append("\t");
 
         Map<Integer, Double> stopMap = new HashMap<>();
-        for (int j = start+1; j < L + 1; j++) {
+        for (int j = start + 1; j < L + 1; j++) {
             stopMap.put(j, tauOmega[1][j]);
         }
         Frequency<Integer> stopF = new Frequency<>(stopMap);
         int stop = stopF.roll();
         startStopSB.append(stop).append("\n");
-        
+
         for (int j = start; j < stop; j++) {
             this.coverage[j]++;
         }

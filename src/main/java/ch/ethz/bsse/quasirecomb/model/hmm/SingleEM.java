@@ -20,7 +20,9 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
+import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,21 +44,40 @@ public class SingleEM {
     private OptimalResult or;
     private double delta;
     private Read[] reads;
+    private int repeat;
 
-    public SingleEM(int N, int K, int L, int n, Read[] reads, double delta) {
+    public SingleEM(int N, int K, int L, int n, Read[] reads, double delta, int repeat) {
         this.N = N;
         this.K = K;
         this.L = L;
         this.n = n;
         this.delta = delta;
         this.reads = reads;
+        this.repeat = repeat;
         start();
+    }
+
+    private void snapshot() {
+        String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
+        OptimalResult localOr = new OptimalResult(N, K, L, n,
+                jhmm.getRho(),
+                jhmm.getPi(),
+                jhmm.getMu(),
+                this.jhmm.getLoglikelihood(),
+                -1, jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
+        Utils.saveOptimum(save + ".optimum", localOr);
+        Summary summary = new Summary();
+        Utils.saveFile(save + "_result.txt", summary.print(localOr));
+        Utils.saveFile(save + "_summary.html", summary.html(localOr));
     }
 
     private void start() {
         this.llh_opt = Globals.getINSTANCE().getMAX_LLH();
         time(false);
         jhmm = new JHMM(reads, N, L, K, n, Globals.getINSTANCE().getESTIMATION_EPSILON());
+        if (Globals.getINSTANCE().isSNAPSHOTS()) {
+            this.snapshot();
+        }
 
         double llh = Double.MIN_VALUE;
         double oldllh;
@@ -67,6 +88,7 @@ public class SingleEM {
                 Globals.getINSTANCE().maxMAX_LLH(llh);
                 this.llh_opt = Math.max(Globals.getINSTANCE().getMAX_LLH(), this.llh_opt);
             }
+            iterations++;
             history.add(llh);
             oldllh = llh;
             llh = jhmm.getLoglikelihood();
@@ -83,12 +105,14 @@ public class SingleEM {
                 Globals.getINSTANCE().log(llh + "\n");
             }
             jhmm.restart();
-            iterations++;
             Globals.getINSTANCE().printPercentage(K);
             if (Double.isNaN(Math.abs((oldllh - llh) / llh))) {
                 System.err.println("adsflh");
             }
-//        } while (Math.abs((oldllh - llh) / llh) > this.delta && jhmm.getParametersChanged() != 0);
+//        } while (Math.abs((oldllh - llh) / llh) > this.delta&& jhmm.getParametersChanged() != 0);
+            if (Globals.getINSTANCE().isSNAPSHOTS()) {
+                this.snapshot();
+            }
         } while (Math.abs((oldllh - llh) / llh) > this.delta);
 //        } while (iterations <= 500);
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");

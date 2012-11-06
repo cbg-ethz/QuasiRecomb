@@ -181,11 +181,6 @@ public class ReadHMMStatic {
                             }
                             xi *= marginalV;
                             jhmm.addnJKL(jGlobal, k, l, xi);
-                            if (k == l) {
-                                jhmm.addnJeq(jGlobal, xi);
-                            } else {
-                                jhmm.addnJneq(jGlobal, xi);
-                            }
                         }
                     }
                 }

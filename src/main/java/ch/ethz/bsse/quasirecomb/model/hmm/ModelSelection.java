@@ -54,14 +54,11 @@ public class ModelSelection {
     private void start(Read[] reads) {
         double optBIC = 0;
         String save = Globals.getINSTANCE().getSAVEPATH() + "support";
-        if (!new File(save).exists()) {
-            if (!new File(save).mkdirs()) {
-                throw new RuntimeException("Cannot create directory: " + save);
-            }
-        }
+        Utils.mkdir(Globals.getINSTANCE().getSnapshotDir());
 
         if (kMin != kMax) {
             Globals.getINSTANCE().setMODELSELECTION(true);
+            Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "modelselection");
             for (int k = kMin; k <= kMax; k++) {
                 if (!Globals.getINSTANCE().isFORCE_NO_RECOMB()) {
                     checkRho0(k);
@@ -85,6 +82,7 @@ public class ModelSelection {
             bestK = kMin;
         }
         Globals.getINSTANCE().setMODELSELECTION(false);
+        Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "training");
         Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
         Globals.getINSTANCE().setPERCENTAGE(0);
         EM em = new EM(this.N, this.L, bestK, this.n, reads);
@@ -92,18 +90,10 @@ public class ModelSelection {
             or = em.getOr();
         }
 
-        Utils.saveFile(save + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
-        Utils.saveFile(save + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
         //save optimumJava
-        try {
-            String s = save + File.separator + "optimumJava";// + (bestK ? "" : K);
-            FileOutputStream fos = new FileOutputStream(s);
-            try (ObjectOutputStream out = new ObjectOutputStream(fos)) {
-                out.writeObject(or);
-            }
-        } catch (IOException ex) {
-            System.out.println("Optimum Java saving\n" + ex.getMessage());
-        }
+        Utils.saveOptimum(save + File.separator + "best.optimum", or);
     }
 
     private static void checkRho0(int K) {

@@ -49,9 +49,10 @@ public class Preprocessing {
      * @param N amount of reads in case exp is false
      */
     public static void workflow(String input, int Kmin, int Kmax) {
+        Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
         Globals.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
-        
+
         for (Read r : reads) {
             Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
@@ -63,7 +64,7 @@ public class Preprocessing {
             int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
             for (int i = 0; i < r.getWatsonLength(); i++) {
                 try {
-                    alignment[i + begin][BitMagic.getPosition(r.getSequence(),i)] += r.getCount();
+                    alignment[i + begin][BitMagic.getPosition(r.getSequence(), i)] += r.getCount();
                 } catch (ArrayIndexOutOfBoundsException e) {
                     System.out.println(e);
                 }
@@ -71,7 +72,7 @@ public class Preprocessing {
             if (r.isPaired()) {
                 begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
                 for (int i = 0; i < r.getCrickLength(); i++) {
-                    alignment[i + begin][BitMagic.getPosition(r.getCrickSequence(),i)] += r.getCount();
+                    alignment[i + begin][BitMagic.getPosition(r.getCrickSequence(), i)] += r.getCount();
                 }
             }
         }
@@ -91,15 +92,15 @@ public class Preprocessing {
             }
         }
         Globals.getINSTANCE().print("Parsing\t75%");
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "hit_dist.txt", sb.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
         sb = null;
         System.gc();
         System.gc();
         int n = countChars(reads);
         Globals.getINSTANCE().print("Parsing\t100%");
-//        Globals.getINSTANCE().println("Plotting\t");
+        Globals.getINSTANCE().println("Plotting\t");
 //        System.exit(9);
-//        Plot.plotCoverage(reads);
+        Plot.plotCoverage(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
         ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
         modelSampling.save();

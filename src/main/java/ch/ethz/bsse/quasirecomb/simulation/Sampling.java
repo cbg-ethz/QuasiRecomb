@@ -96,7 +96,7 @@ public class Sampling {
             if (i > 6 * N / 8) {
                 start = L - insertSize - 2 * readLength;
             }
-            System.out.println(start);
+//            System.out.println(start);
             char[] readArray = new char[length];
 
 
@@ -122,7 +122,7 @@ public class Sampling {
             for (int j = 0; j < length; j++) {
                 sb.append(readArray[j]);
             }
-            reads1[i] = new Read(Utils.splitReadIntoByteArray(sb.toString()), start, start + length);
+            reads1[i] = new Read(BitMagic.splitReadIntoBytes(sb.toString()), start, start + length);
 
 
             start += readLength + insertSize;

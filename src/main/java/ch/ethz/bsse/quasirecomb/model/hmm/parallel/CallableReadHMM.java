@@ -1,19 +1,15 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
-import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMM;
+import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMMStatic;
 import java.util.concurrent.Callable;
 
 /**
  *
  * @author XLR
  */
-public class CallableReadHMM implements Callable<ReadHMM> {
+public class CallableReadHMM implements Callable<Double> {
 
     private JHMM jhmm;
     private Read read;
@@ -23,8 +19,8 @@ public class CallableReadHMM implements Callable<ReadHMM> {
         this.read = read;
     }
     @Override
-    public ReadHMM call() throws Exception {
-        return new ReadHMM(jhmm, read);
+    public Double call() throws Exception {
+        return ReadHMMStatic.computeFB(jhmm, read);
     }
     
 }

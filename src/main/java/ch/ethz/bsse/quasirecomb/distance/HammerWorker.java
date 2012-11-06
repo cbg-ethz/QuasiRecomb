@@ -18,13 +18,9 @@
 package ch.ethz.bsse.quasirecomb.distance;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
-import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMM;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.RecursiveTask;
-import org.javatuples.Pair;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
