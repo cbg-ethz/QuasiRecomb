@@ -67,7 +67,6 @@ public class Globals {
     private int DESIRED_REPEATS;
     private int STEPSIZE = 100;
     private int PARALLEL_RESTARTS_UPPER_BOUND = 10;
-    private boolean PARALLEL_JHMM = true;
     private boolean PARALLEL_RESTARTS = false;
     private double MAX_LLH = Double.NEGATIVE_INFINITY;
     private boolean LOG_BIC = false;
@@ -389,10 +388,6 @@ public class Globals {
 
     public void setPARALLEL_RESTARTS_UPPER_BOUND(int PARALLEL_RESTARTS_UPPER_BOUND) {
         this.PARALLEL_RESTARTS_UPPER_BOUND = PARALLEL_RESTARTS_UPPER_BOUND;
-    }
-
-    public void setPARALLEL_JHMM(boolean PARALLEL_JHMM) {
-        this.PARALLEL_JHMM = PARALLEL_JHMM;
     }
 
     public void setPARALLEL_RESTARTS(boolean PARALLEL_RESTARTS) {

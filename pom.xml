@@ -5,7 +5,7 @@
 
     <groupId>ch.ethz.bsse</groupId>
     <artifactId>QuasiRecomb</artifactId>
-    <version>0.2</version>
+    <version>0.3</version>
     <packaging>jar</packaging>
     <url>http://www.cbg.ethz.ch/software/quasirecomb</url>
     <name>QuasiRecomb</name>
@@ -29,7 +29,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>2.5.1</version>
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
@@ -111,13 +111,13 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math</artifactId>
-            <version>2.3-SNAPSHOT</version>
+            <version>3.0-SNAPSHOT</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>12.0</version>
+            <version>13.0.1</version>
         </dependency>
         <dependency>
             <groupId>net.sf</groupId>
@@ -128,22 +128,6 @@
             <groupId>jfree</groupId>
             <artifactId>jfreechart</artifactId>
             <version>1.0.13</version>
-        </dependency>
-<!--        <dependency>
-            <groupId>org.biojava</groupId>
-            <artifactId>biojava3-sequencing</artifactId>
-            <version>3.0.3</version>
-            <type>jar</type>
-        </dependency>-->
-        <dependency>
-            <groupId>org.apfloat</groupId>
-            <artifactId>apfloat</artifactId>
-            <version>1.6.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.googlecode.efficient-java-matrix-library</groupId>
-            <artifactId>ejml</artifactId>
-            <version>0.20</version>
         </dependency>
     </dependencies>
     <pluginRepositories>

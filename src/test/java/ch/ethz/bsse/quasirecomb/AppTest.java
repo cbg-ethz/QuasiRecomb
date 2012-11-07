@@ -1,14 +1,8 @@
 package ch.ethz.bsse.quasirecomb;
 
-import cc.mallet.types.Dirichlet;
-import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.linear.Array2DRowRealMatrix;
-import org.apache.commons.math.linear.RealMatrix;
-import org.apfloat.Apfloat;
 
 /**
  * Unit test for simple App.
@@ -110,7 +104,7 @@ public class AppTest
     /**
      * Rigourous Test :-)
      */
-    public void testApp() throws MathException {
+    public void testApp() {
         double a = 0.9819770210743201;
         double b = Math.log(a);
         double c = b * 1;

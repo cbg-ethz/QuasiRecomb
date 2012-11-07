@@ -28,8 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.BetaDistributionImpl;
+import org.apache.commons.math3.distribution.BetaDistribution;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -48,7 +47,7 @@ public class Sampling {
             freqMap.put(i, hapProb[i]);
         }
         Frequency<Integer> frequency = new Frequency<>(freqMap);
-        BetaDistributionImpl beta = new BetaDistributionImpl(1, 5);
+        BetaDistribution beta = new BetaDistribution(1, 5);
 
         double[] sample = null;
         try {
@@ -60,7 +59,7 @@ public class Sampling {
             for (int i = 0; i < N; i++) {
                 sample[i] /= max;
             }
-        } catch (MathException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Sampling.class.getName()).log(Level.SEVERE, null, ex);
         }
 

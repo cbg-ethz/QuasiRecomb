@@ -260,11 +260,7 @@ public class ReadHMMStatic {
                             System.out.println("mu:\t" + jhmm.getMu()[begin + j][k][v]);
                             System.exit(0);
                         }
-                        if (k == 0 && v == 0) {
-                            c[j] = fJKV[j][k][v];
-                        } else {
-                            c[j] += fJKV[j][k][v];
-                        }
+                        c[j] += fJKV[j][k][v];
                     }
                 }
                 if (c[j] <= 0) {

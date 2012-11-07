@@ -17,15 +17,15 @@
  */
 package ch.ethz.bsse.quasirecomb;
 
-import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
-import ch.ethz.bsse.quasirecomb.informationholder.Globals;
-import ch.ethz.bsse.quasirecomb.model.Preprocessing;
+import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.distance.HammerWorker;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.model.Preprocessing;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
 import ch.ethz.bsse.quasirecomb.simulation.Sampling;
 import ch.ethz.bsse.quasirecomb.utils.Cutter;
-import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
@@ -73,7 +73,7 @@ public class Startup {
     @Option(name = "-ee")
     private double ee = .0001;
     @Option(name = "-d")
-    private double d = 1e-8;
+    private double d = 1e-4;
     @Option(name = "-p")
     private double p = 1e-4;
     @Option(name = "-parallelRestarts")
@@ -128,8 +128,8 @@ public class Startup {
     private int steps = 100;
     @Option(name = "-snapshots")
     private boolean snapshots;
-    @Option(name = "-storage")
-    private boolean storage;
+    @Option(name = "-minmem")
+    private boolean minmem;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -154,7 +154,7 @@ public class Startup {
                 }
             }
 
-            Globals.getINSTANCE().setSTORAGE(this.storage);
+            Globals.getINSTANCE().setSTORAGE(!this.minmem);
             Globals.getINSTANCE().setSNAPSHOTS(this.snapshots);
             Globals.getINSTANCE().setDEBUG(this.verbose);
             Globals.getINSTANCE().setLOGGING(this.log);
@@ -295,7 +295,6 @@ public class Startup {
                 Globals.getINSTANCE().setALPHA_Z(this.alphaz);
                 Globals.getINSTANCE().setALPHA_H(this.alphah);
                 Globals.getINSTANCE().setBETA_Z(this.betaz);
-                Globals.getINSTANCE().setPARALLEL_JHMM(!this.singleCore);
                 Globals.getINSTANCE().setPARALLEL_RESTARTS(this.parallelRestarts);
                 Globals.getINSTANCE().setESTIMATION_EPSILON(this.e);
                 Globals.getINSTANCE().setSAMPLING_EPSILON(this.ee);

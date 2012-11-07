@@ -4,8 +4,6 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
-import com.google.common.util.concurrent.AtomicDoubleArray;
-
 /**
  *
  * @author XLR

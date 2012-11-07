@@ -131,6 +131,10 @@ public final class ModelSampling extends Utils {
             sb.append("\n");
         }
     }
+    
+    public void saveQuasispeciesOnly(String path) {
+        Utils.saveFile(path, sb.toString());
+    }
 
     public void save() {
         Utils.saveFile(savePath + "quasispecies.fasta", sb.toString());

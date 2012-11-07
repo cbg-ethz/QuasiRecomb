@@ -17,14 +17,16 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 
 /**
  * Responsible for the start of the repeats within the EM algorithm.
@@ -34,7 +36,6 @@ import java.util.List;
 public class EM extends Utils {
 
     private OptimalResult or;
-    private List<OptimalResult> ors;
 
     protected EM(int N, int L, int K, int n, Read[] reads) {
         this.blackbox(reads, N, L, K, n);
@@ -43,36 +44,38 @@ public class EM extends Utils {
     private void blackbox(Read[] reads, int N, int L, int K, int n) {
         Globals.getINSTANCE().setLOG(new StringBuilder());
         Globals.getINSTANCE().setMAX_LLH(Double.NEGATIVE_INFINITY);
-        ors = new ArrayList<>();
+        double maxLLH = Double.NEGATIVE_INFINITY;
+        String pathOptimum = null;
         for (int i = 0; i < Globals.getINSTANCE().getREPEATS(); i++) {
             SingleEM sem = new SingleEM(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), i);
-            ors.add(sem.getOptimalResult());
-        }
-
-        Globals.getINSTANCE().setPARALLEL_JHMM(true);
-        double maxLLH = Double.NEGATIVE_INFINITY;
-        StringBuilder restarts = new StringBuilder();
-        for (OptimalResult tmp : ors) {
-            if (tmp != null) {
-                restarts.append(tmp.getRestarts()).append("\n");
-                if (tmp.getLlh() >= maxLLH) {
-                    maxLLH = tmp.getLlh();
-                    or = tmp;
-                }
+            if (sem.getLoglikelihood() > maxLLH) {
+                maxLLH = sem.getLoglikelihood();
+                pathOptimum = sem.getOptimumPath();
             }
         }
+
+        try {
+            FileInputStream fis = new FileInputStream(pathOptimum);
+            try (ObjectInputStream in = new ObjectInputStream(fis)) {
+                or = (OptimalResult) in.readObject();
+            }
+        } catch (IOException | ClassNotFoundException ex) {
+            System.err.println(ex);
+        }
+
+        ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH());
+        modelSampling.saveQuasispeciesOnly(Globals.getINSTANCE().getSAVEPATH() + "quasispecies_preliminary.fasta");
 
 //        System.out.println("\tBIC: " + (int) or.getBIC());
         Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
         System.out.print("\n");
 //        if (!Globals.NO_REFINE) {
-//            SingleEM bestEM = new SingleEM(N, K, L, n, reads, haplotypesArray, 1e-10, or);
-//            this.or = bestEM.getOptimalResult();
+        SingleEM bestEM = new SingleEM(or, 1e-8, reads);
+        this.or = bestEM.getOptimalResult();
 //        }
         Globals.getINSTANCE().log("\n" + new Summary().print(or));
         if (Globals.getINSTANCE().isLOGGING()) {
             Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "log_K" + K, Globals.getINSTANCE().getLOG().toString());
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "restarts_K" + K, restarts.toString());
         }
     }
 
