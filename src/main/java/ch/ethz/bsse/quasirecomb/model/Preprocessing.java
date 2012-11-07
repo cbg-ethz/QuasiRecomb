@@ -100,7 +100,7 @@ public class Preprocessing {
         Globals.getINSTANCE().print("Parsing\t100%");
         Globals.getINSTANCE().println("Plotting\t");
 //        System.exit(9);
-        Plot.plotCoverage(reads);
+//        Plot.plotCoverage(reads);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
         ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
         modelSampling.save();

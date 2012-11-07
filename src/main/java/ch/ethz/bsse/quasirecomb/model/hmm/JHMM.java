@@ -20,13 +20,17 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import cc.mallet.types.Dirichlet;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
+import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMM;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.util.concurrent.AtomicDoubleArray;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.logging.Level;
@@ -52,15 +56,15 @@ public class JHMM {
     private double[] antieps;
     private AtomicDoubleArray[][] nJKL;
     private AtomicDoubleArray[][] nJKV;
-    private AtomicDoubleArray neqPos;
     private AtomicDoubleArray nneqPos;
     private double loglikelihood;
     private Read[] reads;
-//    private ReadHMM[] readHMMArray;
     private int restart = 0;
     private int coverage[];
     private int parametersChanged = 0;
     private boolean paired;
+    private Map<Integer, TempJHMMStorage> garage = new ConcurrentHashMap<>();
+    private final List<Integer> available = new ArrayList<>();
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
@@ -82,7 +86,6 @@ public class JHMM {
 
         this.nJKL = new AtomicDoubleArray[L][K];
         this.nJKV = new AtomicDoubleArray[L][K];
-        this.neqPos = new AtomicDoubleArray(L);
         this.nneqPos = new AtomicDoubleArray(L);
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
@@ -155,9 +158,6 @@ public class JHMM {
     }
 
     private void start() {
-        if (Globals.getINSTANCE().isPARALLEL_JHMM()) {
-            Globals.getINSTANCE().setPARALLEL_RESTARTS_UPPER_BOUND(Integer.MAX_VALUE);
-        }
         calculate();
     }
 
@@ -168,6 +168,14 @@ public class JHMM {
     }
 
     private void compute() {
+        if (Globals.getINSTANCE().isSTORAGE()) {
+            available.clear();
+            garage.clear();
+            for (int i = 0; i < Globals.getINSTANCE().getCpus(); i++) {
+                available.add(i);
+                garage.put(i, new TempJHMMStorage(L, K, n, i));
+            }
+        }
         this.loglikelihood = 0d;
         List<FutureTask<Double>> taskList = new ArrayList<>();
 
@@ -186,6 +194,45 @@ public class JHMM {
                 Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        if (Globals.getINSTANCE().isSTORAGE()) {
+            if (available.size() != Globals.getINSTANCE().getCpus()) {
+                throw new IllegalStateException("Not all storages have been returned");
+            }
+            Iterator<TempJHMMStorage> iterator = this.garage.values().iterator();
+            TempJHMMStorage store = iterator.next();
+            while (iterator.hasNext()) {
+                store.merge(iterator.next());
+            }
+            for (int j = 0; j < L; j++) {
+                for (int k = 0; k < K; k++) {
+                    for (int l = 0; l < K; l++) {
+                        this.nJKL[j][k].addAndGet(l, store.getnJKL()[j][k][l]);
+                    }
+                    for (int v = 0; v < n; v++) {
+                        this.nJKV[j][k].addAndGet(v, store.getnJKV()[j][k][v]);
+                    }
+                }
+                this.nneqPos.addAndGet(j, store.getNneqPos()[j]);
+            }
+        }
+    }
+
+    public TempJHMMStorage getStorage() {
+        synchronized (this.available) {
+            if (available.iterator().hasNext()) {
+                Integer i = available.iterator().next();
+                available.remove(i);
+                return garage.get(i);
+            } else {
+                throw new IllegalStateException("No storages left");
+            }
+        }
+    }
+
+    public void free(int id) {
+        synchronized (this.available) {
+            this.available.add(id);
+        }
     }
 
     private void calculate() {
@@ -201,7 +248,6 @@ public class JHMM {
                 this.nJKV[j][k] = new AtomicDoubleArray(n);
             }
         }
-        this.neqPos = new AtomicDoubleArray(L);
         this.nneqPos = new AtomicDoubleArray(L);
     }
 
@@ -567,26 +613,14 @@ public class JHMM {
     }
 
     public void addnJKV(int j, int k, int v, double value) {
-//        synchronized (this.nJKV[j][k]) {
         this.nJKV[j][k].addAndGet(v, value);
-//        }
     }
 
     public void addnJKL(int j, int k, int l, double value) {
-//        synchronized (this.nJKL[j][k]) {
         this.nJKL[j][k].addAndGet(l, value);
-//        }
-    }
-
-    public void addneqPos(int l, double value) {
-//        synchronized (this.neqPos[l]) {
-        this.neqPos.getAndAdd(l, value);
-//        }
     }
 
     public void addnneqPos(int l, double value) {
-//        synchronized (this.nneqPos[l]) {
         this.nneqPos.addAndGet(l, value);
-//        }
     }
 }

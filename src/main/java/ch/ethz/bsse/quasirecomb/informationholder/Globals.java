@@ -44,6 +44,7 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean STORAGE;
     private boolean SNAPSHOTS;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
@@ -77,7 +78,8 @@ public class Globals {
     private StringBuilder LOG = new StringBuilder();
     private long start = System.currentTimeMillis();
     private boolean PAIRED = false;
-    private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
+    private final DateFormat df = new SimpleDateFormat("HH:mm:ss");
+    private final int cpus = Runtime.getRuntime().availableProcessors();
     private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 //    private final ExecutorService executor = Executors.newFixedThreadPool(1);
 
@@ -130,12 +132,16 @@ public class Globals {
     public void resetTimer() {
         this.oldTime = 0;
     }
+
     public void printPercentage(int K, double read) {
-        if (oldTime == 0) {
-            oldTime = System.currentTimeMillis();
+        if (!oldOut.equals(time())) {
+            this.oldOut = time();
+            if (oldTime == 0) {
+                oldTime = System.currentTimeMillis();
+            }
+            long time = System.currentTimeMillis() - oldTime;
+            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[ ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]");
         }
-        long time = System.currentTimeMillis() - oldTime;
-        System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[ ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]");
     }
     private double hammingCount = 0;
     private int hammingMax = 0;
@@ -154,9 +160,9 @@ public class Globals {
     }
 
     public String getSnapshotDir() {
-        return Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "snapshots"+File.separator;
+        return Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "snapshots" + File.separator;
     }
-    
+
     public boolean isSNAPSHOTS() {
         return SNAPSHOTS;
     }
@@ -271,10 +277,6 @@ public class Globals {
 
     public int getPARALLEL_RESTARTS_UPPER_BOUND() {
         return PARALLEL_RESTARTS_UPPER_BOUND;
-    }
-
-    public boolean isPARALLEL_JHMM() {
-        return PARALLEL_JHMM;
     }
 
     public boolean isPARALLEL_RESTARTS() {
@@ -435,5 +437,17 @@ public class Globals {
 
     public void setPAIRED(boolean PAIRED) {
         this.PAIRED = PAIRED;
+    }
+
+    public int getCpus() {
+        return cpus;
+    }
+
+    public boolean isSTORAGE() {
+        return STORAGE;
+    }
+
+    public void setSTORAGE(boolean STORAGE) {
+        this.STORAGE = STORAGE;
     }
 }

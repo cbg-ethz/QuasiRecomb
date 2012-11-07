@@ -18,7 +18,7 @@ public class CallableReadHMM implements Callable<Double> {
         this.jhmm = jhmm;
         this.read = read;
     }
-    @Override
+    @Override 
     public Double call() throws Exception {
         return ReadHMMStatic.computeFB(jhmm, read);
     }

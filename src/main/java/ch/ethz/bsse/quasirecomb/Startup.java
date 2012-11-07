@@ -128,6 +128,8 @@ public class Startup {
     private int steps = 100;
     @Option(name = "-snapshots")
     private boolean snapshots;
+    @Option(name = "-storage")
+    private boolean storage;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -152,6 +154,7 @@ public class Startup {
                 }
             }
 
+            Globals.getINSTANCE().setSTORAGE(this.storage);
             Globals.getINSTANCE().setSNAPSHOTS(this.snapshots);
             Globals.getINSTANCE().setDEBUG(this.verbose);
             Globals.getINSTANCE().setLOGGING(this.log);
