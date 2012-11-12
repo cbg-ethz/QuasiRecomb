@@ -44,8 +44,10 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean PLOT;
     private boolean STORAGE;
     private boolean SNAPSHOTS;
+    private double[][] MU_PRIOR;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
     private boolean FLAT_EPSILON_PRIOR;
@@ -156,6 +158,14 @@ public class Globals {
 
     public String time() {
         return df.format(new Date(System.currentTimeMillis() - start));
+    }
+
+    public boolean isPLOT() {
+        return PLOT;
+    }
+
+    public void setPLOT(boolean PLOT) {
+        this.PLOT = PLOT;
     }
 
     public String getSnapshotDir() {
@@ -444,5 +454,13 @@ public class Globals {
 
     public void setSTORAGE(boolean STORAGE) {
         this.STORAGE = STORAGE;
+    }
+
+    public double[][] getMU_PRIOR() {
+        return MU_PRIOR;
+    }
+
+    public void setMU_PRIOR(double[][] MU_PRIOR) {
+        this.MU_PRIOR = MU_PRIOR;
     }
 }

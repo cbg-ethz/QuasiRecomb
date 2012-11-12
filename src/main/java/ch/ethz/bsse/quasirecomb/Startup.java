@@ -75,11 +75,9 @@ public class Startup {
     @Option(name = "-d")
     private double d = 1e-4;
     @Option(name = "-p")
-    private double p = 1e-4;
+    private double p = 1e-3;
     @Option(name = "-parallelRestarts")
     private boolean parallelRestarts;
-    @Option(name = "-singleCore")
-    private boolean singleCore;
     @Option(name = "-flatEpsPrior")
     private boolean flatEpsilonPrior;
     @Option(name = "-noRecomb")
@@ -130,6 +128,8 @@ public class Startup {
     private boolean snapshots;
     @Option(name = "-minmem")
     private boolean minmem;
+    @Option(name = "-plot")
+    private boolean plot;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -162,6 +162,7 @@ public class Startup {
             Globals.getINSTANCE().setSAMPLING_NUMBER(this.samplingNumber);
             Globals.getINSTANCE().setPRINT(this.print);
             Globals.getINSTANCE().setPAIRED(this.paired);
+            Globals.getINSTANCE().setPLOT(this.plot);
 
             if (this.sample) {
                 ModelSampling simulation = new ModelSampling(input, output);

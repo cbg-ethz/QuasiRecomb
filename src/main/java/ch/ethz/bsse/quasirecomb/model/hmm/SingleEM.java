@@ -55,8 +55,11 @@ public class SingleEM {
         this.delta = delta;
         this.reads = reads;
         this.repeat = repeat;
+        time(false);
+        jhmm = new JHMM(reads, N, L, K, n, Globals.getINSTANCE().getESTIMATION_EPSILON());
         start();
     }
+
     public SingleEM(OptimalResult or, double delta, Read[] reads) {
         this.N = or.getN();
         this.K = or.getK();
@@ -65,6 +68,8 @@ public class SingleEM {
         this.delta = delta;
         this.reads = reads;
         this.repeat = -99;
+        time(false);
+        jhmm = new JHMM(reads, N, L, K, n, or.getEps(), or.getRho(), or.getPi(), or.getMu());
         start();
     }
 
@@ -72,10 +77,7 @@ public class SingleEM {
         if (!Globals.getINSTANCE().isSNAPSHOTS()) {
             this.snapshot();
         }
-        return Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations+".optimum";
-    }
-    
-    private void snapshot() {
+        
         String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
         OptimalResult localOr = new OptimalResult(N, K, L, n,
                 jhmm.getRho(),
@@ -84,15 +86,29 @@ public class SingleEM {
                 this.jhmm.getLoglikelihood(),
                 -1, jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
         Utils.saveOptimum(save + ".optimum", localOr);
+        
+        return Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations + ".optimum";
+    }
+
+    private void snapshot() {
+        long time = System.currentTimeMillis();
+//        System.out.println("saving");
+        String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
+        OptimalResult localOr = new OptimalResult(N, K, L, n,
+                jhmm.getRho(),
+                jhmm.getPi(),
+                jhmm.getMu(),
+                this.jhmm.getLoglikelihood(),
+                -1, jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
+//        Utils.saveOptimum(save + ".optimum", localOr);
         Summary summary = new Summary();
         Utils.saveFile(save + ".txt", summary.print(localOr));
-        Utils.saveFile(save + ".html", summary.html(localOr));
+//        Utils.saveFile(save + ".html", summary.html(localOr));
+//        System.out.println("saved: " + (System.currentTimeMillis() - time));
     }
 
     private void start() {
         this.loglikelihood = Double.MIN_VALUE;
-        time(false);
-        jhmm = new JHMM(reads, N, L, K, n, Globals.getINSTANCE().getESTIMATION_EPSILON());
         if (Globals.getINSTANCE().isSNAPSHOTS()) {
             this.snapshot();
         }

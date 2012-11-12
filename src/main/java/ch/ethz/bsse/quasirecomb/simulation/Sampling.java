@@ -25,6 +25,7 @@ import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,9 +39,9 @@ public class Sampling {
     public final static String newline = System.getProperty("line.separator");
 
     public static void fromHaplotypesGlobalPaired(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-        int insertSize = 300;
+        int insertSize = 50;
         int readLength = 250;
-        int sumLength = insertSize + 2 * readLength;
+        int fragmentSize = insertSize + 2 * readLength;
         L = haplotypes[0].length();
         Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
@@ -66,7 +67,7 @@ public class Sampling {
 
         Read[] reads1 = new Read[N];
         Read[] reads2 = new Read[N];
-
+        Random rand = new Random();
         for (int i = 0; i < N; i++) {
             int hap = frequency.roll();
 
@@ -77,23 +78,23 @@ public class Sampling {
 //            if (Math.random() > .5) {
 //                length -= (int) (Math.random() * 100);
 //            } else {
-//                length += (int) (Math.random() * 100);
+//                length += (int) (Math.random() * 100);    
 //            }
-            if (i > N / 4) {
-                start = (int) (Math.random() * (L - insertSize + 3 * readLength));
-                start -= 3 * readLength;
-                for (;;) {
-                    if (start < 0) {
-                        start += readLength;
-                    } else if (start + 2 * readLength + insertSize >= L) {
-                        start -= readLength;
-                    } else {
-                        break;
-                    }
-                }
+            if (i > ((readLength * N) / L)) {
+                start = rand.nextInt(L-fragmentSize);
+//                start -= fragmentSize;
+//                for (;;) {
+//                    if (start < 0) {
+//                        start += fragmentSize;
+//                    } else if (start + fragmentSize >= L) {
+//                        start -= fragmentSize;
+//                    } else {
+//                        break;
+//                    }
+//                }
             }
-            if (i > 6 * N / 8) {
-                start = L - insertSize - 2 * readLength;
+            if (i > N - ((250d * N) / L)) {
+                start = L - fragmentSize;
             }
 //            System.out.println(start);
             char[] readArray = new char[length];
@@ -152,101 +153,19 @@ public class Sampling {
         }
         int z = 0;
         StringBuilder sb = new StringBuilder();
-        for (int i = 0;
-                i < N;
-                i++) {
+        for (int i = 0; i < N; i++) {
             Read r = reads1[i];
             sb.append(">SAMPLED").append(z).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(z).append("/1").append("\n");
-            sb.append(Utils.reverse(r.getSequence(),r.getLength())).append("\n");
+            sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
             r = reads2[i];
             sb.append(">SAMPLED").append(z).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(z).append("/2").append("\n");
-            sb.append(Utils.reverse(r.getSequence(),r.getLength())).append("\n");
+            sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
             z++;
         }
 
         Utils.saveFile(savePath, sb.toString());
     }
 
-//    public static String[] fromHaplotypesCross(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-//        return fromHaplotypesCross(Utils.parseBAMSAM(path), N, L, epsilon, hapProb, n, savePath);
-//    }
-//
-//    public static Map<String, Integer> fromHaplotypes(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-//        return fromHaplotypes(Utils.parseBAMSAM(path), N, L, epsilon, hapProb, n, savePath);
-//    }
-//
-//    public static Map<String, Integer> fromHaplotypesGlobal(String path, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
-//        return fromHaplotypesGlobal(Utils.parseBAMSAM(path), N, L, epsilon, hapProb, n, savePath);
-//    }
-//    public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, int insertSize, String savePath) {
-//        Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
-//        for (int i = 0; i < hapProb.length; i++) {
-//            freqMap.put(i, hapProb[i]);
-//        }
-//        Frequency<Integer> frequency = new Frequency<>(freqMap);
-//
-//        List<Read> reads = new ArrayList<>();
-//        String read;
-//        for (int i = 0; i < N; i++) {
-//            int hap = frequency.roll();
-//
-//            int start = 0;
-//            int length = 0;
-//            for (;;) {
-////                length = (int)(Math.random()*300);
-//                length = 150;
-//                if (Math.random() > .5) {
-//                    length *= -1;
-//                }
-//                start = (int) (Math.random() * (L + 150 + 150));
-//                start -= 300;
-//                if (start >= L) {
-//                    continue;
-//                }
-//                if (start + length <= L) {
-//                    if (start < 0) {
-//                        start = 0;
-//                    }
-//                    break;
-//                }
-//                if (start + length > L) {
-//                    length = L - start;
-//                    break;
-//                }
-//            }
-//            System.out.println(start);
-//            char[] readArray = new char[length];
-//
-//
-//            for (int j = 0; j < length; j++) {
-//                //error
-//                Map<Character, Double> baseMap = new ConcurrentHashMap<>();
-//                for (int v = 0; v < n; v++) {
-//                    char x = reverse(v);
-//                    if (haplotypes[hap].charAt(j + start) == x) {
-//                        baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
-//                    } else {
-//                        baseMap.put(x, epsilon);
-//                    }
-//                }
-//                Frequency<Character> errorF = new Frequency<>(baseMap);
-//                readArray[j] = errorF.roll();
-//            }
-//            StringBuilder sb = new StringBuilder(length);
-//            for (int j = 0; j < length; j++) {
-//                sb.append(readArray[j]);
-//            }
-//            read = sb.toString();
-//            reads.add(new Read(Utils.splitReadIntoByteArray(read), start, start + length));
-//        }
-//        int z = 0;
-//        StringBuilder sb = new StringBuilder();
-//        for (Read r : reads) {
-//            sb.append(">SAMPLED").append(z++).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("\n");
-//            sb.append(Utils.reverse(r.getSequence())).append("\n");
-//        }
-//        Utils.saveFile(savePath, sb.toString());
-//    }
     public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
         Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
@@ -314,7 +233,7 @@ public class Sampling {
         StringBuilder sb = new StringBuilder();
         for (Read r : reads) {
             sb.append(">SAMPLED").append(z++).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("\n");
-            sb.append(Utils.reverse(r.getSequence(),r.getLength())).append("\n");
+            sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
         }
         Utils.saveFile(savePath, sb.toString());
     }

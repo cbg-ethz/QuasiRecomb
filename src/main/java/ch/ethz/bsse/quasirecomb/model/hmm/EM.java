@@ -53,7 +53,10 @@ public class EM extends Utils {
                 pathOptimum = sem.getOptimumPath();
             }
         }
-
+        
+        long time = System.currentTimeMillis();
+        System.out.println("reading");
+        
         try {
             FileInputStream fis = new FileInputStream(pathOptimum);
             try (ObjectInputStream in = new ObjectInputStream(fis)) {
@@ -62,6 +65,8 @@ public class EM extends Utils {
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println(ex);
         }
+        
+        System.out.println("read: " + (System.currentTimeMillis() - time));
 
         ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH());
         modelSampling.saveQuasispeciesOnly(Globals.getINSTANCE().getSAVEPATH() + "quasispecies_preliminary.fasta");

@@ -58,9 +58,12 @@ public class Preprocessing {
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        double N = 0;
         Globals.getINSTANCE().print("Parsing\t25%");
         int[][] alignment = new int[L][5];
+        double[][] prior = new double[L][5];
         for (Read r : reads) {
+            N += r.getCount();
             int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
             for (int i = 0; i < r.getWatsonLength(); i++) {
                 try {
@@ -76,21 +79,26 @@ public class Preprocessing {
                 }
             }
         }
+
 //        saveUnique(reads);
         Globals.getINSTANCE().print("Parsing\t50%");
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < L; i++) {
             int hits = 0;
-            for (int v = 0; v < 4; v++) {
-                sb.append(alignment[i][v]).append("\n");
+            sb.append(i);
+            for (int v = 0; v < alignment[i].length; v++) {
+                prior[i][v] = (alignment[i][v] + 1) / (N + alignment[i].length);
+                sb.append("\t").append(alignment[i][v]);
                 if (alignment[i][v] != 0) {
                     hits++;
                 }
             }
+            sb.append("\n");
             if (hits == 0) {
                 System.out.println("Position " + i + " is not covered.");
             }
         }
+        Globals.getINSTANCE().setMU_PRIOR(prior);
         Globals.getINSTANCE().print("Parsing\t75%");
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
         sb = null;
@@ -100,7 +108,9 @@ public class Preprocessing {
         Globals.getINSTANCE().print("Parsing\t100%");
         Globals.getINSTANCE().println("Plotting\t");
 //        System.exit(9);
-//        Plot.plotCoverage(reads);
+        if (Globals.getINSTANCE().isPLOT()) {
+            Plot.plotCoverage(reads);
+        }
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
         ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
         modelSampling.save();

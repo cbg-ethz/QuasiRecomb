@@ -43,10 +43,10 @@ import java.util.logging.Logger;
  */
 public class JHMM {
 
-    private final int N;
-    private final int L;
-    private final int K;
-    private final int n;
+    private int N;
+    private int L;
+    private int K;
+    private int n;
     //rho[j][k][l] := transition prob. at position j, for l given k
     private double[][] tauOmega;
     private double[][][] rho;
@@ -54,9 +54,9 @@ public class JHMM {
     private double[][][] mu;
     private double[] eps;
     private double[] antieps;
-    private AtomicDoubleArray[][] nJKL;
-    private AtomicDoubleArray[][] nJKV;
-    private AtomicDoubleArray nneqPos;
+    private double[][][] nJKL;
+    private double[][][] nJKV;
+    private double[] nneqPos;
     private double loglikelihood;
     private Read[] reads;
     private int restart = 0;
@@ -68,13 +68,31 @@ public class JHMM {
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
-                (1 - (n - 1) * epsilon),
                 Random.generateInitRho(L - 1, K),
                 Random.generateInitPi(L, K),
                 Random.generateMuInit(L, K, n));
     }
 
-    private JHMM(Read[] reads, int N, int L, int K, int n, double eps, double antieps, double[][][] rho, double[] pi, double[][][] mu) {
+    public JHMM(Read[] reads, int N, int L, int K, int n, double eps, double[][][] rho, double[] pi, double[][][] mu) {
+        this.eps = new double[L];
+        this.antieps = new double[L];
+        for (int j = 0; j < L; j++) {
+            this.eps[j] = eps;
+            this.antieps[j] = (1 - (n - 1) * eps);
+        }
+        this.prepare(reads, N, L, K, n, rho, pi, mu);
+    }
+
+    public JHMM(Read[] reads, int N, int L, int K, int n, double[] eps, double[][][] rho, double[] pi, double[][][] mu) {
+        this.eps = eps;
+        this.antieps = new double[L];
+        for (int j = 0; j < L; j++) {
+            this.antieps[j] = (1 - (n - 1) * eps[j]);
+        }
+        this.prepare(reads, N, L, K, n, rho, pi, mu);
+    }
+
+    private void prepare(Read[] reads, int N, int L, int K, int n, double[][][] rho, double[] pi, double[][][] mu) {
         this.N = N;
         this.L = L;
         this.K = K;
@@ -84,24 +102,10 @@ public class JHMM {
         this.mu = mu;
         this.pi = pi;
 
-        this.nJKL = new AtomicDoubleArray[L][K];
-        this.nJKV = new AtomicDoubleArray[L][K];
-        this.nneqPos = new AtomicDoubleArray(L);
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                this.nJKL[j][k] = new AtomicDoubleArray(K);
-                this.nJKV[j][k] = new AtomicDoubleArray(n);
-            }
-        }
+        this.nJKL = new double[L][K][K];
+        this.nJKV = new double[L][K][n];
+        this.nneqPos = new double[L];
         this.coverage = new int[L];
-        this.eps = new double[L];
-        this.antieps = new double[L];
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                this.eps[j] = eps;
-                this.antieps[j] = antieps;
-            }
-        }
         for (Read r : reads) {
             if (r.isPaired()) {
                 this.paired = true;
@@ -180,12 +184,12 @@ public class JHMM {
         List<FutureTask<Double>> taskList = new ArrayList<>();
 
         for (int i = 0; i < reads.length; i++) {
-            FutureTask<Double> futureTask_1 = new FutureTask<>(new CallableReadHMM(this, reads[i]));
-            taskList.add(futureTask_1);
-            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
+                FutureTask<Double> futureTask_1 = new FutureTask<>(new CallableReadHMM(this, reads[i]));
+                taskList.add(futureTask_1);
+                Globals.getINSTANCE().getExecutor().execute(futureTask_1);
         }
 
-        for (int j = 0; j < reads.length; j++) {
+        for (int j = 0; j < taskList.size(); j++) {
             FutureTask<Double> futureTask = taskList.get(j);
             try {
                 loglikelihood += futureTask.get();
@@ -206,13 +210,13 @@ public class JHMM {
             for (int j = 0; j < L; j++) {
                 for (int k = 0; k < K; k++) {
                     for (int l = 0; l < K; l++) {
-                        this.nJKL[j][k].addAndGet(l, store.getnJKL()[j][k][l]);
+                        this.nJKL[j][k][l] += store.getnJKL()[j][k][l];
                     }
                     for (int v = 0; v < n; v++) {
-                        this.nJKV[j][k].addAndGet(v, store.getnJKV()[j][k][v]);
+                        this.nJKV[j][k][v] += store.getnJKV()[j][k][v];
                     }
                 }
-                this.nneqPos.addAndGet(j, store.getNneqPos()[j]);
+                this.nneqPos[j] += store.getNneqPos()[j];
             }
         }
     }
@@ -240,15 +244,9 @@ public class JHMM {
         this.compute();
         this.mStep();
 
-        this.nJKL = new AtomicDoubleArray[L][K];
-        this.nJKV = new AtomicDoubleArray[L][K];
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                this.nJKL[j][k] = new AtomicDoubleArray(K);
-                this.nJKV[j][k] = new AtomicDoubleArray(n);
-            }
-        }
-        this.nneqPos = new AtomicDoubleArray(L);
+        this.nJKL = new double[L][K][K];
+        this.nJKV = new double[L][K][n];
+        this.nneqPos = new double[L];
     }
 
     private void changed(double a, double b) {
@@ -269,15 +267,15 @@ public class JHMM {
 
                 double max = Double.MIN_VALUE;
                 for (int v = 0; v < n; v++) {
-                    max = Math.max(max, this.nJKV[j][k].get(v));
+                    max = Math.max(max, this.nJKV[j][k][v]);
                 }
                 if (max < 1) {
                     for (int v = 0; v < n; v++) {
-                        sum += this.nJKV[j][k].get(v);
+                        sum += this.nJKV[j][k][v];
                     }
                     if (sum > 0) {
                         for (int v = 0; v < n; v++) {
-                            muJKV[v] = this.nJKV[j][k].get(v) / sum;
+                            muJKV[v] = this.nJKV[j][k][v] / sum;
                         }
                     } else {
 //                        muJKV = new Dirichlet(n).nextDistribution();
@@ -291,7 +289,7 @@ public class JHMM {
                         if (Double.isNaN(muJKV[v])) {
                             System.out.println("R MU plain nan, j " + j + ", k " + k);
                             for (int i = 0; i < n; i++) {
-                                System.out.println(this.nJKV[j][k].get(v) + "\t" + muJKV[i]);
+                                System.out.println(this.nJKV[j][k][v] + "\t" + muJKV[i]);
                             }
                             System.out.println("sum:\t" + sum);
                         }
@@ -301,8 +299,8 @@ public class JHMM {
                         sum = 0d;
                         divisor = 0d;
                         for (int v = 0; v < n; v++) {
-                            muJKV[v] = this.f(this.nJKV[j][k].get(v) + AH);
-                            sum += this.nJKV[j][k].get(v);
+                            muJKV[v] = this.f(this.nJKV[j][k][v] + AH);
+                            sum += this.nJKV[j][k][v];
                         }
                         sum = this.f(sum + n * AH);
                         if (sum > 0) {
@@ -358,15 +356,15 @@ public class JHMM {
 
                 double max = Double.MIN_VALUE;
                 for (int l = 0; l < K; l++) {
-                    max = Math.max(max, this.nJKL[j][k].get(l));
+                    max = Math.max(max, this.nJKL[j][k][l]);
                 }
                 if (max < 1e-10) {
                     for (int l = 0; l < K; l++) {
-                        sum += this.nJKL[j][k].get(l);
+                        sum += this.nJKL[j][k][l];
                     }
                     if (sum > 0) {
                         for (int l = 0; l < K; l++) {
-                            rhoJKL[l] = this.nJKL[j][k].get(l) / sum;
+                            rhoJKL[l] = this.nJKL[j][k][l] / sum;
                         }
 //                    } else {
 //                        for (int l = 0; l < K; l++) {
@@ -383,7 +381,7 @@ public class JHMM {
                         if (Double.isNaN(rhoJKL[l])) {
                             System.out.println("R RHO plain nan, j " + j + ", k " + k);
                             for (int i = 0; i < n; i++) {
-                                System.out.println(this.nJKV[j - 1][k].get(l) + "\t" + rhoJKL[i]);
+                                System.out.println(this.nJKV[j - 1][k][l] + "\t" + rhoJKL[i]);
                             }
                             System.out.println("sum:\t" + sum);
                             System.exit(0);
@@ -394,8 +392,8 @@ public class JHMM {
                         sum = 0d;
                         divisor = 0d;
                         for (int l = 0; l < K; l++) {
-                            rhoJKL[l] = this.f(this.nJKL[j][k].get(l) + AZ);
-                            sum += this.nJKL[j][k].get(l);
+                            rhoJKL[l] = this.f(this.nJKL[j][k][l] + AZ);
+                            sum += this.nJKL[j][k][l];
                         }
                         sum = this.f(sum + K * AZ);
                         if (sum > 0) {
@@ -440,8 +438,8 @@ public class JHMM {
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
                 for (int v = 0; v < n; v++) {
-                    pi[k] += this.nJKV[j][k].get(v);
-                    sumK += this.nJKV[j][k].get(v);
+                    pi[k] += this.nJKV[j][k][v];
+                    sumK += this.nJKV[j][k][v];
                 }
             }
         }
@@ -461,22 +459,23 @@ public class JHMM {
             double ew = 0d;
 //            int nonzero = 0;
             for (int j = 0; j < L; j++) {
-                if (this.nneqPos.get(j) != 0d) {
-                    ew += this.nneqPos.get(j) / N;
+                if (this.nneqPos[j] != 0d) {
+                    ew += this.nneqPos[j] / N;
                 }
             }
             double a = 0d, b = 0d;
-            if (ew != 0d) {
-                ew /= L;
+//            if (ew != 0d) {
+//                ew /= L;
+                ew = .008;
                 a = 20;
                 b = (-a * ew + a + 2 * ew - 1) / ew;
-            }
+//            }
             for (int j = 0; j < L; j++) {
                 if (ew == 0d) {
                     this.eps[j] = 0;
                     this.antieps[j] = 1;
                 } else {
-                    this.eps[j] = f(this.nneqPos.get(j) + a) / f((coverage[j] * (n - 1)) + a + b);
+                    this.eps[j] = f(this.nneqPos[j] + a) / f((coverage[j] * (n - 1)) + a + b);
                     if (this.eps[j] > 1d / n) {
                         this.eps[j] = 0.05;
                     }
@@ -561,8 +560,8 @@ public class JHMM {
                 double max = 0;
                 double sum = 0;
                 for (int v = 0; v < n; v++) {
-                    max = Math.max(this.nJKV[j][k].get(v), max);
-                    sum += this.nJKV[j][k].get(v);
+                    max = Math.max(this.nJKV[j][k][v], max);
+                    sum += this.nJKV[j][k][v];
                 }
                 if (Math.abs(max - sum) < 1e-8) {
                     flats++;
@@ -597,8 +596,8 @@ public class JHMM {
                 double max = 0;
                 double sum = 0;
                 for (int l = 0; l < K; l++) {
-                    max = Math.max(this.nJKL[j][k].get(l), max);
-                    sum += this.nJKL[j][k].get(l);
+                    max = Math.max(this.nJKL[j][k][l], max);
+                    sum += this.nJKL[j][k][l];
                 }
                 if (max != sum) {
                     flats++;
@@ -610,17 +609,5 @@ public class JHMM {
 
     public double[][] getTauOmega() {
         return tauOmega;
-    }
-
-    public void addnJKV(int j, int k, int v, double value) {
-        this.nJKV[j][k].addAndGet(v, value);
-    }
-
-    public void addnJKL(int j, int k, int l, double value) {
-        this.nJKL[j][k].addAndGet(l, value);
-    }
-
-    public void addnneqPos(int l, double value) {
-        this.nneqPos.addAndGet(l, value);
     }
 }
