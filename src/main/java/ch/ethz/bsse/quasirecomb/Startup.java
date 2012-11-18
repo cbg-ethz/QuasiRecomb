@@ -73,9 +73,11 @@ public class Startup {
     @Option(name = "-ee")
     private double ee = .0001;
     @Option(name = "-d")
-    private double d = 1e-4;
+    private double d = 1e-6;
+    @Option(name = "-dd")
+    private double dd = 1e-8;
     @Option(name = "-p")
-    private double p = 1e-3;
+    private double p = 1e-10;
     @Option(name = "-parallelRestarts")
     private boolean parallelRestarts;
     @Option(name = "-flatEpsPrior")
@@ -83,11 +85,11 @@ public class Startup {
     @Option(name = "-noRecomb")
     private boolean noRecomb;
     @Option(name = "-alphah")
-    private double alphah = 0.0000001;
+    private double alphah = 0.05;
     @Option(name = "-alphaz")
-    private double alphaz = 0.0000001;
+    private double alphaz = 0.001;
     @Option(name = "-betaz")
-    private double betaz = 0.01;
+    private double betaz = 0.1;
     @Option(name = "-logBic")
     private boolean logBIC;
     @Option(name = "--recombine")
@@ -130,6 +132,14 @@ public class Startup {
     private boolean minmem;
     @Option(name = "-plot")
     private boolean plot;
+    @Option(name = "-debug")
+    private boolean debug;
+    @Option(name = "--html")
+    private boolean html;
+    @Option(name = "-optimum")
+    private String optimum;
+    @Option(name = "-perturb")
+    private int perturb = 0;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -156,11 +166,11 @@ public class Startup {
 
             Globals.getINSTANCE().setSTORAGE(!this.minmem);
             Globals.getINSTANCE().setSNAPSHOTS(this.snapshots);
-            Globals.getINSTANCE().setDEBUG(this.verbose);
+            Globals.getINSTANCE().setDEBUG(this.verbose || this.debug);
+            Globals.getINSTANCE().setPRINT(this.print || this.debug);
             Globals.getINSTANCE().setLOGGING(this.log);
             Globals.getINSTANCE().setLOG_BIC(this.logBIC);
             Globals.getINSTANCE().setSAMPLING_NUMBER(this.samplingNumber);
-            Globals.getINSTANCE().setPRINT(this.print);
             Globals.getINSTANCE().setPAIRED(this.paired);
             Globals.getINSTANCE().setPLOT(this.plot);
 
@@ -184,7 +194,7 @@ public class Startup {
                     this.output += "reads.fasta";
                 }
                 if (paired) {
-                    Sampling.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
+                    Sampling.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.ee, fArray, this.output);
                 } else {
                     Sampling.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
                 }
@@ -230,6 +240,20 @@ public class Startup {
                 Utils.saveFile(output + "dist.txt", sb.toString());
 //                System.out.println("Max: " + max);
                 System.out.println("");
+            } else if (this.html) {
+                OptimalResult or = null;
+                try {
+                    FileInputStream fis = new FileInputStream(input);
+                    try (ObjectInputStream in = new ObjectInputStream(fis)) {
+                        or = (OptimalResult) in.readObject();
+                    }
+                } catch (IOException | ClassNotFoundException ex) {
+                    System.err.println(ex);
+                }
+                if (or != null) {
+                    Summary s = new Summary();
+                    System.out.println(s.html(or));
+                }
             } else if (this.summary) {
                 OptimalResult or = null;
                 try {
@@ -265,14 +289,23 @@ public class Startup {
                 for (Map.Entry<String, Double> s : quasiDouble.entrySet()) {
                     quasiInt.put(s.getKey(), (int) (s.getValue().doubleValue() * 10000));
                 }
-                Pair[] phi = DistanceUtils.calculatePhi(FastaParser.parseHaplotypeFile(haplotypes), quasiInt);
-                System.out.println("q\tphi");
+                Map<String, String> haps = FastaParser.parseHaplotypeFile(haplotypes);
+                Pair[] precision = DistanceUtils.calculatePhi(haps, quasiInt);
+                String[] quasispecies = quasiInt.keySet().toArray(new String[quasiInt.size()]);
+                quasiInt.clear();
+                for(String h : haps.keySet()) {
+                    quasiInt.put(h,10000/haps.size());
+                }
+                haps.clear();
+                for (String q : quasispecies) {
+                    haps.put(q, "");
+                }
+                Pair[] recall = DistanceUtils.calculatePhi(haps, quasiInt);
+                System.out.println("q\tprecision\trecall");
                 int i = 0;
-                for (Pair phiLocal : phi) {
-                    System.out.println(i++ + "\t" + phiLocal.getValue0());
-                    if (((double) phiLocal.getValue0()) == 1d) {
-                        break;
-                    }
+                int max = Math.max(precision.length, recall.length);
+                for (int j = 0; j < max; j++) {
+                    System.out.println(i++ + "\t" + (j<precision.length?precision[j].getValue0():"1.0")+ "\t" + (j<recall.length?recall[j].getValue0():"1.0"));
                 }
 
             } else if (cut) {
@@ -290,6 +323,7 @@ public class Startup {
                     Kmax = Integer.parseInt(K);
                 }
 
+                Globals.getINSTANCE().setPERTURB(this.perturb);
                 Globals.getINSTANCE().setSTEPSIZE(this.steps);
                 Globals.getINSTANCE().setFLAT_EPSILON_PRIOR(this.flatEpsilonPrior);
                 Globals.getINSTANCE().setPCHANGE(this.p);
@@ -300,12 +334,14 @@ public class Startup {
                 Globals.getINSTANCE().setESTIMATION_EPSILON(this.e);
                 Globals.getINSTANCE().setSAMPLING_EPSILON(this.ee);
                 Globals.getINSTANCE().setDELTA_LLH(this.d);
+                Globals.getINSTANCE().setDELTA_REFINE_LLH(this.dd);
                 Globals.getINSTANCE().setREPEATS(this.m);
                 Globals.getINSTANCE().setDESIRED_REPEATS(this.t);
                 Globals.getINSTANCE().setDEBUG(this.verbose);
                 Globals.getINSTANCE().setSAVEPATH(output + File.separator);
                 Globals.getINSTANCE().setNO_RECOMB(this.noRecomb);
                 Globals.getINSTANCE().setFORCE_NO_RECOMB(this.noRecomb);
+                Globals.getINSTANCE().setOPTIMUM(this.optimum);
                 Preprocessing.workflow(this.input, Kmin, Kmax);
                 System.exit(9);
             }

@@ -52,10 +52,23 @@ public class Random {
                         }
                         rho[j][k][maxIndex] = rho[j][k][k];
                         rho[j][k][k] = max;
-                        if (max < 0.95) {
+                        if (max < 0.90 || max >= 1) {
                             retry = true;
                         }
                     } while (retry);
+                    double max = 0;
+                    for (int l = 0; l < K; l++) {
+                        max = Math.max(max, rho[j][k][l]);
+                    }
+                    if (Math.abs(max - 1d) < 1e-8) {
+                        for (int l = 0; l < K; l++) {
+                            if (rho[j][k][l] < max) {
+                                rho[j][k][l] = 0d;
+                            } else {
+                                rho[j][k][l] = 1;
+                            }
+                        }
+                    }
                 }
             }
         } else {
@@ -72,7 +85,7 @@ public class Random {
 
     public static double[] generateInitPi(int L, int K) {
 //        if (Globals.getINSTANCE().isNO_RECOMB()) {
-            return new Dirichlet(K, 2).nextDistribution();
+        return new Dirichlet(K, 2).nextDistribution();
 //        } else {
 //            double[] pi = new double[K];
 //            for (int k = 1; k <= K; k++) {
@@ -88,13 +101,13 @@ public class Random {
         for (int j = L - 1; j >= 0; j--) {
 //            Dirichlet d = new Dirichlet(Globals.getINSTANCE().getMU_PRIOR()[j]);
             for (int k = K - 1; k >= 0; k--) {
-                if (Globals.getINSTANCE().isNO_RECOMB()) {
-                    mu[j][k] = new Dirichlet(n, 2).nextDistribution();
-                } else {
-                    for (int i = n - 1; i >= 0; i--) {
-                        mu[j][k][i] = 1d / n;
-                    }
-                }
+//                if (Globals.getINSTANCE().isNO_RECOMB()) {
+                    mu[j][k] = new Dirichlet(n, 100).nextDistribution();
+//                } else {
+//                    for (int i = n - 1; i >= 0; i--) {
+//                        mu[j][k][i] = 1d / n;
+//                    }
+//                }
             }
         }
         return mu;

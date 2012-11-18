@@ -14,7 +14,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
  */
 public class ReadHMMStatic {
 
-    public static double computeFB(JHMM jhmm, Read read) {
+    public static double computeFB(JHMMI jhmm, Read read) {
         TempJHMMStorage storage = jhmm.getStorage();
         int begin = read.getBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         int length = read.getLength();
@@ -30,12 +30,11 @@ public class ReadHMMStatic {
             for (int k = 0; k < jhmm.getK(); k++) {
                 for (int v = 0; v < jhmm.getn(); v++) {
                     if (j == 0) {
-                        fJKV[j][k][v] = jhmm.getTauOmega()[0][jGlobal];
-                        fJKV[j][k][v] *= jhmm.getPi()[k];
+                        fJKV[j][k][v] = jhmm.getPi()[k];
                     } else {
                         double sumL = 0d;
                         for (int l = 0; l < jhmm.getK(); l++) {
-                            sumL += fJK[j - 1][l] * jhmm.getRho()[jGlobal - 1][l][k];
+                            sumL += fJK[j - 1][l];// * jhmm.getRho()[jGlobal - 1][l][k];
                         }
                         try {
                             switch (read.getPosition(j)) {
@@ -98,7 +97,12 @@ public class ReadHMMStatic {
             }
         }
         for (int j = length - 1; j >= 0; j--) {
-            likelihood += Math.log(c[j]);
+            if (read.isHit(j)) {
+                likelihood += Math.log(c[j]);
+//                if (likelihood + Math.log(c[j]) > 0) {
+//                    System.err.println("");
+//                }
+            }
             int jGlobal = j + begin;
             for (int k = 0; k < jhmm.getK(); k++) {
                 if (j == length - 1) {
@@ -113,27 +117,21 @@ public class ReadHMMStatic {
                             }
                             switch (read.getPosition(j)) {
                                 case WATSON_HIT:
-//                                System.out.println("w_hit");
                                     sumV *= 1 - jhmm.getTauOmega()[1][jGlobal];
                                     break;
                                 case WATSON_OUT:
-//                                System.out.println("w_out");
                                     sumV *= jhmm.getTauOmega()[1][jGlobal];
                                     break;
                                 case INSERTION:
-//                                System.out.println("insert");
                                     sumV *= 1 - jhmm.getTauOmega()[2][jGlobal];
                                     break;
                                 case CRICK_IN:
-//                                System.out.println("c_in");
                                     sumV *= jhmm.getTauOmega()[2][jGlobal];
                                     break;
                                 case CRICK_HIT:
-//                                System.out.println("c_hit");
                                     sumV *= 1 - jhmm.getTauOmega()[3][jGlobal];
                                     break;
                                 case CRICK_OUT:
-//                                System.out.println("c_out");
                                     break;
                             }
                             bJK[j][k] += sumV * jhmm.getRho()[jGlobal][k][l] * bJK[j + 1][l];

@@ -44,19 +44,27 @@ public class EM extends Utils {
     private void blackbox(Read[] reads, int N, int L, int K, int n) {
         Globals.getINSTANCE().setLOG(new StringBuilder());
         Globals.getINSTANCE().setMAX_LLH(Double.NEGATIVE_INFINITY);
-        double maxLLH = Double.NEGATIVE_INFINITY;
         String pathOptimum = null;
-        for (int i = 0; i < Globals.getINSTANCE().getREPEATS(); i++) {
-            SingleEM sem = new SingleEM(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), i);
-            if (sem.getLoglikelihood() > maxLLH) {
-                maxLLH = sem.getLoglikelihood();
-                pathOptimum = sem.getOptimumPath();
-            }
+        if (K == 1 || Globals.getINSTANCE().isFORCE_NO_RECOMB()) {
+            Globals.getINSTANCE().setNO_RECOMB(true);
+        } else {
+            Globals.getINSTANCE().setNO_RECOMB(false);
         }
-        
+        if (Globals.getINSTANCE().getOPTIMUM() == null) {
+            double maxLLH = Double.NEGATIVE_INFINITY;
+            for (int i = 0; i < Globals.getINSTANCE().getREPEATS(); i++) {
+                SingleEM sem = new SingleEM(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), i);
+                if (sem.getLoglikelihood() > maxLLH) {
+                    maxLLH = sem.getLoglikelihood();
+                    pathOptimum = sem.getOptimumPath();
+                }
+            }
+        } else {
+            pathOptimum = Globals.getINSTANCE().getOPTIMUM();
+        }
         long time = System.currentTimeMillis();
-        System.out.println("reading");
-        
+        System.out.println("reading " + pathOptimum);
+
         try {
             FileInputStream fis = new FileInputStream(pathOptimum);
             try (ObjectInputStream in = new ObjectInputStream(fis)) {
@@ -65,17 +73,17 @@ public class EM extends Utils {
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println(ex);
         }
-        
+
         System.out.println("read: " + (System.currentTimeMillis() - time));
-
-        ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH());
-        modelSampling.saveQuasispeciesOnly(Globals.getINSTANCE().getSAVEPATH() + "quasispecies_preliminary.fasta");
-
+        if (Globals.getINSTANCE().getOPTIMUM() == null) {
+            ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH());
+            modelSampling.saveQuasispeciesOnly(Globals.getINSTANCE().getSAVEPATH() + "quasispecies_preliminary.fasta");
+        }
 //        System.out.println("\tBIC: " + (int) or.getBIC());
         Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
         System.out.print("\n");
 //        if (!Globals.NO_REFINE) {
-        SingleEM bestEM = new SingleEM(or, 1e-8, reads);
+        SingleEM bestEM = new SingleEM(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
         this.or = bestEM.getOptimalResult();
 //        }
         Globals.getINSTANCE().log("\n" + new Summary().print(or));

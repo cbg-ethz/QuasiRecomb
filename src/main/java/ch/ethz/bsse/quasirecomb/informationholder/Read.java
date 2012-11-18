@@ -152,8 +152,8 @@ public class Read {
         } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
             return BitMagic.getPosition(this.crickSequence, j - this.getWatsonLength() - this.getInsertSize());
         } else {
-            return -1;
-//            throw new IllegalAccessError("No such sequence space. j=" + j);
+//            return -1;
+            throw new IllegalAccessError("No such sequence space. j=" + j);
         }
     }
 

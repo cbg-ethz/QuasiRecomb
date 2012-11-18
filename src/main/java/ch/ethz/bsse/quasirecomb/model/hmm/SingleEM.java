@@ -77,22 +77,20 @@ public class SingleEM {
         if (!Globals.getINSTANCE().isSNAPSHOTS()) {
             this.snapshot();
         }
-        
+
         String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
         OptimalResult localOr = new OptimalResult(N, K, L, n,
                 jhmm.getRho(),
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
-                -1, jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
         Utils.saveOptimum(save + ".optimum", localOr);
-        
+
         return Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations + ".optimum";
     }
 
     private void snapshot() {
-        long time = System.currentTimeMillis();
-//        System.out.println("saving");
         String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
         OptimalResult localOr = new OptimalResult(N, K, L, n,
                 jhmm.getRho(),
@@ -134,7 +132,15 @@ public class SingleEM {
             log(loglikelihood);
 
             if (Globals.getINSTANCE().isDEBUG()) {
-                Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
+                if (loglikelihood < 0 && oldllh < 0) {
+                    Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
+                } else if (loglikelihood > 0 && oldllh > 0) {
+                    Globals.getINSTANCE().log((loglikelihood - oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
+                } else if (loglikelihood > 0 && oldllh < 0) {
+                    Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
+                    
+                } 
+//                Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + jhmm.getParametersChanged() + "\t");
                 Globals.getINSTANCE().log(loglikelihood + "\n");
             }
             jhmm.restart();
@@ -143,6 +149,7 @@ public class SingleEM {
                 this.snapshot();
             }
 //        } while (Math.abs((oldllh - llh) / llh) > this.delta&& jhmm.getParametersChanged() != 0);
+
         } while (Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta);
 //        } while (iterations <= 500);
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
@@ -153,6 +160,70 @@ public class SingleEM {
         if (Globals.getINSTANCE().isDEBUG()) {
             Globals.getINSTANCE().log("####");
         }
+    }
+    
+    private double calcBIC() {
+        double BIC_current = this.jhmm.getLoglikelihood();
+        // count free parameters
+        int freeParameters = 0;
+        double ERROR = 1e-15;
+
+        double[][][] rho = jhmm.getRho();
+        double[][][] mu = jhmm.getMu();
+        double[] pi = jhmm.getPi();
+        double[] eps = jhmm.getEps();
+
+        for (int j = 0; j < mu.length; j++) {
+            for (int k = 0; k < mu[j].length; k++) {
+
+                //mu
+                boolean different = false;
+                for (int v = 1; v < mu[j][k].length; v++) {
+                    if (Math.abs(mu[j][k][v - 1] - mu[j][k][v]) > ERROR) {
+                        different = true;
+                        break;
+                    }
+                }
+                if (different) {
+                    for (int v = 0; v < mu[j][k].length; v++) {
+                        if (mu[j][k][v] > ERROR) {
+                            freeParameters++;
+                        }
+                    }
+                }
+
+                //rho
+                if (j < L - 1) {
+                    if (!Globals.getINSTANCE().isNO_RECOMB()) {
+                        different = false;
+                        for (int l = 1; l < rho[j][k].length; l++) {
+                            if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
+                                different = true;
+                                break;
+                            }
+                        }
+                        if (different) {
+                            for (int l = 0; l < rho[j][k].length; l++) {
+                                if (rho[j][k][l] > ERROR) {
+                                    freeParameters++;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (eps[j] > ERROR) {
+                    freeParameters++;
+                }
+            }
+
+            for (int k = 0; k < pi.length; k++) {
+                if (pi[k] > ERROR) {
+                    freeParameters++;
+                }
+            }
+        }
+        BIC_current -= (freeParameters / 2d) * Math.log(N);
+        return BIC_current;
     }
 
     public void calcBic() {

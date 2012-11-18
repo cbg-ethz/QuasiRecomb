@@ -11,11 +11,7 @@ package ch.ethz.bsse.quasirecomb.utils;
 public class BitMagic {
 
     private static int getBit(byte[] data, int pos) {
-        int posByte = pos / 8;
-        int posBit = pos % 8;
-        byte valByte = data[posByte];
-        int valInt = valByte >> (8 - (posBit + 1)) & 0x0001;
-        return valInt;
+        return data[pos / 8] >> (8 - ((pos % 8) + 1)) & 0x0001;
     }
 
     private static void setBit(byte[] data, int pos, int val) {

@@ -40,7 +40,7 @@ import java.util.logging.Logger;
  *
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class JHMM implements JHMMI {
+public class JHMMRefine implements JHMMI {
 
     private int N;
     private int L;
@@ -65,14 +65,14 @@ public class JHMM implements JHMMI {
     private Map<Integer, TempJHMMStorage> garage = new ConcurrentHashMap<>();
     private final List<Integer> available = new ArrayList<>();
 
-    public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon) {
+    public JHMMRefine(Read[] reads, int N, int L, int K, int n, double epsilon) {
         this(reads, N, L, K, n, epsilon,
                 Random.generateInitRho(L - 1, K),
                 Random.generateInitPi(L, K),
                 Random.generateMuInit(L, K, n));
     }
 
-    public JHMM(Read[] reads, int N, int L, int K, int n, double eps, double[][][] rho, double[] pi, double[][][] mu) {
+    public JHMMRefine(Read[] reads, int N, int L, int K, int n, double eps, double[][][] rho, double[] pi, double[][][] mu) {
         this.eps = new double[L];
         this.antieps = new double[L];
         for (int j = 0; j < L; j++) {
@@ -82,7 +82,7 @@ public class JHMM implements JHMMI {
         this.prepare(reads, N, L, K, n, rho, pi, mu);
     }
 
-    public JHMM(Read[] reads, int N, int L, int K, int n, double[] eps, double[][][] rho, double[] pi, double[][][] mu) {
+    public JHMMRefine(Read[] reads, int N, int L, int K, int n, double[] eps, double[][][] rho, double[] pi, double[][][] mu) {
         this.eps = eps;
         this.antieps = new double[L];
         for (int j = 0; j < L; j++) {
@@ -161,7 +161,6 @@ public class JHMM implements JHMMI {
         calculate();
     }
 
-    @Override
     public void restart() {
         this.restart++;
         this.parametersChanged = 0;
@@ -192,7 +191,7 @@ public class JHMM implements JHMMI {
                 loglikelihood += futureTask.get();
                 Globals.getINSTANCE().printPercentage(K, (double) j / reads.length);
             } catch (InterruptedException | ExecutionException ex) {
-                Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(JHMMRefine.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         if (Globals.getINSTANCE().isSTORAGE()) {
@@ -218,7 +217,6 @@ public class JHMM implements JHMMI {
         }
     }
 
-    @Override
     public TempJHMMStorage getStorage() {
         synchronized (this.available) {
             if (available.iterator().hasNext()) {
@@ -231,7 +229,6 @@ public class JHMM implements JHMMI {
         }
     }
 
-    @Override
     public void free(int id) {
         synchronized (this.available) {
             this.available.add(id);
@@ -267,13 +264,13 @@ public class JHMM implements JHMMI {
                         muJKV[v] = this.nJKV[j][k][v] / sum;
                     }
                     if (Globals.getINSTANCE().getALPHA_H() >= 0) {
-                        muJKV = regularizeOnce(this.nJKV[j][k].clone(), Globals.getINSTANCE().getALPHA_H());
+                        muJKV = regularizeOnce(muJKV.clone(), Globals.getINSTANCE().getALPHA_H());
                     }
                 } else {
                     for (int v = 0; v < n; v++) {
                         muJKV[v] = 1d / n;
                     }
-                    if (restart < Globals.getINSTANCE().getPERTURB()) {
+                    if (restart < 50) {
                         sum = 0;
                         for (int v = 0; v < n; v++) {
                             muJKV[v] += Math.random() / (10 * (restart + 1));
@@ -286,13 +283,13 @@ public class JHMM implements JHMMI {
                 }
                 for (int v = 0; v < n; v++) {
                     this.changed(mu[j][k][v], muJKV[v]);
+
                     mu[j][k][v] = muJKV[v];
                     if (Double.isNaN(muJKV[v])) {
                         System.out.println("R nan, j " + j + ", k " + k);
                         for (int i = 0; i < n; i++) {
                             System.out.println(this.nJKV[j][k][v] + "\t" + muJKV[i]);
                         }
-                        System.out.println("sum:\t" + sum);
                     }
                 }
             }
@@ -337,17 +334,6 @@ public class JHMM implements JHMMI {
                     regCounts[v] = 0d;
                 } else {
                     regCounts[v] = 1;
-                }
-            }
-        } else {
-            if (restart < Globals.getINSTANCE().getPERTURB()) {
-                sum = 0;
-                for (int l = 0; l < x; l++) {
-                    regCounts[l] += Math.random() / (10 * (restart + 1));
-                    sum += regCounts[l];
-                }
-                for (int l = 0; l < x; l++) {
-                    regCounts[l] /= sum;
                 }
             }
         }
@@ -440,17 +426,6 @@ public class JHMM implements JHMMI {
                                     rhoJKL[l] = 1;
                                 }
                             }
-                        } else {
-                            if (restart < Globals.getINSTANCE().getPERTURB()) {
-                                sum = 0;
-                                for (int l = 0; l < K; l++) {
-                                    rhoJKL[l] += Math.random() / (10 * (restart + 1));
-                                    sum += rhoJKL[l];
-                                }
-                                for (int l = 0; l < K; l++) {
-                                    rhoJKL[l] /= sum;
-                                }
-                            }
                         }
                     }
                     for (int l = 0; l < K; l++) {
@@ -496,25 +471,6 @@ public class JHMM implements JHMMI {
                         rho[j - 1][k][l] = rhoJKL[l];
                     }
                 }
-
-//                max = 0;
-//                int m = -1;
-//                for (int l = 0; l < K; l++) {
-//                    if (max < rho[j - 1][k][l]) {
-//                        max = rho[j - 1][k][l];
-//                        m = l;
-//                    }
-//                }
-//
-//                if (Math.abs(max - 1d) < 1e-8 && m != k) {
-//                    for (int l = 0; l < K; l++) {
-//                        if (k != l) {
-//                            rho[j - 1][k][l] = 0d;
-//                        } else {
-//                            rho[j - 1][k][l] = 1;
-//                        }
-//                    }
-//                }
             }
         }
     }
@@ -582,67 +538,54 @@ public class JHMM implements JHMMI {
         }
     }
 
-    @Override
     public int getK() {
         return K;
     }
 
-    @Override
     public int getL() {
         return L;
     }
 
-    @Override
     public int getN() {
         return N;
     }
 
-    @Override
     public int getn() {
         return n;
     }
 
-    @Override
     public double[] getEps() {
         return eps;
     }
 
-    @Override
     public double[] getAntieps() {
         return antieps;
     }
 
-    @Override
     public double getLoglikelihood() {
         return loglikelihood;
     }
 
-    @Override
     public double[][][] getMu() {
         return mu;
     }
 
-    @Override
     public double[] getPi() {
         return pi;
     }
 
-    @Override
     public double[][][] getRho() {
         return rho;
     }
 
-    @Override
     public int getRestart() {
         return restart;
     }
 
-    @Override
     public int getParametersChanged() {
         return parametersChanged;
     }
 
-    @Override
     public int getMuFlats() {
         int flats = 0;
         for (int j = 0; j < L; j++) {
@@ -663,7 +606,6 @@ public class JHMM implements JHMMI {
         return flats;
     }
 
-    @Override
     public int getNjkvFlats() {
         int flats = 0;
         for (int j = 0; j < L; j++) {
@@ -682,7 +624,6 @@ public class JHMM implements JHMMI {
         return flats;
     }
 
-    @Override
     public int getRhoFlats() {
         int flats = 0;
         for (int j = 0; j < L - 1; j++) {
@@ -701,7 +642,6 @@ public class JHMM implements JHMMI {
         return flats;
     }
 
-    @Override
     public int getNjklFlats() {
         int flats = 0;
         for (int j = 0; j < L - 1; j++) {
@@ -720,7 +660,6 @@ public class JHMM implements JHMMI {
         return flats;
     }
 
-    @Override
     public double[][] getTauOmega() {
         return tauOmega;
     }

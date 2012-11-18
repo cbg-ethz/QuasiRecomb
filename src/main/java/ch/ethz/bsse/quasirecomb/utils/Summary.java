@@ -133,7 +133,7 @@ public class Summary extends Utils {
                             flat = true;
                             break;
                         }
-                        if (or.getRho()[j][k][l] == 1d && k!=l) {
+                        if (or.getRho()[j][k][l] == 1d && k != l) {
                             flat = true;
                             break;
                         }
@@ -170,7 +170,8 @@ public class Summary extends Utils {
                 boolean flat = false;
                 if (j < or.getL() - 1) {
                     for (int l = 0; l < or.getK(); l++) {
-                        if (or.getRho()[j][k][l] > 1e-20 && or.getRho()[j][k][l] != 1d) {
+//                        if (or.getRho()[j][k][l] > 1e-20 && or.getRho()[j][k][l] != 1d) {
+                        if (k == l && or.getRho()[j][k][l] != 1d) {
                             flat = true;
                             break;
                         }

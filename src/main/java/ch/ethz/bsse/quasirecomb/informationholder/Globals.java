@@ -47,42 +47,44 @@ public class Globals {
     private boolean PLOT;
     private boolean STORAGE;
     private boolean SNAPSHOTS;
-    private double[][] MU_PRIOR;
-    private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
-    private int ALIGNMENT_END = Integer.MIN_VALUE;
     private boolean FLAT_EPSILON_PRIOR;
-    private double PCHANGE;
-    private double BETA_Z;
-    private double ALPHA_Z;
-    private double ALPHA_H;
-    private String[] HAPLOTYPE_ARRAY_EMPIRICAL;
-    private String SAVEPATH;
-    private double ESTIMATION_EPSILON;
-    private double SAMPLING_EPSILON;
-    private double DELTA_LLH = 1e-8;
-    private final ForkJoinPool fjPool = new ForkJoinPool();
     private boolean DEBUG;
-    private List<Integer> runtime = new LinkedList<>();
     private boolean NO_RECOMB = false;
     private boolean FORCE_NO_RECOMB = false;
-    private int REPEATS;
-    private int DESIRED_REPEATS;
-    private int STEPSIZE = 100;
-    private int PARALLEL_RESTARTS_UPPER_BOUND = 10;
     private boolean PARALLEL_RESTARTS = false;
-    private double MAX_LLH = Double.NEGATIVE_INFINITY;
     private boolean LOG_BIC = false;
     private boolean LOGGING = false;
     private boolean PRINT = true;
     private boolean MODELSELECTION;
-    private int SAMPLING_NUMBER;
-    private StringBuilder LOG = new StringBuilder();
-    private long start = System.currentTimeMillis();
     private boolean PAIRED = false;
-    private final DateFormat df = new SimpleDateFormat("HH:mm:ss");
+    private double PCHANGE;
+    private double BETA_Z;
+    private double ALPHA_Z;
+    private double ALPHA_H;
+    private double ESTIMATION_EPSILON;
+    private double SAMPLING_EPSILON;
+    private double DELTA_LLH;
+    private double DELTA_REFINE_LLH;
+    private double MAX_LLH = Double.NEGATIVE_INFINITY;
+    private double[][] MU_PRIOR;
+    private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
+    private int ALIGNMENT_END = Integer.MIN_VALUE;
+    private int REPEATS;
+    private int DESIRED_REPEATS;
+    private int STEPSIZE = 100;
+    private int PARALLEL_RESTARTS_UPPER_BOUND = 10;
+    private int SAMPLING_NUMBER;
+    private int PERTURB;
     private final int cpus = Runtime.getRuntime().availableProcessors();
-    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-//    private final ExecutorService executor = Executors.newFixedThreadPool(1);
+    private List<Integer> runtime = new LinkedList<>();
+    private long start = System.currentTimeMillis();
+    private String OPTIMUM;
+    private String[] HAPLOTYPE_ARRAY_EMPIRICAL;
+    private String SAVEPATH;
+    private StringBuilder LOG = new StringBuilder();
+    private final DateFormat df = new SimpleDateFormat("HH:mm:ss");
+    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+    private final ForkJoinPool fjPool = new ForkJoinPool();
 
     public synchronized void log(Object o) {
         if (PRINT) {
@@ -160,6 +162,14 @@ public class Globals {
         return df.format(new Date(System.currentTimeMillis() - start));
     }
 
+    public void setDELTA_REFINE_LLH(double DELTA_REFINE_LLH) {
+        this.DELTA_REFINE_LLH = DELTA_REFINE_LLH;
+    }
+
+    public double getDELTA_REFINE_LLH() {
+        return DELTA_REFINE_LLH;
+    }
+    
     public boolean isPLOT() {
         return PLOT;
     }
@@ -463,4 +473,21 @@ public class Globals {
     public void setMU_PRIOR(double[][] MU_PRIOR) {
         this.MU_PRIOR = MU_PRIOR;
     }
+
+    public String getOPTIMUM() {
+        return OPTIMUM;
+    }
+
+    public void setOPTIMUM(String OPTIMUM) {
+        this.OPTIMUM = OPTIMUM;
+    }
+
+    public int getPERTURB() {
+        return PERTURB;
+    }
+
+    public void setPERTURB(int PERTURB) {
+        this.PERTURB = PERTURB;
+    }
+    
 }

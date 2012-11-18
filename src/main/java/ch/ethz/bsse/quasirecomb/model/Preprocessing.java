@@ -106,11 +106,13 @@ public class Preprocessing {
         System.gc();
         int n = countChars(reads);
         Globals.getINSTANCE().print("Parsing\t100%");
+        Globals.getINSTANCE().println("Unique reads\t"+reads.length);
         Globals.getINSTANCE().println("Plotting\t");
 //        System.exit(9);
         if (Globals.getINSTANCE().isPLOT()) {
             Plot.plotCoverage(reads);
         }
+        
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
         ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
         modelSampling.save();
@@ -120,8 +122,13 @@ public class Preprocessing {
     private static int countChars(Read[] rs) {
         Map<Byte, Boolean> map = new HashMap<>();
         for (Read r : rs) {
-            for (int i = 0; i < r.getLength(); i++) {
+            for (int i = 0; i < r.getWatsonLength(); i++) {
                 map.put(r.getBase(i), Boolean.TRUE);
+            }
+            if (r.isPaired()) {
+                for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
+                    map.put(r.getBase(i-r.getCrickBegin()), Boolean.TRUE);
+                }
             }
         }
         return map.keySet().size();

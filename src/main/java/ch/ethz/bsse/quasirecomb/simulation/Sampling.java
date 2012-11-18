@@ -23,6 +23,7 @@ import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -38,7 +39,14 @@ public class Sampling {
 
     public final static String newline = System.getProperty("line.separator");
 
-    public static void fromHaplotypesGlobalPaired(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
+    public static void fromHaplotypesGlobalPaired(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, String savePath) {
+        Map<Byte, Boolean> map = new HashMap<>();
+        for (String h : haplotypes) {
+            for (int i = 0; i < h.length(); i++) {
+                map.put((byte)h.charAt(i), Boolean.TRUE);
+            }
+        }
+        int n = map.keySet().size();
         int insertSize = 50;
         int readLength = 250;
         int fragmentSize = insertSize + 2 * readLength;
@@ -50,21 +58,6 @@ public class Sampling {
         Frequency<Integer> frequency = new Frequency<>(freqMap);
         BetaDistribution beta = new BetaDistribution(1, 5);
 
-        double[] sample = null;
-        try {
-            sample = beta.sample(N);
-            double max = 0;
-            for (int i = 0; i < N; i++) {
-                max = Math.max(sample[i], max);
-            }
-            for (int i = 0; i < N; i++) {
-                sample[i] /= max;
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(Sampling.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-
         Read[] reads1 = new Read[N];
         Read[] reads2 = new Read[N];
         Random rand = new Random();
@@ -73,30 +66,13 @@ public class Sampling {
 
             int start = 0;
             int length = 0;
-//                length = (int)(Math.random()*300);
             length = readLength;
-//            if (Math.random() > .5) {
-//                length -= (int) (Math.random() * 100);
-//            } else {
-//                length += (int) (Math.random() * 100);    
-//            }
             if (i > ((readLength * N) / L)) {
                 start = rand.nextInt(L-fragmentSize);
-//                start -= fragmentSize;
-//                for (;;) {
-//                    if (start < 0) {
-//                        start += fragmentSize;
-//                    } else if (start + fragmentSize >= L) {
-//                        start -= fragmentSize;
-//                    } else {
-//                        break;
-//                    }
-//                }
             }
             if (i > N - ((250d * N) / L)) {
                 start = L - fragmentSize;
             }
-//            System.out.println(start);
             char[] readArray = new char[length];
 
 
