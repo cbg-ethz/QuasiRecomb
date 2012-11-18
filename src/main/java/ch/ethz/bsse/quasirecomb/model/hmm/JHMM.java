@@ -267,7 +267,7 @@ public class JHMM implements JHMMI {
                         muJKV[v] = this.nJKV[j][k][v] / sum;
                     }
                     if (Globals.getINSTANCE().getALPHA_H() >= 0) {
-                        muJKV = regularizeOnce(this.nJKV[j][k].clone(), Globals.getINSTANCE().getALPHA_H());
+//                        muJKV = regularizeOnce(this.nJKV[j][k].clone(), Globals.getINSTANCE().getALPHA_H());
                     }
                 } else {
                     for (int v = 0; v < n; v++) {
