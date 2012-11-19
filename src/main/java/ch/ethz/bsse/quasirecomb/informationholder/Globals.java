@@ -44,6 +44,7 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean PDELTA;
     private boolean PLOT;
     private boolean STORAGE;
     private boolean SNAPSHOTS;
@@ -162,6 +163,14 @@ public class Globals {
         return df.format(new Date(System.currentTimeMillis() - start));
     }
 
+    public boolean isPDELTA() {
+        return PDELTA;
+    }
+
+    public void setPDELTA(boolean PDELTA) {
+        this.PDELTA = PDELTA;
+    }
+    
     public void setDELTA_REFINE_LLH(double DELTA_REFINE_LLH) {
         this.DELTA_REFINE_LLH = DELTA_REFINE_LLH;
     }

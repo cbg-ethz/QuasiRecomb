@@ -125,16 +125,16 @@ public class JHMM implements JHMMI {
         int[] omega2 = new int[L + 1];
         for (Read r : reads) {
             for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
-                this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+                this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
             }
-            tau1[r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
-            omega1[r.getWatsonEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+            tau1[r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+            omega1[r.getWatsonEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
             if (r.isPaired()) {
                 for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
-                    this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+                    this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
                 }
-                tau2[r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
-                omega2[r.getCrickEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()]++;
+                tau2[r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+                omega2[r.getCrickEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
             }
         }
         StringBuilder sb = new StringBuilder();
@@ -263,26 +263,27 @@ public class JHMM implements JHMMI {
                     sum += this.nJKV[j][k][v];
                 }
                 if (sum > 0) {
-                    for (int v = 0; v < n; v++) {
-                        muJKV[v] = this.nJKV[j][k][v] / sum;
-                    }
+//                    for (int v = 0; v < n; v++) {
+//                        muJKV[v] = this.nJKV[j][k][v] / sum;
+//                    }
                     if (Globals.getINSTANCE().getALPHA_H() >= 0) {
-//                        muJKV = regularizeOnce(this.nJKV[j][k].clone(), Globals.getINSTANCE().getALPHA_H());
+                        muJKV = regularize(this.nJKV[j][k].clone(), Globals.getINSTANCE().getALPHA_H());
                     }
                 } else {
-                    for (int v = 0; v < n; v++) {
-                        muJKV[v] = 1d / n;
-                    }
-                    if (restart < Globals.getINSTANCE().getPERTURB()) {
-                        sum = 0;
-                        for (int v = 0; v < n; v++) {
-                            muJKV[v] += Math.random() / (10 * (restart + 1));
-                            sum += muJKV[v];
-                        }
-                        for (int v = 0; v < n; v++) {
-                            muJKV[v] /= sum;
-                        }
-                    }
+                    System.err.println("MU TOO SMALL");
+//                    for (int v = 0; v < n; v++) {
+//                        muJKV[v] = 1d / n;
+//                    }
+//                    if (restart < Globals.getINSTANCE().getPERTURB()) {
+//                        sum = 0;
+//                        for (int v = 0; v < n; v++) {
+//                            muJKV[v] += Math.random() / (10 * (restart + 1));
+//                            sum += muJKV[v];
+//                        }
+//                        for (int v = 0; v < n; v++) {
+//                            muJKV[v] /= sum;
+//                        }
+//                    }
                 }
                 for (int v = 0; v < n; v++) {
                     this.changed(mu[j][k][v], muJKV[v]);
@@ -411,15 +412,13 @@ public class JHMM implements JHMMI {
         double[] rhoJKL = new double[K];
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double AZ = Globals.getINSTANCE().getALPHA_Z();
-                double divisor;
-                double sum = 0d;
-
                 double max = Double.MIN_VALUE;
+                double sum = 0;
                 for (int l = 0; l < K; l++) {
                     max = Math.max(max, this.nJKL[j][k][l]);
                 }
                 if (max < 1) {
+//                    System.err.println("RHO TOO SMALL");
                     for (int l = 0; l < K; l++) {
                         sum += this.nJKL[j][k][l];
                     }
@@ -453,68 +452,13 @@ public class JHMM implements JHMMI {
                             }
                         }
                     }
-                    for (int l = 0; l < K; l++) {
-                        this.changed(rho[j - 1][k][l], rhoJKL[l]);
-                        rho[j - 1][k][l] = rhoJKL[l];
-                        if (Double.isNaN(rhoJKL[l])) {
-                            System.out.println("R RHO plain nan, j " + j + ", k " + k);
-                            for (int i = 0; i < n; i++) {
-                                System.out.println(this.nJKV[j - 1][k][l] + "\t" + rhoJKL[i]);
-                            }
-                            System.out.println("sum:\t" + sum);
-                            System.exit(0);
-                        }
-                    }
                 } else {
-                    do {
-                        sum = 0d;
-                        divisor = 0d;
-                        for (int l = 0; l < K; l++) {
-                            rhoJKL[l] = this.f(this.nJKL[j][k][l] + AZ);
-                            sum += this.nJKL[j][k][l];
-                        }
-                        sum = this.f(sum + K * AZ);
-                        if (sum > 0) {
-                            for (int l = 0; l < K; l++) {
-                                rhoJKL[l] /= sum;
-                                divisor += rhoJKL[l];
-                            }
-                            if (divisor > 0) {
-                                for (int l = 0; l < K; l++) {
-                                    rhoJKL[l] /= divisor;
-                                }
-                            } else {
-                                AZ *= 10;
-                            }
-                        } else {
-                            AZ *= 10;
-                        }
-                    } while (sum == 0 || divisor == 0);
-
-                    for (int l = 0; l < K; l++) {
-                        this.changed(rho[j - 1][k][l], rhoJKL[l]);
-                        rho[j - 1][k][l] = rhoJKL[l];
-                    }
+                    rhoJKL = regularize(this.nJKL[j][k].clone(), Globals.getINSTANCE().getALPHA_Z());
                 }
-
-//                max = 0;
-//                int m = -1;
-//                for (int l = 0; l < K; l++) {
-//                    if (max < rho[j - 1][k][l]) {
-//                        max = rho[j - 1][k][l];
-//                        m = l;
-//                    }
-//                }
-//
-//                if (Math.abs(max - 1d) < 1e-8 && m != k) {
-//                    for (int l = 0; l < K; l++) {
-//                        if (k != l) {
-//                            rho[j - 1][k][l] = 0d;
-//                        } else {
-//                            rho[j - 1][k][l] = 1;
-//                        }
-//                    }
-//                }
+                for (int l = 0; l < K; l++) {
+                    this.changed(rho[j - 1][k][l], rhoJKL[l]);
+                    rho[j - 1][k][l] = rhoJKL[l];
+                }
             }
         }
     }
@@ -523,11 +467,7 @@ public class JHMM implements JHMMI {
         if (upsilon == 0d) {
             return 0d;
         }
-        return Math.exp(rho_phi(upsilon));
-    }
-
-    private double rho_phi(double upsilon) {
-        return Dirichlet.digamma(upsilon);
+        return Math.exp(Dirichlet.digamma(upsilon));
     }
 
     private void calcPi() {

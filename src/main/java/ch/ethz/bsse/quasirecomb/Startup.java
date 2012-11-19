@@ -85,9 +85,10 @@ public class Startup {
     @Option(name = "-noRecomb")
     private boolean noRecomb;
     @Option(name = "-alphah")
-    private double alphah = 0.05;
+    private double alphah = 0.000001;
+//    private double alphah = 0.05;
     @Option(name = "-alphaz")
-    private double alphaz = 0.001;
+    private double alphaz = 0.000001;
     @Option(name = "-betaz")
     private double betaz = 0.1;
     @Option(name = "-logBic")
@@ -136,6 +137,8 @@ public class Startup {
     private boolean debug;
     @Option(name = "--html")
     private boolean html;
+    @Option(name = "-pdelta")
+    private boolean pdelta;
     @Option(name = "-optimum")
     private String optimum;
     @Option(name = "-perturb")
@@ -323,6 +326,7 @@ public class Startup {
                     Kmax = Integer.parseInt(K);
                 }
 
+                Globals.getINSTANCE().setPDELTA(this.pdelta);
                 Globals.getINSTANCE().setPERTURB(this.perturb);
                 Globals.getINSTANCE().setSTEPSIZE(this.steps);
                 Globals.getINSTANCE().setFLAT_EPSILON_PRIOR(this.flatEpsilonPrior);

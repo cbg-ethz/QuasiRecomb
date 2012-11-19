@@ -64,4 +64,12 @@ public class TempJHMMStorage {
     public double[] getNneqPos() {
         return nneqPos;
     }
+    
+    public double getnJK(int j, int k) {
+        double sum = 0;
+        for (int l = 0; l < this.nJKV[j][k].length; l++) {
+            sum += this.nJKV[j][k][l];
+        }
+        return sum;
+    }
 }

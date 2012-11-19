@@ -148,9 +148,9 @@ public class SingleEM {
             if (Globals.getINSTANCE().isSNAPSHOTS()) {
                 this.snapshot();
             }
-//        } while (Math.abs((oldllh - llh) / llh) > this.delta&& jhmm.getParametersChanged() != 0);
+        } while ((Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta && !Globals.getINSTANCE().isPDELTA()) || (Globals.getINSTANCE().isPDELTA() && jhmm.getParametersChanged() != 0));
 
-        } while (Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta);
+//        } while (Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta);
 //        } while (iterations <= 500);
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
 
