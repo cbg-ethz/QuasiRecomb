@@ -28,9 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.math3.distribution.BetaDistribution;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -56,7 +53,6 @@ public class Sampling {
             freqMap.put(i, hapProb[i]);
         }
         Frequency<Integer> frequency = new Frequency<>(freqMap);
-        BetaDistribution beta = new BetaDistribution(1, 5);
 
         Read[] reads1 = new Read[N];
         Read[] reads2 = new Read[N];

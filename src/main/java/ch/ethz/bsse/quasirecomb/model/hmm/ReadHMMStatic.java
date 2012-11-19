@@ -67,7 +67,7 @@ public class ReadHMMStatic {
         }
         for (int j = length - 1; j >= 0; j--) {
             if (read.isHit(j)) {
-                likelihood += Math.log(c[j]);
+                likelihood += Math.log(1d/c[j]);
             }
             int jGlobal = j + begin;
             for (int k = 0; k < jhmm.getK(); k++) {
@@ -131,7 +131,7 @@ public class ReadHMMStatic {
         for (int j = 1; j < length; j++) {
             int jGlobal = j + begin;
             if (read.isHit(j)) {
-                double sum = 0d;
+                double xiSum = 0d;
                 for (int k = 0; k < jhmm.getK(); k++) {
                     for (int l = 0; l < jhmm.getK(); l++) {
                         double marginalV = 0d;
@@ -139,7 +139,7 @@ public class ReadHMMStatic {
                             marginalV += (read.getBase(j) == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
                         }
                         double xi = fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l];
-                        sum += xi;
+                        xiSum += xi;
                     }
                 }
                 for (int k = 0; k < jhmm.getK(); k++) {
@@ -148,7 +148,7 @@ public class ReadHMMStatic {
                         for (int v = 0; v < jhmm.getn(); v++) {
                             marginalV += (read.getBase(j) == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
                         }
-                        double xi = read.getCount() * fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l] / sum;
+                        double xi = read.getCount() * fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l] / xiSum;
                         if (Double.isNaN(xi)) {
                             System.err.println("xx");
 //                                xi = 0;

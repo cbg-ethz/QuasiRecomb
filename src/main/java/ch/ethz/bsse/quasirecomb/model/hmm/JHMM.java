@@ -254,26 +254,12 @@ public class JHMM implements JHMMI {
     }
 
     private void calcMu() {
-        double[] muJKV = new double[n];
+        double[] muJKV;
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
 
-                double sum = 0d;
-                for (int v = 0; v < n; v++) {
-                    sum += this.nJKV[j][k][v];
-                }
-                if (sum > 0) {
-//                    for (int v = 0; v < n; v++) {
-//                        muJKV[v] = this.nJKV[j][k][v] / sum;
-//                    }
-                    if (Globals.getINSTANCE().getALPHA_H() >= 0) {
-                        muJKV = regularize(this.nJKV[j][k].clone(), Globals.getINSTANCE().getALPHA_H());
-                    }
-                } else {
-                    System.err.println("MU TOO SMALL");
-//                    for (int v = 0; v < n; v++) {
-//                        muJKV[v] = 1d / n;
-//                    }
+                muJKV = regularizeOnce(this.nJKV[j][k]);
+
 //                    if (restart < Globals.getINSTANCE().getPERTURB()) {
 //                        sum = 0;
 //                        for (int v = 0; v < n; v++) {
@@ -284,7 +270,6 @@ public class JHMM implements JHMMI {
 //                            muJKV[v] /= sum;
 //                        }
 //                    }
-                }
                 for (int v = 0; v < n; v++) {
                     this.changed(mu[j][k][v], muJKV[v]);
                     mu[j][k][v] = muJKV[v];
@@ -293,24 +278,49 @@ public class JHMM implements JHMMI {
                         for (int i = 0; i < n; i++) {
                             System.out.println(this.nJKV[j][k][v] + "\t" + muJKV[i]);
                         }
-                        System.out.println("sum:\t" + sum);
                     }
                 }
             }
         }
     }
 
-    private double[] regularizeOnce(double[] estCounts, double hyperParameter) {
+    private double[] regularizeOnce(double[] estCounts) {
+        double hyperParameter = 0.001;
         int x = estCounts.length;
         double[] regCounts = new double[x];
-        double sum;
         double divisor;
-        double max;
+
+        double sum = 0d;
+        double max = Double.MIN_VALUE;
+        for (int v = 0; v < x; v++) {
+            sum += estCounts[v];
+            max = Math.max(estCounts[v], max);
+        }
+        if (sum == 0) {
+            for (int v = 0; v < x; v++) {
+                regCounts[v] = 1d / x;
+            }
+            return regCounts;
+        }
+        if (Math.abs(max - sum) < 1e-8) {
+            for (int v = 0; v < x; v++) {
+                if (estCounts[v] < max) {
+                    regCounts[v] = 0d;
+                } else {
+                    regCounts[v] = 1;
+                }
+            }
+            return regCounts;
+        }
+        for (int v = 0; v < x; v++) {
+            regCounts[v] = 100 * estCounts[v] / sum;
+        }
+
         sum = 0d;
         divisor = 0d;
         for (int i = 0; i < x; i++) {
-            regCounts[i] = this.f(estCounts[i] + hyperParameter);
-            sum += estCounts[i];
+            regCounts[i] = this.f(regCounts[i] + hyperParameter);
+            sum += regCounts[i];
         }
         sum = this.f(sum + x * hyperParameter);
         if (sum > 0) {
@@ -405,56 +415,11 @@ public class JHMM implements JHMMI {
         return regCounts;
     }
 
-//    if (Globals.getINSTANCE().getALPHA_Z() >= 0) {
-//                        rhoJKL = regularizeOnce(rhoJKL.clone(), Globals.getINSTANCE().getALPHA_Z());
-//                    }
     private void calcRho() {
         double[] rhoJKL = new double[K];
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double max = Double.MIN_VALUE;
-                double sum = 0;
-                for (int l = 0; l < K; l++) {
-                    max = Math.max(max, this.nJKL[j][k][l]);
-                }
-                if (max < 1) {
-//                    System.err.println("RHO TOO SMALL");
-                    for (int l = 0; l < K; l++) {
-                        sum += this.nJKL[j][k][l];
-                    }
-                    if (sum > 0) {
-                        max = Double.MIN_VALUE;
-                        for (int l = 0; l < K; l++) {
-                            rhoJKL[l] = this.nJKL[j][k][l] / sum;
-                            max = Math.max(max, rhoJKL[l]);
-                        }
-//                    if (Globals.getINSTANCE().getALPHA_Z() >= 0) {
-//                        rhoJKL = regularizeOnce(rhoJKL.clone(), Globals.getINSTANCE().getALPHA_Z());
-//                    }
-                        if (Math.abs(max - 1d) < 1e-8) {
-                            for (int l = 0; l < K; l++) {
-                                if (rhoJKL[l] < max) {
-                                    rhoJKL[l] = 0d;
-                                } else {
-                                    rhoJKL[l] = 1;
-                                }
-                            }
-                        } else {
-                            if (restart < Globals.getINSTANCE().getPERTURB()) {
-                                sum = 0;
-                                for (int l = 0; l < K; l++) {
-                                    rhoJKL[l] += Math.random() / (10 * (restart + 1));
-                                    sum += rhoJKL[l];
-                                }
-                                for (int l = 0; l < K; l++) {
-                                    rhoJKL[l] /= sum;
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    rhoJKL = regularize(this.nJKL[j][k].clone(), Globals.getINSTANCE().getALPHA_Z());
-                }
+                rhoJKL = regularizeOnce(this.nJKL[j][k]);
                 for (int l = 0; l < K; l++) {
                     this.changed(rho[j - 1][k][l], rhoJKL[l]);
                     rho[j - 1][k][l] = rhoJKL[l];
