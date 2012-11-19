@@ -44,6 +44,7 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean UNINFORMATIVE_EPSILON_PRIOR;
     private boolean PDELTA;
     private boolean PLOT;
     private boolean STORAGE;
@@ -161,6 +162,14 @@ public class Globals {
 
     public String time() {
         return df.format(new Date(System.currentTimeMillis() - start));
+    }
+
+    public void setUNINFORMATIVE_EPSILON_PRIOR(boolean UNINFORMATIVE_EPSILON_PRIOR) {
+        this.UNINFORMATIVE_EPSILON_PRIOR = UNINFORMATIVE_EPSILON_PRIOR;
+    }
+
+    public boolean isUNINFORMATIVE_EPSILON_PRIOR() {
+        return UNINFORMATIVE_EPSILON_PRIOR;
     }
 
     public boolean isPDELTA() {

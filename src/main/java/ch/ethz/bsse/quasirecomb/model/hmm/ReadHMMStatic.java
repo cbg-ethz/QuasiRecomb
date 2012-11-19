@@ -14,7 +14,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
  */
 public class ReadHMMStatic {
 
-    public static double computeFB(JHMMI jhmm, Read read) {
+    public static double computeFB(JHMM jhmm, Read read) {
         TempJHMMStorage storage = jhmm.getStorage();
         int begin = read.getBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         int length = read.getLength();
@@ -67,7 +67,7 @@ public class ReadHMMStatic {
         }
         for (int j = length - 1; j >= 0; j--) {
             if (read.isHit(j)) {
-                likelihood += Math.log(1d/c[j]);
+                likelihood += Math.log(1d / c[j]);
             }
             int jGlobal = j + begin;
             for (int k = 0; k < jhmm.getK(); k++) {
@@ -103,8 +103,19 @@ public class ReadHMMStatic {
             int jGlobal = j + begin;
             if (read.isHit(j)) {
                 double gammaSum = 0d;
+                double xiSum = 0d;
                 for (int k = 0; k < jhmm.getK(); k++) {
                     gammaSum += fJK[j][k] * bJK[j][k];
+                    if (j > 0) {
+                        for (int l = 0; l < jhmm.getK(); l++) {
+                            double marginalV = 0d;
+                            for (int v = 0; v < jhmm.getn(); v++) {
+                                marginalV += (read.getBase(j) == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
+                            }
+                            double xi = fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l];
+                            xiSum += xi;
+                        }
+                    }
                 }
                 for (int k = 0; k < jhmm.getK(); k++) {
                     double gammaKSum = 0d;
@@ -124,65 +135,23 @@ public class ReadHMMStatic {
                             storage.addnJKV(jGlobal, k, v, ((double) read.getCount()) / jhmm.getn());
                         }
                     }
+                    if (j > 0) {
+                        for (int l = 0; l < jhmm.getK(); l++) {
+                            double marginalV = 0d;
+                            for (int v = 0; v < jhmm.getn(); v++) {
+                                marginalV += (read.getBase(j) == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
+                            }
+                            double xi = read.getCount() * fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l] / xiSum;
+                            if (Double.isNaN(xi)) {
+                                System.err.println("xi nan");
+                            }
+                            storage.addnJKL(jGlobal, k, l, xi);
+                        }
+                    }
                 }
             }
         }
 
-        for (int j = 1; j < length; j++) {
-            int jGlobal = j + begin;
-            if (read.isHit(j)) {
-                double xiSum = 0d;
-                for (int k = 0; k < jhmm.getK(); k++) {
-                    for (int l = 0; l < jhmm.getK(); l++) {
-                        double marginalV = 0d;
-                        for (int v = 0; v < jhmm.getn(); v++) {
-                            marginalV += (read.getBase(j) == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
-                        }
-                        double xi = fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l];
-                        xiSum += xi;
-                    }
-                }
-                for (int k = 0; k < jhmm.getK(); k++) {
-                    for (int l = 0; l < jhmm.getK(); l++) {
-                        double marginalV = 0d;
-                        for (int v = 0; v < jhmm.getn(); v++) {
-                            marginalV += (read.getBase(j) == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
-                        }
-                        double xi = read.getCount() * fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l] / xiSum;
-                        if (Double.isNaN(xi)) {
-                            System.err.println("xx");
-//                                xi = 0;
-                        }
-                        storage.addnJKL(jGlobal, k, l, xi);
-                    }
-                }
-            }
-        }
-//        for (int j = 0; j < length - 2; j++) {
-//            int jGlobal = j + begin;
-//            double denom = 0d;
-//            for (int k = 0; k < jhmm.getK(); k++) {
-//                for (int l = 0; l < jhmm.getK(); l++) {
-//                    double sumV = 0d;
-//                    for (int v = 0; v < jhmm.getn(); v++) {
-//                        sumV += (read.getBase(j + 1) == v ? jhmm.getAntieps()[jGlobal + 1] : jhmm.getEps()[jGlobal + 1]) * jhmm.getMu()[jGlobal + 1][l][v];
-//                    }
-//                    denom += fJK[j][k] * jhmm.getRho()[jGlobal][k][l] * bJK[jGlobal + 1][l] * sumV;
-//                }
-//            }
-//            double xi = 0d;
-//            for (int k = 0; k < jhmm.getK(); k++) {
-//                for (int l = 0; l < jhmm.getK(); l++) {
-//                    double sumV = 0d;
-//                    for (int v = 0; v < jhmm.getn(); v++) {
-//                        sumV += (read.getBase(j + 1) == v ? jhmm.getAntieps()[jGlobal + 1] : jhmm.getEps()[jGlobal + 1]) * jhmm.getMu()[jGlobal + 1][l][v];
-//                    }
-//                    double xiSingle = fJK[j][k] * jhmm.getRho()[jGlobal][k][l] * bJK[jGlobal + 1][l] * sumV;
-//                    storage.addnJKL(j, k, l, xiSingle);
-//                    xi += xiSingle;
-//                }
-//            }
-//        }
         likelihood *= read.getCount();
 
         jhmm.free(storage.getId());

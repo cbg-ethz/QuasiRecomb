@@ -316,7 +316,7 @@ public class Sampling {
             }
         }
         Utils.saveFile(savePath + "_dist", sb.toString());
-        Utils.saveFile(savePath, sb2.toString());
+        Utils.saveFile(savePath +".fasta", sb2.toString());
         return map;
     }
 

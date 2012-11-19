@@ -70,6 +70,8 @@ public class Startup {
     private int samplingNumber = 10000;
     @Option(name = "-e")
     private double e = .001;
+    @Option(name = "-noInfoEps")
+    private boolean noInfoEps;
     @Option(name = "-ee")
     private double ee = .0001;
     @Option(name = "-d")
@@ -84,11 +86,6 @@ public class Startup {
     private boolean flatEpsilonPrior;
     @Option(name = "-noRecomb")
     private boolean noRecomb;
-    @Option(name = "-alphah")
-    private double alphah = 0.000001;
-//    private double alphah = 0.05;
-    @Option(name = "-alphaz")
-    private double alphaz = 0.000001;
     @Option(name = "-betaz")
     private double betaz = 0.1;
     @Option(name = "-logBic")
@@ -111,10 +108,6 @@ public class Startup {
     private boolean hamming;
     @Option(name = "--distance")
     private boolean distance;
-    @Option(name = "-afile")
-    private String afile;
-    @Option(name = "-bfile")
-    private String bfile;
     @Option(name = "-h")
     private String haplotypes;
     @Option(name = "--simulate")
@@ -296,8 +289,8 @@ public class Startup {
                 Pair[] precision = DistanceUtils.calculatePhi(haps, quasiInt);
                 String[] quasispecies = quasiInt.keySet().toArray(new String[quasiInt.size()]);
                 quasiInt.clear();
-                for(String h : haps.keySet()) {
-                    quasiInt.put(h,10000/haps.size());
+                for (String h : haps.keySet()) {
+                    quasiInt.put(h, 10000 / haps.size());
                 }
                 haps.clear();
                 for (String q : quasispecies) {
@@ -308,7 +301,7 @@ public class Startup {
                 int i = 0;
                 int max = Math.max(precision.length, recall.length);
                 for (int j = 0; j < max; j++) {
-                    System.out.println(i++ + "\t" + (j<precision.length?precision[j].getValue0():"1.0")+ "\t" + (j<recall.length?recall[j].getValue0():"1.0"));
+                    System.out.println(i++ + "\t" + (j < precision.length ? precision[j].getValue0() : "1.0") + "\t" + (j < recall.length ? recall[j].getValue0() : "1.0"));
                 }
 
             } else if (cut) {
@@ -329,12 +322,13 @@ public class Startup {
                 Globals.getINSTANCE().setPDELTA(this.pdelta);
                 Globals.getINSTANCE().setPERTURB(this.perturb);
                 Globals.getINSTANCE().setSTEPSIZE(this.steps);
-                Globals.getINSTANCE().setFLAT_EPSILON_PRIOR(this.flatEpsilonPrior);
                 Globals.getINSTANCE().setPCHANGE(this.p);
-                Globals.getINSTANCE().setALPHA_Z(this.alphaz);
-                Globals.getINSTANCE().setALPHA_H(this.alphah);
                 Globals.getINSTANCE().setBETA_Z(this.betaz);
                 Globals.getINSTANCE().setPARALLEL_RESTARTS(this.parallelRestarts);
+                if (this.e != .001) {
+                    Globals.getINSTANCE().setFLAT_EPSILON_PRIOR(this.flatEpsilonPrior);
+                }
+                Globals.getINSTANCE().setUNINFORMATIVE_EPSILON_PRIOR(this.noInfoEps);
                 Globals.getINSTANCE().setESTIMATION_EPSILON(this.e);
                 Globals.getINSTANCE().setSAMPLING_EPSILON(this.ee);
                 Globals.getINSTANCE().setDELTA_LLH(this.d);
@@ -363,16 +357,18 @@ public class Startup {
 //            System.err.println(" === TRAINING options ===");
             System.err.println("  -i INPUT\t\t: Multiple fasta file");
             System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory)");
+            System.err.println("  -paired\t\t: Reads are paired");
             System.err.println("");
             System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
                     + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached, but will stop at K=5.");
             System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
             System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
-            System.err.println("  -flatEpsPrior\t\t: Do not train epsilon, in combination with -e");
-            System.err.println("  -e DOUBLE\t\t: Error rate of the sequencing machine (default: 0.0001)");
+            System.err.println("  -pdelta\t\t: Stop if no parameters change, convergence criterium");
+            System.err.println("  -e DOUBLE\t\t: Fix error rate of the sequencing machine");
+            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
             System.err.println("  -noRecomb\t\t: Do not allow recombination");
-            System.err.println("  -parallelRestarts\t: Parallelize the EM restarts, use this only on machines with 10+ cores!");
+            System.err.println("  -plot\t\t: Plot coverage");
             System.err.println("");
             System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -i input.fasta");
             System.err.println(" ------------------------");
