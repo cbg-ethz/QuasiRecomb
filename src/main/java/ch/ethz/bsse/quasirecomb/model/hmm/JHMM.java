@@ -269,7 +269,80 @@ public class JHMM {
         }
     }
 
-    private double[] regularizeOnce(double[] estCounts) {
+    private void calcRho() {
+        double[] rhoJKL;
+        for (int j = 1; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                rhoJKL = regularizeOnce(this.nJKL[j][k]);
+                for (int l = 0; l < K; l++) {
+                    this.changed(rho[j - 1][k][l], rhoJKL[l]);
+                    rho[j - 1][k][l] = rhoJKL[l];
+                }
+            }
+        }
+    }
+
+    private double f(double upsilon) {
+        if (upsilon == 0d) {
+            return 0d;
+        }
+        return Math.exp(Dirichlet.digamma(upsilon));
+    }
+
+    private void calcPi() {
+        double sumK = 0d;
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                for (int v = 0; v < n; v++) {
+                    pi[k] += this.nJKV[j][k][v];
+                    sumK += this.nJKV[j][k][v];
+                }
+            }
+        }
+        for (int k = 0; k < K; k++) {
+            pi[k] /= sumK;
+        }
+    }
+
+    private void mStep() {
+        if (!Globals.getINSTANCE().isNO_RECOMB()) {
+            this.calcRho();
+        }
+        this.calcPi();
+        this.calcMu();
+
+        if (!Globals.getINSTANCE().isFLAT_EPSILON_PRIOR()) {
+            double ew = 0d;
+            if (Globals.getINSTANCE().isUNINFORMATIVE_EPSILON_PRIOR()) {
+                for (int j = 0; j < L; j++) {
+                    if (this.nneqPos[j] != 0d) {
+                        ew += this.nneqPos[j] / N;
+                    }
+                }
+                if (ew != 0d) {
+                    ew /= L;
+                }
+            } else {
+                ew = .008;
+            }
+            double a = 20;
+            double b = (-a * ew + a + 2 * ew - 1) / ew;
+            for (int j = 0; j < L; j++) {
+                if (ew == 0d) {
+                    this.eps[j] = 0;
+                    this.antieps[j] = 1;
+                } else {
+                    this.eps[j] = f(this.nneqPos[j] + a) / f((coverage[j] * (n - 1)) + a + b);
+                    if (this.eps[j] > 1d / n) {
+                        this.eps[j] = 0.05;
+                    }
+                    this.antieps[j] = 1 - (n - 1) * eps[j];
+                }
+            }
+        }
+    }
+    
+        private double[] regularizeOnce(double[] estCounts) {
         double hyperParameter = 0.001;
         int x = estCounts.length;
         double[] regCounts = new double[x];
@@ -348,79 +421,6 @@ public class JHMM {
             }
         }
         return regCounts;
-    }
-
-    private void calcRho() {
-        double[] rhoJKL;
-        for (int j = 1; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                rhoJKL = regularizeOnce(this.nJKL[j][k]);
-                for (int l = 0; l < K; l++) {
-                    this.changed(rho[j - 1][k][l], rhoJKL[l]);
-                    rho[j - 1][k][l] = rhoJKL[l];
-                }
-            }
-        }
-    }
-
-    private double f(double upsilon) {
-        if (upsilon == 0d) {
-            return 0d;
-        }
-        return Math.exp(Dirichlet.digamma(upsilon));
-    }
-
-    private void calcPi() {
-        double sumK = 0d;
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                for (int v = 0; v < n; v++) {
-                    pi[k] += this.nJKV[j][k][v];
-                    sumK += this.nJKV[j][k][v];
-                }
-            }
-        }
-        for (int k = 0; k < K; k++) {
-            pi[k] /= sumK;
-        }
-    }
-
-    private void mStep() {
-        if (!Globals.getINSTANCE().isNO_RECOMB()) {
-            this.calcRho();
-        }
-        this.calcPi();
-        this.calcMu();
-
-        if (!Globals.getINSTANCE().isFLAT_EPSILON_PRIOR()) {
-            double ew = 0d;
-            if (Globals.getINSTANCE().isUNINFORMATIVE_EPSILON_PRIOR()) {
-                for (int j = 0; j < L; j++) {
-                    if (this.nneqPos[j] != 0d) {
-                        ew += this.nneqPos[j] / N;
-                    }
-                }
-                if (ew != 0d) {
-                    ew /= L;
-                }
-            } else {
-                ew = .008;
-            }
-            double a = 20;
-            double b = (-a * ew + a + 2 * ew - 1) / ew;
-            for (int j = 0; j < L; j++) {
-                if (ew == 0d) {
-                    this.eps[j] = 0;
-                    this.antieps[j] = 1;
-                } else {
-                    this.eps[j] = f(this.nneqPos[j] + a) / f((coverage[j] * (n - 1)) + a + b);
-                    if (this.eps[j] > 1d / n) {
-                        this.eps[j] = 0.05;
-                    }
-                    this.antieps[j] = 1 - (n - 1) * eps[j];
-                }
-            }
-        }
     }
 
     public int getK() {

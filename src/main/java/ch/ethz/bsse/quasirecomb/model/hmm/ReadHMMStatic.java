@@ -18,6 +18,7 @@ public class ReadHMMStatic {
         TempJHMMStorage storage = jhmm.getStorage();
         int begin = read.getBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         int length = read.getLength();
+        byte[] sequence;
 
         double[][][] fJKV = new double[length][jhmm.getK()][jhmm.getn()];
         double[][] fJK = new double[length][jhmm.getK()];
