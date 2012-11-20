@@ -98,10 +98,6 @@ public class ReadHMMStatic {
                     bJK[j][k] = 0d;
                 }
             }
-        }
-
-        for (int j = 0; j < length; j++) {
-            int jGlobal = j + begin;
             if (read.isHit(j)) {
                 double gammaSum = 0d;
                 double xiSum = 0d;

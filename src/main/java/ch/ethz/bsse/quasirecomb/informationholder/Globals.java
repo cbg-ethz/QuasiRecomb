@@ -85,6 +85,7 @@ public class Globals {
     private String SAVEPATH;
     private StringBuilder LOG = new StringBuilder();
     private final DateFormat df = new SimpleDateFormat("HH:mm:ss");
+//    private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
     private final ForkJoinPool fjPool = new ForkJoinPool();
 
