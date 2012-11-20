@@ -135,7 +135,7 @@ public class Sampling {
             z++;
         }
 
-        Utils.saveFile(savePath, sb.toString());
+        Utils.saveFile(savePath+".fasta", sb.toString());
     }
 
     public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {

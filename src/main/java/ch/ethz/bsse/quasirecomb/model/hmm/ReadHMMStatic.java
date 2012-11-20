@@ -119,24 +119,23 @@ public class ReadHMMStatic {
                     }
                 }
                 for (int k = 0; k < jhmm.getK(); k++) {
-                    double gammaKSum = 0d;
-                    for (int v = 0; v < jhmm.getn(); v++) {
-                        double gamma = read.getCount() * fJKV[j][k][v] * bJK[j][k] / gammaSum;
-                        gammaKSum += gamma;
-                        storage.addnJKV(jGlobal, k, v, gamma);
-                        if (Double.isNaN(gamma)) {
-                            System.out.println("#####");
-                        }
-                        if (read.getBase(j) != v) {
-                            storage.addnneqPos(j, gamma);
-                        }
-                    }
-                    if (gammaKSum == 0) {
+                    if (gammaSum == 0) {
                         for (int v = 0; v < jhmm.getn(); v++) {
                             storage.addnJKV(jGlobal, k, v, ((double) read.getCount()) / jhmm.getn());
                         }
+                    } else {
+                        for (int v = 0; v < jhmm.getn(); v++) {
+                            double gamma = read.getCount() * fJKV[j][k][v] * bJK[j][k] / gammaSum;
+                            storage.addnJKV(jGlobal, k, v, gamma);
+                            if (Double.isNaN(gamma)) {
+                                System.out.println("#####");
+                            }
+                            if (read.getBase(j) != v) {
+                                storage.addnneqPos(j, gamma);
+                            }
+                        }
                     }
-                    if (j > 0) {
+                    if (xiSum != 0 && j > 0) {
                         for (int l = 0; l < jhmm.getK(); l++) {
                             double marginalV = 0d;
                             for (int v = 0; v < jhmm.getn(); v++) {

@@ -187,7 +187,7 @@ public class Startup {
                     throw new RuntimeException("Frequencies do not add up to 1, instead to " + sum);
                 }
                 if (this.output.endsWith(File.separator)) {
-                    this.output += "reads.fasta";
+                    this.output += "reads";
                 }
                 if (paired) {
                     Sampling.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.ee, fArray, this.output);
@@ -281,27 +281,31 @@ public class Startup {
                 }
             } else if (this.distance) {
                 Map<String, Double> quasiDouble = FastaParser.parseQuasispeciesFile(input);
-                Map<String, Integer> quasiInt = new HashMap<>();
+                Map<String, Double> quasiInt = new HashMap<>();
                 for (Map.Entry<String, Double> s : quasiDouble.entrySet()) {
-                    quasiInt.put(s.getKey(), (int) (s.getValue().doubleValue() * 10000));
+                    quasiInt.put(s.getKey(), s.getValue().doubleValue());
                 }
                 Map<String, String> haps = FastaParser.parseHaplotypeFile(haplotypes);
-                Pair[] precision = DistanceUtils.calculatePhi(haps, quasiInt);
+                double[] precision = DistanceUtils.calculatePhi2(haps, quasiInt);
+//                System.out.println("q\tprecision");
+//                for (int j = 0; j < 20; j++) {
+//                    System.out.println(j + "\t" + precision[j]);
+//                }
                 String[] quasispecies = quasiInt.keySet().toArray(new String[quasiInt.size()]);
                 quasiInt.clear();
                 for (String h : haps.keySet()) {
-                    quasiInt.put(h, 10000 / haps.size());
+                    quasiInt.put(h, 1d / haps.size());
                 }
                 haps.clear();
                 for (String q : quasispecies) {
                     haps.put(q, "");
                 }
-                Pair[] recall = DistanceUtils.calculatePhi(haps, quasiInt);
+                double[] recall = DistanceUtils.calculatePhi2(haps, quasiInt);
                 System.out.println("q\tprecision\trecall");
                 int i = 0;
                 int max = Math.max(precision.length, recall.length);
                 for (int j = 0; j < max; j++) {
-                    System.out.println(i++ + "\t" + (j < precision.length ? precision[j].getValue0() : "1.0") + "\t" + (j < recall.length ? recall[j].getValue0() : "1.0"));
+                    System.out.println(j + "\t" + (j < precision.length ? precision[j] : "1.0") + "\t" + (j < recall.length ? recall[j] : "1.0"));
                 }
 
             } else if (cut) {

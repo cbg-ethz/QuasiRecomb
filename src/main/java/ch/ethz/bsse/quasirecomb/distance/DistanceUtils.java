@@ -17,10 +17,12 @@
  */
 package ch.ethz.bsse.quasirecomb.distance;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.javatuples.Pair;
 
 /**
@@ -28,17 +30,68 @@ import org.javatuples.Pair;
  */
 public class DistanceUtils {
 
-    public static enum PhiCalcMethod {
-
-        META_RECOMBINANT,
-        ONLY_GIVEN_HAPLOTYPES
+    public static double[] calculatePhi2(Map<String, String> haplotypes, Map<String, Double> input) {
+        int N = 20;
+        double[] dist = new double[N];
+        Map<String, Map<String, Integer>> invoke = Globals.getINSTANCE().getFjPool().invoke(new Hammer2Worker(input.keySet().toArray(new String[input.size()]), haplotypes.keySet().toArray(new String[haplotypes.size()]), 0, input.size()));
+        for (int DELTA = 0; DELTA < N; DELTA++) {
+            double sum = 0;
+            for (Entry<String, Map<String, Integer>> entry : invoke.entrySet()) {
+                String inputString = entry.getKey();
+                for (Entry<String, Integer> entryInner : entry.getValue().entrySet()) {
+                    if (entryInner.getValue() <= DELTA) {
+                        sum += input.get(inputString);
+                        break;
+                    }
+                }
+            }
+            dist[DELTA] = Math.round(sum*1e4)/1e4d;
+        }
+        
+        
+//        for (int DELTA = 0; DELTA < N; DELTA++) {
+//
+//            Map<String, Double> distMap = new HashMap<>();
+//            for (String s : haplotypes.keySet()) {
+//                distMap.put(s, 0d);
+//            }
+//            Map<String, List<Pair<String, Double>>> PHtoPHtest = new HashMap<>();
+//            for (String ptest : input.keySet()) {
+//                List<Pair<String, Double>> list = new LinkedList<>();
+//                for (String ptrue : haplotypes.keySet()) {
+//                    double error = 0d;
+//                    error = calcHamming(ptrue, ptest);
+//                    if (error <= DELTA) {
+//                        list.add(Pair.with(ptrue, error));
+//                    }
+//                }
+//                PHtoPHtest.put(ptest, list);
+//                double minError = Integer.MAX_VALUE;
+//                List<Pair<String, Integer>> best = new LinkedList<>();
+//                for (Pair p : list) {
+//                    if ((double) p.getValue1() < minError) {
+//                        minError = (double) p.getValue1();
+//                        best.clear();
+//                        best.add(p);
+//                    } else if ((double) p.getValue1() == minError) {
+//                        best.add(p);
+//                    }
+//                }
+//                for (Pair p : best) {
+//                    String ptrue = (String) p.getValue0();
+//                    distMap.put(ptrue, distMap.get(ptrue) + input.get(ptest) / (double) best.size());
+//                }
+//            }
+//            double sum = 0d;
+//            for (String hap : haplotypes.keySet()) {
+//                sum += distMap.get(hap);
+//            }
+//            dist[DELTA] = sum / (double) max;
+//        }
+        return dist;
     }
 
-    public static Pair[] calculatePhi(Map<String, String> PH, Map<String, Integer> PHtest) {
-        return calculatePhi(PH, PHtest, PhiCalcMethod.ONLY_GIVEN_HAPLOTYPES);
-    }
-
-    public static Pair[] calculatePhi(Map<String, String> original, Map<String, Integer> ph, PhiCalcMethod method) {
+    public static Pair[] calculatePhi(Map<String, String> original, Map<String, Integer> ph) {
         int max = 0;
         for (Integer x : ph.values()) {
             max += x;
@@ -53,7 +106,6 @@ public class DistanceUtils {
             for (String s : original.keySet()) {
                 distMap.put(s, 0d);
             }
-            double recombinant = 0d;
             Map<String, List<Pair<String, Double>>> PHtoPHtest = new HashMap<>();
             for (String ptest : ph.keySet()) {
                 List<Pair<String, Double>> list = new LinkedList<>();
@@ -62,11 +114,6 @@ public class DistanceUtils {
                     error = calcHamming(ptrue, ptest);
                     if (error <= DELTA) {
                         list.add(Pair.with(ptrue, error));
-                    }
-                }
-                if (list.isEmpty()) {
-                    if (method == PhiCalcMethod.META_RECOMBINANT) {
-                        recombs[DELTA]++;
                     }
                 }
                 PHtoPHtest.put(ptest, list);
@@ -91,7 +138,7 @@ public class DistanceUtils {
                 sum += distMap.get(hap);
             }
             dist[DELTA] = sum / (double) max;
-            pairs[DELTA] = Pair.with(dist[DELTA], recombs[DELTA]/(double)max);
+            pairs[DELTA] = Pair.with(dist[DELTA], recombs[DELTA] / (double) max);
         }
         return pairs;
     }
@@ -141,7 +188,7 @@ public class DistanceUtils {
         System.out.println(sb);
         return result;
     }
-    
+
     public static Double calculateKLD2(Map<String, Integer> P, Map<String, Integer> Q) {
 
         double Psize = (double) P.values().size();

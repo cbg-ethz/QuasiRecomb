@@ -52,7 +52,7 @@ public class Preprocessing {
         Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
         Globals.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
-
+        
         for (Read r : reads) {
             Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
@@ -106,7 +106,7 @@ public class Preprocessing {
         System.gc();
         int n = countChars(reads);
         Globals.getINSTANCE().print("Parsing\t100%");
-        Globals.getINSTANCE().println("Unique reads\t"+reads.length);
+        Globals.getINSTANCE().println("Unique reads\t" + reads.length);
         Globals.getINSTANCE().println("Plotting\t");
 //        System.exit(9);
         if (Globals.getINSTANCE().isPLOT()) {
@@ -118,22 +118,25 @@ public class Preprocessing {
         modelSampling.save();
         System.out.println("Quasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
     }
-
+    
     private static int countChars(Read[] rs) {
         Map<Byte, Boolean> map = new HashMap<>();
         for (Read r : rs) {
-            for (int i = 0; i < r.getWatsonLength(); i++) {
-                map.put(r.getBase(i), Boolean.TRUE);
-            }
             if (r.isPaired()) {
-                for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
-                    map.put(r.getBase(i-r.getCrickBegin()), Boolean.TRUE);
+                for (int i = 0; i < r.getLength(); i++) {
+                    if (r.isHit(i)) {
+                        map.put(r.getBase(i), Boolean.TRUE);
+                    }
+                }
+            } else {
+                for (int i = 0; i < r.getWatsonLength(); i++) {
+                    map.put(r.getBase(i), Boolean.TRUE);
                 }
             }
         }
         return map.keySet().size();
     }
-
+    
     private static void saveUnique(Read[] reads) {
         if (Globals.getINSTANCE().isDEBUG()) {
             StringBuilder sb = new StringBuilder();

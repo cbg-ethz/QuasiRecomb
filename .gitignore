@@ -3,4 +3,6 @@
 /nbactions.xml
 /nb-configuration.xml
 /target/
-/nbactions*
+/nbactions-global.xml
+/nbactions-simulate.xml
+/nbactions-DISTANCE.xml
