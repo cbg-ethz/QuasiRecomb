@@ -4,10 +4,12 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
+import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  *
@@ -18,12 +20,12 @@ public class ReadTest {
     private Read read;
 
     public ReadTest() {
-        Read read1 = new Read(new byte[]{0, 1, 2, 3, 4}, 0, 5, new byte[]{10, 11, 12, 13, 14}, 10, 15);
-        for (int i = read1.getBegin(); i <= read1.getEnd(); i++) {
-            System.out.println(i + ":" + read1.getPosition(i) + " " + read1.getBase(i));
-        }
-//        Read[] reads = FastaParser.parseFastaPairedEnd("/Users/XLR/Dropbox/simulationStudy/reads.fasta");
-        System.out.println("");
+//        Read read1 = new Read(BitMagic.splitReadIntoBytes("ACGT"), 0, 4, BitMagic.splitReadIntoBytes("ACGT"), 10, 14);
+//        for (int i = read1.getBegin(); i <= read1.getEnd(); i++) {
+//            System.out.println(i + ":" + read1.getPosition(i) + " " + read1.getBase(i));
+//        }
+////        Read[] reads = FastaParser.parseFastaPairedEnd("/Users/XLR/Dropbox/simulationStudy/reads.fasta");
+//        System.out.println("");
         //        this.read = FastaParser.parseFastq("/Users/XLR/Dropbox/QuasiAsterisk/QuasiRecomb/src/main/resources/haplotypes/singlePairedEnd.fastq")[0];
         //        System.out.println("");
         //        Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(read.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
@@ -49,9 +51,15 @@ public class ReadTest {
     /**
      * Test of setCount method, of class Read.
      */
-//    @Test
+    @Test
     public void testInsertSize() {
-//        Read read1 = new Read(new byte[]{1,2,3}, 0, 12,new byte[]{4,5,6}, 50, 100);
+        Globals.getINSTANCE().setDEBUG(true);
+        Read read1 = new Read(BitMagic.splitReadIntoBytes("ACGT"), 0, 4, BitMagic.splitReadIntoBytes("GTAC"), 2, 6);
+        System.out.println("");
+        for (int i = 0; i < read1.getLength(); i++) {
+            System.out.print(read1.getBase(i));
+        }
+        System.out.println("");
 //        assertTrue(read1.equals(new Read(new byte[]{1,2,3}, 0, 12,new byte[]{4,5,6,1}, 50, 100)));
 //        assertFalse(read1.equals(new Read(new byte[]{1,1,3}, 0, 12)));
 //        assertFalse(read1.equals(new Read(new byte[]{1,2,3}, 1, 12)));

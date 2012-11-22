@@ -19,20 +19,29 @@ package ch.ethz.bsse.quasirecomb.simulation;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
+import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMM;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.javatuples.Pair;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class Sampling {
+public class Simulator {
 
     public final static String newline = System.getProperty("line.separator");
 
@@ -40,7 +49,7 @@ public class Sampling {
         Map<Byte, Boolean> map = new HashMap<>();
         for (String h : haplotypes) {
             for (int i = 0; i < h.length(); i++) {
-                map.put((byte)h.charAt(i), Boolean.TRUE);
+                map.put((byte) h.charAt(i), Boolean.TRUE);
             }
         }
         int n = map.keySet().size();
@@ -54,88 +63,71 @@ public class Sampling {
         }
         Frequency<Integer> frequency = new Frequency<>(freqMap);
 
-        Read[] reads1 = new Read[N];
-        Read[] reads2 = new Read[N];
         Random rand = new Random();
-        for (int i = 0; i < N; i++) {
-            int hap = frequency.roll();
 
+        List<FutureTask<Pair<Read, Read>>> taskList = new ArrayList<>();
+        int coverage[] = new int[L];
+        for (int i = 0; i < N; i++) {
             int start = 0;
             int length = 0;
             length = readLength;
             if (i > ((readLength * N) / L)) {
-                start = rand.nextInt(L-fragmentSize);
+                start = rand.nextInt(L - fragmentSize);
             }
             if (i > N - ((250d * N) / L)) {
                 start = L - fragmentSize;
             }
-            char[] readArray = new char[length];
-
-
-            for (int j = 0; j < length; j++) {
-                //error
-                if (epsilon > 0d) {
-                    Map<Character, Double> baseMap = new ConcurrentHashMap<>();
-                    for (int v = 0; v < n; v++) {
-                        char x = reverse(v);
-                        if (haplotypes[hap].charAt(j + start) == x) {
-                            baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
-                        } else {
-                            baseMap.put(x, epsilon);
-                        }
-                    }
-                    Frequency<Character> errorF = new Frequency<>(baseMap);
-                    readArray[j] = errorF.roll();
-                } else {
-                    readArray[j] = haplotypes[hap].charAt(j + start);
+            for (int j = 0; j < readLength; j++) {
+                coverage[start + j]++;
+            }
+            int start2 = start;
+            if (Globals.getINSTANCE().isOVERLAP()) {
+                start2 += readLength - insertSize;
+            } else {
+//                start += readLength + insertSize;
+                start2 += readLength + rand.nextInt(2 * insertSize) - insertSize;
+                for (int j = 0; j < readLength; j++) {
+                    coverage[start2 + j]++;
                 }
             }
-            StringBuilder sb = new StringBuilder(length);
-            for (int j = 0; j < length; j++) {
-                sb.append(readArray[j]);
-            }
-            reads1[i] = new Read(BitMagic.splitReadIntoBytes(sb.toString()), start, start + length);
-
-
-            start += readLength + insertSize;
-
-            for (int j = 0; j < length; j++) {
-                //error
-                if (epsilon > 0d) {
-                    Map<Character, Double> baseMap = new ConcurrentHashMap<>();
-                    for (int v = 0; v < n; v++) {
-                        char x = reverse(v);
-                        if (haplotypes[hap].charAt(j + start) == x) {
-                            baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
-                        } else {
-                            baseMap.put(x, epsilon);
-                        }
-                    }
-                    Frequency<Character> errorF = new Frequency<>(baseMap);
-                    readArray[j] = errorF.roll();
-                } else {
-                    readArray[j] = haplotypes[hap].charAt(j + start);
-                }
-            }
-            StringBuilder sb2 = new StringBuilder(length);
-            for (int j = 0; j < length; j++) {
-                sb2.append(readArray[j]);
-            }
-            reads2[i] = new Read(BitMagic.splitReadIntoBytes(sb2.toString()), start, start + length);
+            int hap = frequency.roll();
+            FutureTask<Pair<Read, Read>> futureTask_1 = new FutureTask<>(new CallableSimulator(length, epsilon, n, haplotypes, hap, start, start2));
+            taskList.add(futureTask_1);
+            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
+            Globals.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");
         }
-        int z = 0;
+        System.out.println("");
+
+
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < N; i++) {
-            Read r = reads1[i];
-            sb.append(">SAMPLED").append(z).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(z).append("/1").append("\n");
-            sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
-            r = reads2[i];
-            sb.append(">SAMPLED").append(z).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(z).append("/2").append("\n");
-            sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
-            z++;
+        for (int j = 0; j < taskList.size(); j++) {
+            FutureTask<Pair<Read, Read>> futureTask = taskList.get(j);
+            try {
+                Pair<Read, Read> pair = futureTask.get();
+                Read r = pair.getValue0();
+                sb.append(">SAMPLED").append(j).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(j).append("/1").append("\n");
+                sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
+                r = pair.getValue1();
+                sb.append(">SAMPLED").append(j).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(j).append("/2").append("\n");
+                sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
+                Globals.getINSTANCE().print("Simulation\t" + Math.round((100d * j) / taskList.size()) + "%");
+            } catch (InterruptedException | ExecutionException ex) {
+                System.err.println("Problem");
+                System.err.println(ex);
+            }
         }
+        System.out.println("");
+        if (savePath.endsWith(".fasta")) {
+            Utils.saveFile(savePath, sb.toString());
+        } else {
+            Utils.saveFile(savePath + ".fasta", sb.toString());
+        }
+        sb.setLength(0);
+        for (int i = 0; i < L; i++) {
+            sb.append(coverage[i]).append("\n");
+        }
+        Utils.saveFile(savePath + "_coverage.txt", sb.toString());
 
-        Utils.saveFile(savePath+".fasta", sb.toString());
     }
 
     public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
@@ -316,7 +308,7 @@ public class Sampling {
             }
         }
         Utils.saveFile(savePath + "_dist", sb.toString());
-        Utils.saveFile(savePath +".fasta", sb2.toString());
+        Utils.saveFile(savePath + ".fasta", sb2.toString());
         return map;
     }
 

@@ -33,6 +33,39 @@ public class Read {
     private int crickBegin;
     private int crickEnd = -1;
 
+    public void merge() {
+        if (this.watsonEnd < this.crickBegin) {
+            return;
+        }
+        byte[] consensus = new byte[this.crickEnd - this.watsonBegin];
+//        if (Globals.getINSTANCE().isDEBUG()) {
+//            for (int i = 0; i < BitMagic.getLength(watsonSequence); i++) {
+//                System.out.print(BitMagic.getPosition(this.watsonSequence, i));
+//            }
+//            System.out.println("");
+//            for (int i = 0; i < this.crickBegin - this.watsonBegin; i++) {
+//                System.out.print(" ");
+//            }
+//            for (int i = 0; i < BitMagic.getLength(crickSequence); i++) {
+//                System.out.print(BitMagic.getPosition(this.crickSequence, i));
+//            }
+//            System.out.println("");
+//        }
+
+        for (int i = 0; i < this.getLength(); i++) {
+            consensus[i] = this.getBase(i);
+        }
+        this.watsonEnd = this.crickEnd;
+        this.watsonSequence = BitMagic.pack(consensus);
+        this.crickEnd = -1;
+        this.crickBegin = 0;
+        this.crickSequence = null;
+//        for (int i = 0; i < BitMagic.getLength(watsonSequence); i++) {
+//            System.out.print(BitMagic.getPosition(this.watsonSequence, i));
+//        }
+//        System.out.println("\n");
+    }
+
     public enum Position {
 
         WATSON_IN,
@@ -57,12 +90,14 @@ public class Read {
         this.watsonEnd = end;
         setPairedEnd(Csequence, Cbegin, Cend);
         if (end - begin != BitMagic.getLength(sequence)) {
-            throw new IllegalAccessError("length problen: watson");
+            throw new IllegalAccessError("length problen: watson. Suggested length: " + (end - begin) + ". Actual length: " + BitMagic.getLength(sequence));
         }
         if (Cend - Cbegin != BitMagic.getLength(Csequence)) {
             throw new IllegalAccessError("length problen: crick");
         }
         rearrange();
+
+        merge();
     }
 
     public Read(byte[] sequence, int begin, int end, int count) {
@@ -122,7 +157,7 @@ public class Read {
         } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
             return true;
         } else {
-            throw new IllegalAccessError("No such sequence space for hit. j=" + j +"\tl="+ (this.crickBegin + this.getCrickLength() - this.watsonBegin));
+            throw new IllegalAccessError("No such sequence space for hit. j=" + j + "\tl=" + (this.crickBegin + this.getCrickLength() - this.watsonBegin));
         }
     }
 

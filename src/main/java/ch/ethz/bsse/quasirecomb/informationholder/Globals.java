@@ -44,6 +44,7 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean OVERLAP;
     private boolean UNINFORMATIVE_EPSILON_PRIOR;
     private boolean PDELTA;
     private boolean PLOT;
@@ -165,6 +166,14 @@ public class Globals {
         return df.format(new Date(System.currentTimeMillis() - start));
     }
 
+    public void setOVERLAP(boolean OVERLAP) {
+        this.OVERLAP = OVERLAP;
+    }
+
+    public boolean isOVERLAP() {
+        return OVERLAP;
+    }
+    
     public void setUNINFORMATIVE_EPSILON_PRIOR(boolean UNINFORMATIVE_EPSILON_PRIOR) {
         this.UNINFORMATIVE_EPSILON_PRIOR = UNINFORMATIVE_EPSILON_PRIOR;
     }

@@ -178,6 +178,7 @@ public class FastaParser {
                     Read r2 = pairedReads2.get(tag);
                     r.getValue().setPairedEnd(r2.getSequence().clone(), r2.getBegin(), r2.getEnd());
                     r.getValue().rearrange();
+                    r.getValue().merge();
                 } else {
 //                System.out.println("");
 //                pairedReads1.remove(tag);

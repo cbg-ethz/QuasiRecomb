@@ -31,6 +31,74 @@ public class BitMagic {
         return buf.toString();
     }
 
+    public static byte[] pack(byte[] s) {
+        int l = s.length * 3;
+        int hangover = (l + 3) % 8;
+        int byteCount = (3 + l) / 8 + (hangover != 0 ? 1 : 0);
+
+        byte[] packed = new byte[byteCount];
+        
+        switch (8 - hangover) {
+            case 8:
+                break;
+            case 1:
+                setBit(packed, 2, 1);
+                break;
+            case 2:
+                setBit(packed, 1, 1);
+                break;
+            case 3:
+                setBit(packed, 1, 1);
+                setBit(packed, 2, 1);
+                break;
+            case 4:
+                setBit(packed, 0, 1);
+                break;
+            case 5:
+                setBit(packed, 0, 1);
+                setBit(packed, 2, 1);
+                break;
+            case 6:
+                setBit(packed, 0, 1);
+                setBit(packed, 1, 1);
+                break;
+            case 7:
+                setBit(packed, 0, 1);
+                setBit(packed, 1, 1);
+                setBit(packed, 2, 1);
+                break;
+            default:
+                throw new IllegalStateException("BitMagic length problem: " + (8 - hangover));
+        }
+        int pos = 1;
+        for (byte c : s) {
+            switch ((short) c) {
+                case 0:
+                    break;
+                case 1:
+                    setBit(packed, pos * 3 + 2, 1);
+                    break;
+                case 2:
+                    setBit(packed, pos * 3 + 1, 1);
+                    break;
+                case 3:
+                    setBit(packed, pos * 3 + 1, 1);
+                    setBit(packed, pos * 3 + 2, 1);
+                    break;
+                case 4:
+                    setBit(packed, pos * 3 + 0, 1);
+                    break;
+                default:
+                    break;
+            }
+            pos++;
+//            for (int i = 0; i < packed.length; i++) {
+//                System.out.print(byteToBits(packed[i]) + " ");
+//            }
+//            System.out.println("");
+        }
+        return packed;
+    }
     public static byte[] splitReadIntoBytes(String s) {
         int l = s.length() * 3;
         int hangover = (l + 3) % 8;

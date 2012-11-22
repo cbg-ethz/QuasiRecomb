@@ -18,8 +18,6 @@ public class ReadHMMStatic {
         TempJHMMStorage storage = jhmm.getStorage();
         int begin = read.getBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         int length = read.getLength();
-        byte[] sequence;
-
         double[][][] fJKV = new double[length][jhmm.getK()][jhmm.getn()];
         double[][] fJK = new double[length][jhmm.getK()];
         double[][] bJK = new double[length][jhmm.getK()];
@@ -71,6 +69,7 @@ public class ReadHMMStatic {
                 likelihood += Math.log(1d / c[j]);
             }
             int jGlobal = j + begin;
+            double gammaSum = 0d;
             for (int k = 0; k < jhmm.getK(); k++) {
                 if (j == length - 1) {
                     bJK[j][k] = c[j];
@@ -92,28 +91,15 @@ public class ReadHMMStatic {
                     }
                     bJK[j][k] *= c[j];
                 }
-                if (Double.isInfinite(bJK[j][k])) {
-                    //this is infinite, because the char has not been observed and there no probability to emit it
-                    //thus we divide 0 by a very small number, i.e. 1e-300.
-                    bJK[j][k] = 0d;
-                }
+//                if (Double.isInfinite(bJK[j][k])) {
+//                    //this is infinite, because the char has not been observed and there no probability to emit it
+//                    //thus we divide 0 by a very small number, i.e. 1e-300.
+//                    bJK[j][k] = 0d;
+//                }
+                gammaSum += fJK[j][k] * bJK[j][k];
             }
             if (read.isHit(j)) {
-                double gammaSum = 0d;
                 double xiSum = 0d;
-                for (int k = 0; k < jhmm.getK(); k++) {
-                    gammaSum += fJK[j][k] * bJK[j][k];
-                    if (j > 0) {
-                        for (int l = 0; l < jhmm.getK(); l++) {
-                            double marginalV = 0d;
-                            for (int v = 0; v < jhmm.getn(); v++) {
-                                marginalV += (read.getBase(j) == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
-                            }
-                            double xi = fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l];
-                            xiSum += xi;
-                        }
-                    }
-                }
                 for (int k = 0; k < jhmm.getK(); k++) {
                     if (gammaSum == 0) {
                         for (int v = 0; v < jhmm.getn(); v++) {
@@ -131,6 +117,18 @@ public class ReadHMMStatic {
                             }
                         }
                     }
+                    if (j > 0) {
+                        for (int l = 0; l < jhmm.getK(); l++) {
+                            double marginalV = 0d;
+                            for (int v = 0; v < jhmm.getn(); v++) {
+                                marginalV += (read.getBase(j) == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
+                            }
+                            double xi = fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l];
+                            xiSum += xi;
+                        }
+                    }
+                }
+                for (int k = 0; k < jhmm.getK(); k++) {
                     if (xiSum != 0 && j > 0) {
                         for (int l = 0; l < jhmm.getK(); l++) {
                             double marginalV = 0d;

@@ -83,6 +83,7 @@ public class Preprocessing {
 //        saveUnique(reads);
         Globals.getINSTANCE().print("Parsing\t50%");
         StringBuilder sb = new StringBuilder();
+        sb.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
         for (int i = 0; i < L; i++) {
             int hits = 0;
             sb.append(i);

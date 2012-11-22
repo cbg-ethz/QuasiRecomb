@@ -24,7 +24,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.model.Preprocessing;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
-import ch.ethz.bsse.quasirecomb.simulation.Sampling;
+import ch.ethz.bsse.quasirecomb.simulation.Simulator;
 import ch.ethz.bsse.quasirecomb.utils.Cutter;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
@@ -66,14 +66,10 @@ public class Startup {
     private int t = 50;
     @Option(name = "-N")
     private int N = 2000;
-    @Option(name = "-samplingNumber")
-    private int samplingNumber = 10000;
     @Option(name = "-e")
     private double e = .001;
     @Option(name = "-noInfoEps")
     private boolean noInfoEps;
-    @Option(name = "-ee")
-    private double ee = .0001;
     @Option(name = "-d")
     private double d = 1e-6;
     @Option(name = "-dd")
@@ -132,6 +128,8 @@ public class Startup {
     private boolean html;
     @Option(name = "-pdelta")
     private boolean pdelta;
+    @Option(name = "-overlap")
+    private boolean overlap;
     @Option(name = "-optimum")
     private String optimum;
     @Option(name = "-perturb")
@@ -139,6 +137,7 @@ public class Startup {
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
+        System.exit(0);
     }
 
     public void doMain(String[] args) throws IOException {
@@ -166,7 +165,6 @@ public class Startup {
             Globals.getINSTANCE().setPRINT(this.print || this.debug);
             Globals.getINSTANCE().setLOGGING(this.log);
             Globals.getINSTANCE().setLOG_BIC(this.logBIC);
-            Globals.getINSTANCE().setSAMPLING_NUMBER(this.samplingNumber);
             Globals.getINSTANCE().setPAIRED(this.paired);
             Globals.getINSTANCE().setPLOT(this.plot);
 
@@ -174,6 +172,7 @@ public class Startup {
                 ModelSampling simulation = new ModelSampling(input, output);
                 simulation.save();
             } else if (this.simulate) {
+                Globals.getINSTANCE().setOVERLAP(this.overlap);
                 double fArray[];
                 String[] split = f.split(",");
                 fArray = new double[split.length];
@@ -190,9 +189,9 @@ public class Startup {
                     this.output += "reads";
                 }
                 if (paired) {
-                    Sampling.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.ee, fArray, this.output);
+                    Simulator.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.e, fArray, this.output);
                 } else {
-                    Sampling.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
+                    Simulator.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.e, fArray, 4, this.output);
                 }
 //                Sampling.fromHaplotypesGlobal(FastaParser.parseFarFile(input), N, L, this.ee, fArray, 4, this.output);
             } else if (this.recombine) {
@@ -330,11 +329,10 @@ public class Startup {
                 Globals.getINSTANCE().setBETA_Z(this.betaz);
                 Globals.getINSTANCE().setPARALLEL_RESTARTS(this.parallelRestarts);
                 if (this.e != .001) {
-                    Globals.getINSTANCE().setFLAT_EPSILON_PRIOR(this.flatEpsilonPrior);
+                    Globals.getINSTANCE().setFLAT_EPSILON_PRIOR(true);
                 }
                 Globals.getINSTANCE().setUNINFORMATIVE_EPSILON_PRIOR(this.noInfoEps);
                 Globals.getINSTANCE().setESTIMATION_EPSILON(this.e);
-                Globals.getINSTANCE().setSAMPLING_EPSILON(this.ee);
                 Globals.getINSTANCE().setDELTA_LLH(this.d);
                 Globals.getINSTANCE().setDELTA_REFINE_LLH(this.dd);
                 Globals.getINSTANCE().setREPEATS(this.m);
