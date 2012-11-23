@@ -27,6 +27,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Information holder for all necessary given and inferred parameters.
@@ -89,6 +90,7 @@ public class Globals {
 //    private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
     private final ForkJoinPool fjPool = new ForkJoinPool();
+    private final AtomicInteger MERGED = new AtomicInteger(0);
 
     public synchronized void log(Object o) {
         if (PRINT) {
@@ -166,6 +168,13 @@ public class Globals {
         return df.format(new Date(System.currentTimeMillis() - start));
     }
 
+    public int getMERGED() {
+        return MERGED.get();
+    }
+    public void incMERGED() {
+        MERGED.getAndIncrement();
+    }
+    
     public void setOVERLAP(boolean OVERLAP) {
         this.OVERLAP = OVERLAP;
     }

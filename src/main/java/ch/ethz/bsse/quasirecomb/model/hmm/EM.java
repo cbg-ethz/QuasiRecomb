@@ -20,7 +20,6 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -75,10 +74,10 @@ public class EM extends Utils {
         }
 
         System.out.println("read: " + (System.currentTimeMillis() - time));
-        if (Globals.getINSTANCE().getOPTIMUM() == null) {
-            ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH());
-            modelSampling.saveQuasispeciesOnly(Globals.getINSTANCE().getSAVEPATH() + "quasispecies_preliminary.fasta");
-        }
+//        if (Globals.getINSTANCE().getOPTIMUM() == null) {l
+//            ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH());
+//            modelSampling.saveQuasispeciesOnly(Globals.getINSTANCE().getSAVEPATH() + "quasispecies_preliminary.fasta");
+//        }
 //        System.out.println("\tBIC: " + (int) or.getBIC());
         Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
         System.out.print("\n");
@@ -86,7 +85,7 @@ public class EM extends Utils {
         SingleEM bestEM = new SingleEM(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
         this.or = bestEM.getOptimalResult();
 //        }
-        Globals.getINSTANCE().log("\n" + new Summary().print(or));
+//        Globals.getINSTANCE().log("\n" + new Summary().print(or));
         if (Globals.getINSTANCE().isLOGGING()) {
             Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "log_K" + K, Globals.getINSTANCE().getLOG().toString());
         }

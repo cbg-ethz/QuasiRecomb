@@ -64,6 +64,7 @@ public class Read {
 //            System.out.print(BitMagic.getPosition(this.watsonSequence, i));
 //        }
 //        System.out.println("\n");
+        Globals.getINSTANCE().incMERGED();
     }
 
     public enum Position {

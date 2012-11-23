@@ -167,7 +167,7 @@ public class Startup {
             Globals.getINSTANCE().setLOG_BIC(this.logBIC);
             Globals.getINSTANCE().setPAIRED(this.paired);
             Globals.getINSTANCE().setPLOT(this.plot);
-
+            
             if (this.sample) {
                 ModelSampling simulation = new ModelSampling(input, output);
                 simulation.save();

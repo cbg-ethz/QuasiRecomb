@@ -108,6 +108,7 @@ public class Preprocessing {
         int n = countChars(reads);
         Globals.getINSTANCE().print("Parsing\t100%");
         Globals.getINSTANCE().println("Unique reads\t" + reads.length);
+        Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED());
         Globals.getINSTANCE().println("Plotting\t");
 //        System.exit(9);
         if (Globals.getINSTANCE().isPLOT()) {

@@ -53,7 +53,7 @@ public class Simulator {
             }
         }
         int n = map.keySet().size();
-        int insertSize = 50;
+        int insertSize = 100;
         int readLength = 250;
         int fragmentSize = insertSize + 2 * readLength;
         L = haplotypes[0].length();
@@ -82,13 +82,12 @@ public class Simulator {
             }
             int start2 = start;
             if (Globals.getINSTANCE().isOVERLAP()) {
-                start2 += readLength - insertSize;
-            } else {
-//                start += readLength + insertSize;
                 start2 += readLength + rand.nextInt(2 * insertSize) - insertSize;
                 for (int j = 0; j < readLength; j++) {
                     coverage[start2 + j]++;
                 }
+            } else {
+                start2 += readLength + insertSize;
             }
             int hap = frequency.roll();
             FutureTask<Pair<Read, Read>> futureTask_1 = new FutureTask<>(new CallableSimulator(length, epsilon, n, haplotypes, hap, start, start2));

@@ -57,6 +57,7 @@ public class JHMM {
     private double[][][] nJKV;
     private double[] nneqPos;
     private double loglikelihood;
+    private double[] muPrior;
     private Read[] reads;
     private int restart = 0;
     private int coverage[];
@@ -100,6 +101,11 @@ public class JHMM {
         this.rho = rho;
         this.mu = mu;
         this.pi = pi;
+
+        this.muPrior = new double[n];
+        for (int i = 0; i < n; i++) {
+            this.muPrior[i] = 0.001;
+        }
 
         this.coverage = new int[L];
         for (Read r : reads) {
@@ -254,7 +260,7 @@ public class JHMM {
         double[] muJKV;
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                muJKV = regularizeOnce(this.nJKV[j][k]);
+                muJKV = Regularizations.regularizeOnce(this.nJKV[j][k], restart, muPrior, 100);
                 for (int v = 0; v < n; v++) {
                     this.changed(mu[j][k][v], muJKV[v]);
                     mu[j][k][v] = muJKV[v];
@@ -273,7 +279,19 @@ public class JHMM {
         double[] rhoJKL;
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                rhoJKL = regularizeOnce(this.nJKL[j][k]);
+                double[] rhoPrior = new double[K];
+                for (int l = 0; l < K; l++) {
+                    if (k == l) {
+                        if (restart < 20) {
+                            rhoPrior[l] = 1;
+                        } else {
+                            rhoPrior[l] = 0.0001;
+                        }
+                    } else {
+                        rhoPrior[l] = 0.0001;
+                    }
+                }
+                rhoJKL = Regularizations.regularizeOnce(this.nJKL[j][k], restart, rhoPrior, 100);
                 for (int l = 0; l < K; l++) {
                     this.changed(rho[j - 1][k][l], rhoJKL[l]);
                     rho[j - 1][k][l] = rhoJKL[l];
@@ -281,14 +299,7 @@ public class JHMM {
             }
         }
     }
-
-    private double f(double upsilon) {
-        if (upsilon == 0d) {
-            return 0d;
-        }
-        return Math.exp(Dirichlet.digamma(upsilon));
-    }
-
+    
     private void calcPi() {
         double sumK = 0d;
         for (int j = 0; j < L; j++) {
@@ -332,7 +343,7 @@ public class JHMM {
                     this.eps[j] = 0;
                     this.antieps[j] = 1;
                 } else {
-                    this.eps[j] = f(this.nneqPos[j] + a) / f((coverage[j] * (n - 1)) + a + b);
+                    this.eps[j] = Regularizations.f(this.nneqPos[j] + a) / Regularizations.f((coverage[j] * (n - 1)) + a + b);
                     if (this.eps[j] > 1d / n) {
                         this.eps[j] = 0.05;
                     }
@@ -340,87 +351,6 @@ public class JHMM {
                 }
             }
         }
-    }
-    
-        private double[] regularizeOnce(double[] estCounts) {
-        double hyperParameter = 0.001;
-        int x = estCounts.length;
-        double[] regCounts = new double[x];
-        double divisor;
-
-        double sum = 0d;
-        double max = Double.MIN_VALUE;
-        for (int v = 0; v < x; v++) {
-            sum += estCounts[v];
-            max = Math.max(estCounts[v], max);
-        }
-        if (sum == 0) {
-            for (int v = 0; v < x; v++) {
-                regCounts[v] = 1d / x;
-            }
-            return regCounts;
-        }
-        if (Math.abs(max - sum) < 1e-8) {
-            for (int v = 0; v < x; v++) {
-                if (estCounts[v] < max) {
-                    regCounts[v] = 0d;
-                } else {
-                    regCounts[v] = 1;
-                }
-            }
-            return regCounts;
-        }
-        for (int v = 0; v < x; v++) {
-            regCounts[v] = 100 * estCounts[v] / sum;
-        }
-
-        sum = 0d;
-        divisor = 0d;
-        for (int i = 0; i < x; i++) {
-            regCounts[i] = this.f(regCounts[i] + hyperParameter);
-            sum += regCounts[i];
-        }
-        sum = this.f(sum + x * hyperParameter);
-        if (sum > 0) {
-            for (int i = 0; i < x; i++) {
-                regCounts[i] /= sum;
-                divisor += regCounts[i];
-            }
-            if (divisor > 0) {
-                for (int i = 0; i < x; i++) {
-                    regCounts[i] /= divisor;
-                }
-            }
-        }
-        if (Double.isNaN(sum) || Double.isNaN(divisor)) {
-            System.out.println("reg nan");
-            System.exit(0);
-        }
-        max = Double.MIN_VALUE;
-        for (int v = 0; v < x; v++) {
-            max = Math.max(max, regCounts[v]);
-        }
-        if (Math.abs(max - 1d) < 1e-8) {
-            for (int v = 0; v < x; v++) {
-                if (regCounts[v] < max) {
-                    regCounts[v] = 0d;
-                } else {
-                    regCounts[v] = 1;
-                }
-            }
-        } else {
-            if (restart < Globals.getINSTANCE().getPERTURB()) {
-                sum = 0;
-                for (int l = 0; l < x; l++) {
-                    regCounts[l] += Math.random() / (10 * (restart + 1));
-                    sum += regCounts[l];
-                }
-                for (int l = 0; l < x; l++) {
-                    regCounts[l] /= sum;
-                }
-            }
-        }
-        return regCounts;
     }
 
     public int getK() {
