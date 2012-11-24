@@ -17,29 +17,36 @@
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
+import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.javatuples.Pair;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class Summary extends Utils {
-    
-    public String viterbi(OptimalResult or) {
-        double[][][] rho = or.getRho();
+
+    public String kl(OptimalResult or) {
+        StringBuilder sb = new StringBuilder();
         double[][][] mu = or.getMu();
-        double[] pi = or.getPi();
-        
-        byte[] seq = new byte[mu.length];
-        for (int i = 0; i < seq.length; i++) {
-            
+        Set<Pair<Integer, Integer>> a = new HashSet<>();
+        for (int k = 0; k < or.getK(); k++) {
+            for (int l = 0; l < or.getK(); l++) {
+                if (k != l) {
+                    if (!a.contains(Pair.with(k, l)) && !a.contains(Pair.with(l, k))) {
+                        a.add(Pair.with(k, l));
+                        sb.append(k).append(" <-> ").append(l).append(" = ").append(KullbackLeibler.symmetric(mu, k, l)).append("\n");
+                    }
+                }
+            }
         }
-        
-        
-        return null;
+        return sb.toString();
     }
 
     public String print(OptimalResult or) {

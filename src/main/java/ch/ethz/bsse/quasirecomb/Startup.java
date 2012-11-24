@@ -134,6 +134,8 @@ public class Startup {
     private String optimum;
     @Option(name = "-perturb")
     private int perturb = 0;
+    @Option(name = "--kl")
+    private boolean kl;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -235,6 +237,20 @@ public class Startup {
                 Utils.saveFile(output + "dist.txt", sb.toString());
 //                System.out.println("Max: " + max);
                 System.out.println("");
+            } else if (this.kl) {
+                OptimalResult or = null;
+                try {
+                    FileInputStream fis = new FileInputStream(input);
+                    try (ObjectInputStream in = new ObjectInputStream(fis)) {
+                        or = (OptimalResult) in.readObject();
+                    }
+                } catch (IOException | ClassNotFoundException ex) {
+                    System.err.println(ex);
+                }
+                if (or != null) {
+                    Summary s = new Summary();
+                    System.out.println(s.kl(or));
+                }
             } else if (this.html) {
                 OptimalResult or = null;
                 try {
