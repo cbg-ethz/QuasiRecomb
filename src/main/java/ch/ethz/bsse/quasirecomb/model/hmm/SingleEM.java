@@ -97,7 +97,7 @@ public class SingleEM {
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
-                -1, jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
 //        Utils.saveOptimum(save + ".optimum", localOr);
         Summary summary = new Summary();
         Utils.saveFile(save + ".txt", summary.print(localOr));

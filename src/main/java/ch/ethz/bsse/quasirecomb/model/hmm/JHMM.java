@@ -17,7 +17,6 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import cc.mallet.types.Dirichlet;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
@@ -279,19 +278,30 @@ public class JHMM {
         double[] rhoJKL;
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
+
+                double max = 0d;
+                int lPrime = -1;
+                for (int l = 0; l < K; l++) {
+                    if (this.nJKL[j][k][l] > max) {
+                        max = this.nJKL[j][k][l];
+                        lPrime = l;
+                    }
+                }
+
                 double[] rhoPrior = new double[K];
                 for (int l = 0; l < K; l++) {
                     if (k == l) {
-                        if (restart < 20) {
+                        if (Math.abs(max - 1d) < 1e-8 && lPrime != k) {
                             rhoPrior[l] = 1;
                         } else {
-                            rhoPrior[l] = 0.0001;
+                            rhoPrior[l] = 0.001;
                         }
                     } else {
                         rhoPrior[l] = 0.0001;
                     }
                 }
                 rhoJKL = Regularizations.regularizeOnce(this.nJKL[j][k], restart, rhoPrior, 100);
+
                 for (int l = 0; l < K; l++) {
                     this.changed(rho[j - 1][k][l], rhoJKL[l]);
                     rho[j - 1][k][l] = rhoJKL[l];
@@ -299,7 +309,7 @@ public class JHMM {
             }
         }
     }
-    
+
     private void calcPi() {
         double sumK = 0d;
         for (int j = 0; j < L; j++) {

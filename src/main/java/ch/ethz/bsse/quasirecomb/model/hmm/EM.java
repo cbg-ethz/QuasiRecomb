@@ -61,33 +61,45 @@ public class EM extends Utils {
         } else {
             pathOptimum = Globals.getINSTANCE().getOPTIMUM();
         }
-        long time = System.currentTimeMillis();
-        System.out.println("reading " + pathOptimum);
-
-        try {
-            FileInputStream fis = new FileInputStream(pathOptimum);
-            try (ObjectInputStream in = new ObjectInputStream(fis)) {
-                or = (OptimalResult) in.readObject();
+        if (Globals.getINSTANCE().isMODELSELECTION()) {
+            try {
+                FileInputStream fis = new FileInputStream(pathOptimum);
+                try (ObjectInputStream in = new ObjectInputStream(fis)) {
+                    or = (OptimalResult) in.readObject();
+                }
+            } catch (IOException | ClassNotFoundException ex) {
+                System.err.println(ex);
             }
-        } catch (IOException | ClassNotFoundException ex) {
-            System.err.println(ex);
-        }
+            Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
+        } else {
+            long time = System.currentTimeMillis();
+            System.out.println("reading " + pathOptimum);
 
-        System.out.println("read: " + (System.currentTimeMillis() - time));
+            try {
+                FileInputStream fis = new FileInputStream(pathOptimum);
+                try (ObjectInputStream in = new ObjectInputStream(fis)) {
+                    or = (OptimalResult) in.readObject();
+                }
+            } catch (IOException | ClassNotFoundException ex) {
+                System.err.println(ex);
+            }
+
+            System.out.println("read: " + (System.currentTimeMillis() - time));
 //        if (Globals.getINSTANCE().getOPTIMUM() == null) {l
 //            ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH());
 //            modelSampling.saveQuasispeciesOnly(Globals.getINSTANCE().getSAVEPATH() + "quasispecies_preliminary.fasta");
 //        }
 //        System.out.println("\tBIC: " + (int) or.getBIC());
-        Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
-        System.out.print("\n");
+            Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
+            System.out.print("\n");
 //        if (!Globals.NO_REFINE) {
-        SingleEM bestEM = new SingleEM(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
-        this.or = bestEM.getOptimalResult();
+            SingleEM bestEM = new SingleEM(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
+            this.or = bestEM.getOptimalResult();
 //        }
 //        Globals.getINSTANCE().log("\n" + new Summary().print(or));
-        if (Globals.getINSTANCE().isLOGGING()) {
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "log_K" + K, Globals.getINSTANCE().getLOG().toString());
+            if (Globals.getINSTANCE().isLOGGING()) {
+                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "log_K" + K, Globals.getINSTANCE().getLOG().toString());
+            }
         }
     }
 

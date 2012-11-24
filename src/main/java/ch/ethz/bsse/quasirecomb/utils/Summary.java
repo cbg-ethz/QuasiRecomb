@@ -27,6 +27,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class Summary extends Utils {
+    
+    public String viterbi(OptimalResult or) {
+        double[][][] rho = or.getRho();
+        double[][][] mu = or.getMu();
+        double[] pi = or.getPi();
+        
+        byte[] seq = new byte[mu.length];
+        for (int i = 0; i < seq.length; i++) {
+            
+        }
+        
+        
+        return null;
+    }
 
     public String print(OptimalResult or) {
         StringBuilder sb = new StringBuilder();
