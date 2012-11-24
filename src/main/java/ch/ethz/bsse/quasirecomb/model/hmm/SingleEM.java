@@ -140,18 +140,15 @@ public class SingleEM {
                     Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
                     
                 } 
-//                Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + jhmm.getParametersChanged() + "\t");
                 Globals.getINSTANCE().log(loglikelihood + "\n");
             }
             jhmm.restart();
+            
             Globals.getINSTANCE().printPercentage(K);
             if (Globals.getINSTANCE().isSNAPSHOTS()) {
                 this.snapshot();
             }
         } while ((Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta && !Globals.getINSTANCE().isPDELTA()) || (Globals.getINSTANCE().isPDELTA() && jhmm.getParametersChanged() != 0));
-
-//        } while (Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta);
-//        } while (iterations <= 500);
         Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
 
         Globals.getINSTANCE().incPercentage();
@@ -160,6 +157,12 @@ public class SingleEM {
         if (Globals.getINSTANCE().isDEBUG()) {
             Globals.getINSTANCE().log("####");
         }
+    }
+    
+    private JHMM prune() {
+        JHMM merge = jhmm.clone();
+        
+        return null;
     }
     
     private double calcBIC() {

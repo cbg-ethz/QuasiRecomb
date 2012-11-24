@@ -1,0 +1,268 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package ch.ethz.bsse.quasirecomb.model.hmm;
+
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
+import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ *
+ * @author XLR
+ */
+public class JHMMBasics {
+
+    protected int N;
+    protected int L;
+    protected int K;
+    protected int n;
+    //rho[j][k][l] := transition prob. at position j, for l given k
+    protected double[][] tauOmega;
+    protected double[][][] rho;
+    protected double[] pi;
+    protected double[][][] mu;
+    protected double[] eps;
+    protected double[] antieps;
+    protected double loglikelihood;
+    protected double[][][] nJKL;
+    protected double[][][] nJKV;
+    protected double[] nneqPos;
+    protected double[] muPrior;
+    protected Read[] reads;
+    protected int restart = 0;
+    protected int coverage[];
+    protected int parametersChanged = 0;
+    protected boolean paired;
+    protected Map<Integer, TempJHMMStorage> garage = new ConcurrentHashMap<>();
+    protected final List<Integer> available = new ArrayList<>();
+    
+    public TempJHMMStorage getStorage() {
+        synchronized (this.available) {
+            if (available.iterator().hasNext()) {
+                Integer i = available.iterator().next();
+                available.remove(i);
+                return garage.get(i);
+            } else {
+                throw new IllegalStateException("No storages left");
+            }
+        }
+    }
+
+    public void free(int id) {
+        synchronized (this.available) {
+            this.available.add(id);
+        }
+    }
+    
+    
+    protected void changed(double a, double b) {
+        if (Math.abs(a - b) > Globals.getINSTANCE().getPCHANGE()) {
+            this.parametersChanged++;
+        }
+    }
+
+    protected void prepare(Read[] reads, int N, int L, int K, int n, double[][][] rho, double[] pi, double[][][] mu) {
+        this.N = N;
+        this.L = L;
+        this.K = K;
+        this.n = n;
+        this.reads = reads;
+        this.rho = rho;
+        this.mu = mu;
+        this.pi = pi;
+
+        this.muPrior = new double[n];
+        for (int i = 0; i < n; i++) {
+            this.muPrior[i] = 0.001;
+        }
+
+        this.coverage = new int[L];
+        for (Read r : reads) {
+            if (r.isPaired()) {
+                this.paired = true;
+                break;
+            }
+        }
+        if (this.paired) {
+            this.tauOmega = new double[4][L + 1];
+        } else {
+            this.tauOmega = new double[2][L + 1];
+
+        }
+        this.init();
+    }
+
+    protected void init() {
+        int[] tau1 = new int[L + 1];
+        int[] tau2 = new int[L + 1];
+        int[] omega1 = new int[L + 1];
+        int[] omega2 = new int[L + 1];
+        for (Read r : reads) {
+            for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
+                this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+            }
+            tau1[r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+            omega1[r.getWatsonEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+            if (r.isPaired()) {
+                for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
+                    this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+                }
+                tau2[r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+                omega2[r.getCrickEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < L + 1; i++) {
+            this.tauOmega[0][i] = tau1[i] / (double) N;
+            this.tauOmega[1][i] = omega1[i] / (double) N;
+            sb.append(this.tauOmega[0][i]);
+            sb.append("\t");
+            sb.append(this.tauOmega[1][i]);
+            sb.append("\t");
+            if (this.paired) {
+                this.tauOmega[2][i] = tau2[i] / (double) N;
+                this.tauOmega[3][i] = omega2[i] / (double) N;
+                sb.append(this.tauOmega[2][i]);
+                sb.append("\t");
+                sb.append(this.tauOmega[3][i]);
+            }
+            sb.append("\n");
+        }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "twtw", sb.toString());
+    }
+    
+    
+    public int getMuFlats() {
+        int flats = 0;
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int v = 0; v < n; v++) {
+                    max = Math.max(this.mu[j][k][v], max);
+                    sum += this.mu[j][k][v];
+//                    max = Math.max(this.nJKV[j][k][v], max);
+//                    sum += this.nJKV[j][k][v];
+                }
+                if (max < sum) {
+                    flats++;
+                }
+            }
+        }
+        return flats;
+    }
+
+    public int getNjkvFlats() {
+        int flats = 0;
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int v = 0; v < n; v++) {
+                    max = Math.max(this.nJKV[j][k][v], max);
+                    sum += this.nJKV[j][k][v];
+                }
+                if (max < sum) {
+                    flats++;
+                }
+            }
+        }
+        return flats;
+    }
+
+    public int getRhoFlats() {
+        int flats = 0;
+        for (int j = 0; j < L - 1; j++) {
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int l = 0; l < K; l++) {
+                    max = Math.max(this.rho[j][k][l], max);
+                    sum += this.rho[j][k][l];
+                }
+                if (max < sum) {
+                    flats++;
+                }
+            }
+        }
+        return flats;
+    }
+
+    public int getNjklFlats() {
+        int flats = 0;
+        for (int j = 0; j < L - 1; j++) {
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int l = 0; l < K; l++) {
+                    max = Math.max(this.nJKL[j][k][l], max);
+                    sum += this.nJKL[j][k][l];
+                }
+                if (max < sum) {
+                    flats++;
+                }
+            }
+        }
+        return flats;
+    }
+
+    public double[][] getTauOmega() {
+        return tauOmega;
+    }
+
+    public int getK() {
+        return K;
+    }
+
+    public int getL() {
+        return L;
+    }
+
+    public int getN() {
+        return N;
+    }
+
+    public int getn() {
+        return n;
+    }
+
+    public double[] getEps() {
+        return eps;
+    }
+
+    public double[] getAntieps() {
+        return antieps;
+    }
+
+    public double getLoglikelihood() {
+        return loglikelihood;
+    }
+
+    public double[][][] getMu() {
+        return mu;
+    }
+
+    public double[] getPi() {
+        return pi;
+    }
+
+    public double[][][] getRho() {
+        return rho;
+    }
+
+    public int getRestart() {
+        return restart;
+    }
+
+    public int getParametersChanged() {
+        return parametersChanged;
+    }
+}
