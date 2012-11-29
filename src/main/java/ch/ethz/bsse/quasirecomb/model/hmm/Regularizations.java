@@ -82,6 +82,11 @@ public class Regularizations {
                 }
             }
         } else {
+//            for (int v = 0; v < x; v++) {
+//                if (regCounts[v] <= 1e-7) {
+//                    regCounts[v] = 0d;
+//                }
+//            }
             if (restart < Globals.getINSTANCE().getPERTURB()) {
                 sum = 0;
                 for (int l = 0; l < x; l++) {

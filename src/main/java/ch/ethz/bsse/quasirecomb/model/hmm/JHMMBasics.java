@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class JHMMBasics {
 
+    protected int Kmin;
     protected int N;
     protected int L;
     protected int K;
@@ -81,7 +82,7 @@ public class JHMMBasics {
 
         this.muPrior = new double[n];
         for (int i = 0; i < n; i++) {
-            this.muPrior[i] = 0.001;
+            this.muPrior[i] = Globals.getINSTANCE().getALPHA_H();
         }
 
         this.coverage = new int[L];

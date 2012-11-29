@@ -23,6 +23,7 @@ import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Plot;
+import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
 import java.util.HashMap;
@@ -36,6 +37,8 @@ import java.util.Map;
  */
 public class Preprocessing {
 
+    private static int N = 0;
+    
     /**
      * Entry point. Forwards invokes of the specified workflow.
      *
@@ -52,38 +55,21 @@ public class Preprocessing {
         Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
         Globals.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
-        
+
         for (Read r : reads) {
             Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-        double N = 0;
         Globals.getINSTANCE().print("Parsing\t25%");
-        int[][] alignment = new int[L][5];
-        double[][] prior = new double[L][5];
-        for (Read r : reads) {
-            N += r.getCount();
-            int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-            for (int i = 0; i < r.getWatsonLength(); i++) {
-                try {
-                    alignment[i + begin][BitMagic.getPosition(r.getSequence(), i)] += r.getCount();
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    System.out.println(e);
-                }
-            }
-            if (r.isPaired()) {
-                begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-                for (int i = 0; i < r.getCrickLength(); i++) {
-                    alignment[i + begin][BitMagic.getPosition(r.getCrickSequence(), i)] += r.getCount();
-                }
-            }
-        }
+        int[][] alignment = countPos(reads,L);
+        
 
 //        saveUnique(reads);
         Globals.getINSTANCE().print("Parsing\t50%");
         StringBuilder sb = new StringBuilder();
         sb.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
+        double[][] prior = new double[L][5];
         for (int i = 0; i < L; i++) {
             int hits = 0;
             sb.append(i);
@@ -114,13 +100,40 @@ public class Preprocessing {
         if (Globals.getINSTANCE().isPLOT()) {
             Plot.plotCoverage(reads);
         }
-        
+        if (Globals.getINSTANCE().isCIRCOS()) {
+        new Summary().printAlignment(reads);
+            new Summary().circos(L,alignment);
+            System.exit(0);
+        }
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
-        ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
-        modelSampling.save();
-        System.out.println("Quasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
+        if (!Globals.getINSTANCE().isNOSAMPLE()) {
+            ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
+            modelSampling.save();
+            System.out.println("Quasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
+        }
     }
     
+    public static int[][] countPos(Read[] reads, int L){
+        int[][] alignment = new int[L][5];
+        for (Read r : reads) {
+            int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+            for (int i = 0; i < r.getWatsonLength(); i++) {
+                try {
+                    alignment[i + begin][BitMagic.getPosition(r.getSequence(), i)] += r.getCount();
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println(e);
+                }
+            }
+            if (r.isPaired()) {
+                begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+                for (int i = 0; i < r.getCrickLength(); i++) {
+                    alignment[i + begin][BitMagic.getPosition(r.getCrickSequence(), i)] += r.getCount();
+                }
+            }
+        }
+        return alignment;
+    }
+
     private static int countChars(Read[] rs) {
         Map<Byte, Boolean> map = new HashMap<>();
         for (Read r : rs) {
@@ -138,7 +151,7 @@ public class Preprocessing {
         }
         return map.keySet().size();
     }
-    
+
     private static void saveUnique(Read[] reads) {
         if (Globals.getINSTANCE().isDEBUG()) {
             StringBuilder sb = new StringBuilder();

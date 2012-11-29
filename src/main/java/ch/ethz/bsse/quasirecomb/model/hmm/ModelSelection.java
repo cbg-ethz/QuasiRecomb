@@ -23,9 +23,6 @@ import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 
 /**
  * Selects the best model among the specified range of generators.
@@ -64,6 +61,7 @@ public class ModelSelection {
                     checkRho0(k);
                 }
                 EM em = new EM(this.N, this.L, k, this.n, reads);
+                System.out.println("");
                 if (Globals.getINSTANCE().isLOG_BIC()) {
                     StringBuilder sb = new StringBuilder();
                     sb.append(new Summary().print(em.getOr()));
@@ -91,6 +89,7 @@ public class ModelSelection {
         }
 
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
         //save optimumJava
         Utils.saveOptimum(save + File.separator + "best.optimum", or);

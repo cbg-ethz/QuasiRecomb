@@ -202,6 +202,14 @@ public class BitMagic {
         }
         return (packed.length * 8 - 3 - hangover) / 3;
     }
+    
+    public static String toString(byte[] packed) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < getLength(packed); i++) {
+            sb.append(getPosition(packed, i));
+        }
+        return sb.toString();
+    }
 
     public static byte getPosition(byte[] packed, int i) {
         i += 1;

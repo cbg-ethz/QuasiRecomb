@@ -27,6 +27,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.*;
 
+
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
@@ -49,6 +50,7 @@ public final class ModelSampling extends Utils {
     private StringBuilder sb = new StringBuilder();
     private StringBuilder startStopSB = new StringBuilder();
     private int[] coverage;
+    private Map<String,Double> map = new HashMap<>();
 
     public ModelSampling(OptimalResult or, String savePath) {
         this.K = or.getK();
@@ -124,11 +126,18 @@ public final class ModelSampling extends Utils {
         for (Object o : sortMapByValue(reads).keySet()) {
             byte[] read = (byte[]) o;
             sb.append(">read").append(i++).append("_").append(((double) reads.get(read)) / amount).append("\n");
+            StringBuilder sb2 = new StringBuilder();
             for (int r : read) {
-                sb.append(reverse(r));
+                sb2.append(reverse(r));
             }
+            map.put(sb2.toString(), ((double) reads.get(read)) / amount);
+            sb.append(sb2);
             sb.append("\n");
         }
+    }
+
+    public Map<String, Double> getMap() {
+        return map;
     }
     
     public void saveQuasispeciesOnly(String path) {
@@ -245,7 +254,6 @@ public final class ModelSampling extends Utils {
         return K;
     }
 }
-
 class ValueComparator implements Comparator, Serializable {
 
     Map base;

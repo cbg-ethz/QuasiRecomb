@@ -45,6 +45,8 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean CIRCOS;
+    private boolean NOSAMPLE;
     private boolean OVERLAP;
     private boolean UNINFORMATIVE_EPSILON_PRIOR;
     private boolean PDELTA;
@@ -61,7 +63,11 @@ public class Globals {
     private boolean PRINT = true;
     private boolean MODELSELECTION;
     private boolean PAIRED = false;
+    private boolean SPIKE_RHO;
+    private boolean SPIKE_MU;
     private double PCHANGE;
+    private double MULT_RHO;
+    private double MULT_MU;
     private double BETA_Z;
     private double ALPHA_Z;
     private double ALPHA_H;
@@ -69,7 +75,10 @@ public class Globals {
     private double SAMPLING_EPSILON;
     private double DELTA_LLH;
     private double DELTA_REFINE_LLH;
+    private boolean PRUNE;
+    private double CURRENT_DELTA_LLH = 0;
     private double MAX_LLH = Double.NEGATIVE_INFINITY;
+    private double MIN_BIC = Double.NEGATIVE_INFINITY;
     private double[][] MU_PRIOR;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
@@ -86,7 +95,7 @@ public class Globals {
     private String[] HAPLOTYPE_ARRAY_EMPIRICAL;
     private String SAVEPATH;
     private StringBuilder LOG = new StringBuilder();
-    private final DateFormat df = new SimpleDateFormat("HH:mm:ss");
+    private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
 //    private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
     private final ForkJoinPool fjPool = new ForkJoinPool();
@@ -108,6 +117,7 @@ public class Globals {
     }
 
     public void printBIC(int K, int bic) {
+        System.out.print("\r                                                                                                                                                   ");
         if (MODELSELECTION) {
             System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
         } else {
@@ -126,30 +136,30 @@ public class Globals {
     public void println(String s) {
         System.out.print("\n" + time() + " " + s);
     }
-
-    public void printPercentage(int K) {
-        if (!DEBUG) {
-            if (MODELSELECTION) {
-                System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + MAX_LLH + "]                 ");
-            } else {
-                System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + MAX_LLH + "]                 ");
-            }
-        }
-    }
+//    public void printPercentage(int K) {
+//        if (!DEBUG) {
+//            if (MODELSELECTION) {
+//                System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + MAX_LLH + "]                 ");
+//            } else {
+//                System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[LLH: " + MAX_LLH + "]                 ");
+//            }
+//        }
+//    }
     private long oldTime = 0;
 
     public void resetTimer() {
         this.oldTime = 0;
     }
 
-    public void printPercentage(int K, double read) {
+    public void printPercentage(int K, double read, double Kmin) {
         if (!oldOut.equals(time())) {
             this.oldOut = time();
             if (oldTime == 0) {
                 oldTime = System.currentTimeMillis();
             }
             long time = System.currentTimeMillis() - oldTime;
-            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[ ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]");
+            System.out.print("\r                                                                                                                                                   ");
+            System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]" + "[cK " + K + "]" + "[LLH " + MAX_LLH + "]" + "[BIC " + MIN_BIC + "]" + "[D-LLH " + CURRENT_DELTA_LLH + "]");
         }
     }
     private double hammingCount = 0;
@@ -168,13 +178,50 @@ public class Globals {
         return df.format(new Date(System.currentTimeMillis() - start));
     }
 
+    public boolean isSPIKE_RHO() {
+        return SPIKE_RHO;
+    }
+
+    public void setSPIKE_RHO(boolean SPIKE_RHO) {
+        this.SPIKE_RHO = SPIKE_RHO;
+    }
+
+    public boolean isSPIKE_MU() {
+        return SPIKE_MU;
+    }
+
+    public void setSPIKE_MU(boolean SPIKE_MU) {
+        this.SPIKE_MU = SPIKE_MU;
+    }
+    
+    public double getCURRENT_DELTA_LLH() {
+        return CURRENT_DELTA_LLH;
+    }
+
+    public void setCURRENT_DELTA_LLH(double CURRENT_DELTA_LLH) {
+        this.CURRENT_DELTA_LLH = CURRENT_DELTA_LLH;
+    }
+
+    public double getMIN_BIC() {
+        return MIN_BIC;
+    }
+
+    public void setPRUNE(boolean PRUNE) {
+        this.PRUNE = PRUNE;
+    }
+
+    public boolean isPRUNE() {
+        return PRUNE;
+    }
+
     public int getMERGED() {
         return MERGED.get();
     }
+
     public void incMERGED() {
         MERGED.getAndIncrement();
     }
-    
+
     public void setOVERLAP(boolean OVERLAP) {
         this.OVERLAP = OVERLAP;
     }
@@ -182,7 +229,7 @@ public class Globals {
     public boolean isOVERLAP() {
         return OVERLAP;
     }
-    
+
     public void setUNINFORMATIVE_EPSILON_PRIOR(boolean UNINFORMATIVE_EPSILON_PRIOR) {
         this.UNINFORMATIVE_EPSILON_PRIOR = UNINFORMATIVE_EPSILON_PRIOR;
     }
@@ -198,7 +245,7 @@ public class Globals {
     public void setPDELTA(boolean PDELTA) {
         this.PDELTA = PDELTA;
     }
-    
+
     public void setDELTA_REFINE_LLH(double DELTA_REFINE_LLH) {
         this.DELTA_REFINE_LLH = DELTA_REFINE_LLH;
     }
@@ -206,7 +253,7 @@ public class Globals {
     public double getDELTA_REFINE_LLH() {
         return DELTA_REFINE_LLH;
     }
-    
+
     public boolean isPLOT() {
         return PLOT;
     }
@@ -245,6 +292,10 @@ public class Globals {
 
     public synchronized double getMAX_LLH() {
         return MAX_LLH;
+    }
+
+    public synchronized void minMIN_BIC(double bic) {
+        MIN_BIC = Math.min(MIN_BIC, bic);
     }
 
     public synchronized void maxMAX_LLH(double llh) {
@@ -455,6 +506,10 @@ public class Globals {
         this.MAX_LLH = MAX_LLH;
     }
 
+    public void setMIN_BIC(double MAX_BIC) {
+        this.MIN_BIC = MAX_BIC;
+    }
+    
     public void setLOG_BIC(boolean LOG_BIC) {
         this.LOG_BIC = LOG_BIC;
     }
@@ -525,6 +580,38 @@ public class Globals {
 
     public void setPERTURB(int PERTURB) {
         this.PERTURB = PERTURB;
+    }
+
+    public boolean isNOSAMPLE() {
+        return NOSAMPLE;
+    }
+
+    public void setNOSAMPLE(boolean NOSAMPLE) {
+        this.NOSAMPLE = NOSAMPLE;
+    }
+
+    public boolean isCIRCOS() {
+        return CIRCOS;
+    }
+
+    public void setCIRCOS(boolean CIRCOS) {
+        this.CIRCOS = CIRCOS;
+    }
+
+    public double getMULT_RHO() {
+        return MULT_RHO;
+    }
+
+    public void setMULT_RHO(double MULT_RHO) {
+        this.MULT_RHO = MULT_RHO;
+    }
+
+    public double getMULT_MU() {
+        return MULT_MU;
+    }
+
+    public void setMULT_MU(double MULT_MU) {
+        this.MULT_MU = MULT_MU;
     }
     
 }

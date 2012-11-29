@@ -30,8 +30,31 @@ import org.javatuples.Pair;
  */
 public class DistanceUtils {
 
+    public static String[] calculatePhi3(Map<String, String> haplotypes, Map<String, Pair<String, Double>> input) {
+        int N = 300;
+        String[] dist = new String[N];
+        Map<String, Map<String, Integer>> invoke = Globals.getINSTANCE().getFjPool().invoke(new Hammer2Worker(input.keySet().toArray(new String[input.size()]), haplotypes.keySet().toArray(new String[haplotypes.size()]), 0, input.size()));
+        for (int DELTA = 0; DELTA < N; DELTA++) {
+            double sum = 0;
+            StringBuilder sb = new StringBuilder();
+            for (Entry<String, Map<String, Integer>> entry : invoke.entrySet()) {
+                String inputString = entry.getKey();
+                for (Entry<String, Integer> entryInner : entry.getValue().entrySet()) {
+                    if (entryInner.getValue() <= DELTA) {
+                        sum += input.get(inputString).getValue1();
+                        String head = input.get(inputString).getValue0();
+                        sb.append(head.substring(1)).append("\t");
+                        break;
+                    }
+                }
+            }
+            dist[DELTA] = Math.round(sum * 1e4) / 1e4d + "\t" + sb.toString();
+        }
+        return dist;
+    }
+
     public static double[] calculatePhi2(Map<String, String> haplotypes, Map<String, Double> input) {
-        int N = 20;
+        int N = 300;
         double[] dist = new double[N];
         Map<String, Map<String, Integer>> invoke = Globals.getINSTANCE().getFjPool().invoke(new Hammer2Worker(input.keySet().toArray(new String[input.size()]), haplotypes.keySet().toArray(new String[haplotypes.size()]), 0, input.size()));
         for (int DELTA = 0; DELTA < N; DELTA++) {
@@ -45,49 +68,8 @@ public class DistanceUtils {
                     }
                 }
             }
-            dist[DELTA] = Math.round(sum*1e4)/1e4d;
+            dist[DELTA] = Math.round(sum * 1e4) / 1e4d;
         }
-        
-        
-//        for (int DELTA = 0; DELTA < N; DELTA++) {
-//
-//            Map<String, Double> distMap = new HashMap<>();
-//            for (String s : haplotypes.keySet()) {
-//                distMap.put(s, 0d);
-//            }
-//            Map<String, List<Pair<String, Double>>> PHtoPHtest = new HashMap<>();
-//            for (String ptest : input.keySet()) {
-//                List<Pair<String, Double>> list = new LinkedList<>();
-//                for (String ptrue : haplotypes.keySet()) {
-//                    double error = 0d;
-//                    error = calcHamming(ptrue, ptest);
-//                    if (error <= DELTA) {
-//                        list.add(Pair.with(ptrue, error));
-//                    }
-//                }
-//                PHtoPHtest.put(ptest, list);
-//                double minError = Integer.MAX_VALUE;
-//                List<Pair<String, Integer>> best = new LinkedList<>();
-//                for (Pair p : list) {
-//                    if ((double) p.getValue1() < minError) {
-//                        minError = (double) p.getValue1();
-//                        best.clear();
-//                        best.add(p);
-//                    } else if ((double) p.getValue1() == minError) {
-//                        best.add(p);
-//                    }
-//                }
-//                for (Pair p : best) {
-//                    String ptrue = (String) p.getValue0();
-//                    distMap.put(ptrue, distMap.get(ptrue) + input.get(ptest) / (double) best.size());
-//                }
-//            }
-//            double sum = 0d;
-//            for (String hap : haplotypes.keySet()) {
-//                sum += distMap.get(hap);
-//            }
-//            dist[DELTA] = sum / (double) max;
-//        }
         return dist;
     }
 

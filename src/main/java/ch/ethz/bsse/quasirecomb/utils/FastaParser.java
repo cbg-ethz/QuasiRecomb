@@ -98,14 +98,15 @@ public class FastaParser {
                         sb.append(strLine);
                     }
                 }
-                double freq;
-                try {
-                    freq = Double.parseDouble(head);
-                } catch (NumberFormatException e) {
-                    freq = Double.parseDouble(head.split("_")[1]);
+                if (head != null) {
+                    double freq;
+                    try {
+                        freq = Double.parseDouble(head);
+                    } catch (NumberFormatException e) {
+                        freq = Double.parseDouble(head.split("_")[1]);
+                    }
+                    hapMap.put(sb.toString(), freq);
                 }
-                hapMap.put(sb.toString(), freq);
-
             }
         } catch (IOException | NumberFormatException e) {
             System.err.println("Error Far: " + e.getMessage());
@@ -278,7 +279,7 @@ public class FastaParser {
                 } else {
                     sb.append(strLine);
                 }
-                if (hapMap.size()%50000==0) {
+                if (hapMap.size() % 50000 == 0) {
                     System.gc();
                 }
             }

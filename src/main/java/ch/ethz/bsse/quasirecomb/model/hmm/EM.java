@@ -20,7 +20,6 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,6 +42,7 @@ public class EM extends Utils {
     private void blackbox(Read[] reads, int N, int L, int K, int n) {
         Globals.getINSTANCE().setLOG(new StringBuilder());
         Globals.getINSTANCE().setMAX_LLH(Double.NEGATIVE_INFINITY);
+        Globals.getINSTANCE().setMIN_BIC(Double.MAX_VALUE);
         String pathOptimum = null;
         if (K == 1 || Globals.getINSTANCE().isFORCE_NO_RECOMB()) {
             Globals.getINSTANCE().setNO_RECOMB(true);
@@ -73,7 +73,7 @@ public class EM extends Utils {
             Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
         } else {
             long time = System.currentTimeMillis();
-            System.out.println("reading " + pathOptimum);
+//            System.out.println("reading " + pathOptimum);
 
             try {
                 FileInputStream fis = new FileInputStream(pathOptimum);
@@ -84,7 +84,7 @@ public class EM extends Utils {
                 System.err.println(ex);
             }
 
-            System.out.println("read: " + (System.currentTimeMillis() - time));
+//            System.out.println("read: " + (System.currentTimeMillis() - time));
 //        if (Globals.getINSTANCE().getOPTIMUM() == null) {l
 //            ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH());
 //            modelSampling.saveQuasispeciesOnly(Globals.getINSTANCE().getSAVEPATH() + "quasispecies_preliminary.fasta");

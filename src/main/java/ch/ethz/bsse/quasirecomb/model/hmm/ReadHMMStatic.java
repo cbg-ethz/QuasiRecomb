@@ -54,6 +54,8 @@ public class ReadHMMStatic {
                 }
             }
             if (c[j] <= 0) {
+//                jhmm.free(storage.getId());
+//                return 0;
                 System.err.println("R");
             }
             c[j] = 1d / c[j];
