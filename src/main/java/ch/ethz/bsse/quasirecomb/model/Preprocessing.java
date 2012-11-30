@@ -61,6 +61,11 @@ public class Preprocessing {
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        Globals.getINSTANCE().setALIGNMENT_END(L);
+        for (Read r : reads) {
+            r.shrink();
+        }
+        
         Globals.getINSTANCE().print("Parsing\t25%");
         int[][] alignment = countPos(reads,L);
         
@@ -69,12 +74,10 @@ public class Preprocessing {
         Globals.getINSTANCE().print("Parsing\t50%");
         StringBuilder sb = new StringBuilder();
         sb.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
-        double[][] prior = new double[L][5];
         for (int i = 0; i < L; i++) {
             int hits = 0;
             sb.append(i);
             for (int v = 0; v < alignment[i].length; v++) {
-                prior[i][v] = (alignment[i][v] + 1) / (N + alignment[i].length);
                 sb.append("\t").append(alignment[i][v]);
                 if (alignment[i][v] != 0) {
                     hits++;
@@ -85,7 +88,6 @@ public class Preprocessing {
                 System.out.println("Position " + i + " is not covered.");
             }
         }
-        Globals.getINSTANCE().setMU_PRIOR(prior);
         Globals.getINSTANCE().print("Parsing\t75%");
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
         sb = null;
@@ -98,7 +100,7 @@ public class Preprocessing {
         Globals.getINSTANCE().println("Plotting\t");
 //        System.exit(9);
         if (Globals.getINSTANCE().isPLOT()) {
-            Plot.plotCoverage(reads);
+            Plot.plotCoverage(alignment);
         }
         if (Globals.getINSTANCE().isCIRCOS()) {
         new Summary().printAlignment(reads);
@@ -116,7 +118,7 @@ public class Preprocessing {
     public static int[][] countPos(Read[] reads, int L){
         int[][] alignment = new int[L][5];
         for (Read r : reads) {
-            int begin = r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+            int begin = r.getWatsonBegin();
             for (int i = 0; i < r.getWatsonLength(); i++) {
                 try {
                     alignment[i + begin][BitMagic.getPosition(r.getSequence(), i)] += r.getCount();
@@ -125,7 +127,7 @@ public class Preprocessing {
                 }
             }
             if (r.isPaired()) {
-                begin = r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+                begin = r.getCrickBegin();
                 for (int i = 0; i < r.getCrickLength(); i++) {
                     alignment[i + begin][BitMagic.getPosition(r.getCrickSequence(), i)] += r.getCount();
                 }
@@ -160,7 +162,7 @@ public class Preprocessing {
                 if (r.getCount() < 1000) {
                     sb.append("\t");
                 }
-                for (int i = Globals.getINSTANCE().getALIGNMENT_BEGIN(); i < r.getBegin(); i++) {
+                for (int i = 0; i < r.getBegin(); i++) {
                     sb.append(" ");
                 }
                 sb.append(Utils.reverse(r.getSequence())).append("\n");

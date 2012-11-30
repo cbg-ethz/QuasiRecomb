@@ -108,16 +108,16 @@ public class JHMMBasics {
         int[] omega2 = new int[L + 1];
         for (Read r : reads) {
             for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
-                this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+                this.coverage[i] += r.getCount();
             }
-            tau1[r.getWatsonBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
-            omega1[r.getWatsonEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+            tau1[r.getWatsonBegin()] += r.getCount();
+            omega1[r.getWatsonEnd()] += r.getCount();
             if (r.isPaired()) {
                 for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
-                    this.coverage[i - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+                    this.coverage[i] += r.getCount();
                 }
-                tau2[r.getCrickBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
-                omega2[r.getCrickEnd() - Globals.getINSTANCE().getALIGNMENT_BEGIN()] += r.getCount();
+                tau2[r.getCrickBegin()] += r.getCount();
+                omega2[r.getCrickEnd()] += r.getCount();
             }
         }
         StringBuilder sb = new StringBuilder();

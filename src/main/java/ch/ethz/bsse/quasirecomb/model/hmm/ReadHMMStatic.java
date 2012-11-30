@@ -16,7 +16,7 @@ public class ReadHMMStatic {
 
     public static double computeFB(JHMM jhmm, Read read) {
         TempJHMMStorage storage = jhmm.getStorage();
-        int begin = read.getBegin() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        int begin = read.getBegin();
         int length = read.getLength();
         double[][][] fJKV = new double[length][jhmm.getK()][jhmm.getn()];
         double[][] fJK = new double[length][jhmm.getK()];

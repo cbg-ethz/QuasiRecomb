@@ -39,24 +39,17 @@ import org.jfree.data.xy.XYSeriesCollection;
  */
 public class Plot {
 
-    public static void plotCoverage(Read[] reads) {
+    public static void plotCoverage(int[][] alignment) {
         Multiset<Integer> coverage = HashMultiset.create();
-        int rLength = reads.length;
-        int j = 0;
-        for (Read r : reads) {
-            int amount = r.getCount();
-            for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
-                coverage.add(i, amount);
+        for (int i = 0; i < alignment.length; i++) {
+            for (int j = 0; j < alignment[0].length; j++) {
+                coverage.add(i, alignment[i][j]);
             }
-            for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
-                coverage.add(i, amount);
-            }
-            Globals.getINSTANCE().print("Plotting\t" + Math.round(1000 * ++j * 50d / rLength) / 1000 + "%");
         }
         XYSeries dataset = new XYSeries("Coverage");
-        int alignmentLength = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        int alignmentLength = Globals.getINSTANCE().getALIGNMENT_END();
         StringBuilder sb = new StringBuilder();
-        for (int i = Globals.getINSTANCE().getALIGNMENT_BEGIN(); i < Globals.getINSTANCE().getALIGNMENT_END(); i++) {
+        for (int i = 0; i < Globals.getINSTANCE().getALIGNMENT_END(); i++) {
             if (!coverage.contains(i)) {
                 dataset.add((double) i, 0.0);
                 sb.append(0).append(" ");
@@ -64,7 +57,7 @@ public class Plot {
                 dataset.add((double) i, (double) coverage.count(i));
                 sb.append(coverage.count(i)).append(" ");
             }
-            Globals.getINSTANCE().print("Plotting\t" + (50 + Math.round(1000 * (i - Globals.getINSTANCE().getALIGNMENT_BEGIN()) * 50d / alignmentLength) / 1000) + "%");
+            Globals.getINSTANCE().print("Plotting\t" + (50 + Math.round(1000 * i * 50d / alignmentLength) / 1000) + "%");
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "coverage.txt", sb.toString());
         XYSeriesCollection collection = new XYSeriesCollection(dataset);

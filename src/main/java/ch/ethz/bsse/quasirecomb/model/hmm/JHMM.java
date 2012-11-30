@@ -141,11 +141,7 @@ public class JHMM extends JHMMBasics {
         double[] muJKV;
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double mult = Globals.getINSTANCE().getMULT_MU();
-                if (Globals.getINSTANCE().isSPIKE_MU()) {
-                    mult = 10;
-                }
-                muJKV = Regularizations.regularizeOnce(this.nJKV[j][k], restart, muPrior, mult);
+                muJKV = Regularizations.regularizeOnce(this.nJKV[j][k], restart, muPrior, Globals.getINSTANCE().getMULT_MU());
                 for (int v = 0; v < n; v++) {
                     this.changed(mu[j][k][v], muJKV[v]);
                     mu[j][k][v] = muJKV[v];
@@ -168,44 +164,33 @@ public class JHMM extends JHMMBasics {
                 double mult = Globals.getINSTANCE().getMULT_RHO();
                 double[] rhoPrior = new double[K];
 
-                if (Globals.getINSTANCE().isSPIKE_RHO()) {
-                    mult = 1;
-//                    for (int l = 0; l < K; l++) {
-//                        if (k == l) {
-//                            rhoPrior[l] = 10;
-//                        } else {
-//                            rhoPrior[l] = 1e-10;
-//                        }
-//                    }
-                } else {
-                    double max = 0d;
-                    int lPrime = -1;
-                    double sum = 0d;
-                    double[] intermediate = new double[K];
-                    for (int l = 0; l < K; l++) {
-                        intermediate[l] = this.nJKL[j][k][l];
-                        sum += intermediate[l];
+                double max = 0d;
+                int lPrime = -1;
+                double sum = 0d;
+                double[] intermediate = new double[K];
+                for (int l = 0; l < K; l++) {
+                    intermediate[l] = this.nJKL[j][k][l];
+                    sum += intermediate[l];
+                }
+                for (int l = 0; l < K; l++) {
+                    intermediate[l] /= sum;
+                    if (intermediate[l] > max) {
+                        max = intermediate[l];
+                        lPrime = l;
                     }
-                    for (int l = 0; l < K; l++) {
-                        intermediate[l] /= sum;
-                        if (intermediate[l] > max) {
-                            max = intermediate[l];
-                            lPrime = l;
-                        }
-                    }
+                }
 
-                    for (int l = 0; l < K; l++) {
-                        if (k == l) {
+                for (int l = 0; l < K; l++) {
+                    if (k == l) {
 //                        if (Math.abs(max - 1d) < 1e-8 && lPrime != k) {
-                            if (max > 0.5 && lPrime != k) {
-                                mult = 10;
-                                rhoPrior[l] = 10;
-                            } else {
-                                rhoPrior[l] = 0.001;
-                            }
+                        if (max > 0.5 && lPrime != k) {
+                            mult = 10;
+                            rhoPrior[l] = 10;
                         } else {
-                            rhoPrior[l] = 0.0001;
+                            rhoPrior[l] = 0.001;
                         }
+                    } else {
+                        rhoPrior[l] = 0.0001;
                     }
                 }
                 rhoJKL = Regularizations.regularizeOnce(this.nJKL[j][k], restart, rhoPrior, mult);
@@ -301,7 +286,6 @@ public class JHMM extends JHMMBasics {
                 if (k != l) {
                     if (!a.contains(Pair.with(k, l)) && !a.contains(Pair.with(l, k))) {
                         a.add(Pair.with(k, l));
-//                        sb.append(k).append(" <-> ").append(l).append(" = ").append(KullbackLeibler.symmetric(mu, k, l)).append("\n");
                         double d = KullbackLeibler.symmetric(mu, k, l);
                         if (d < min) {
                             min = d;

@@ -261,4 +261,13 @@ public class Read {
             this.crickSequence = seqTmp;
         }
     }
+
+    public void shrink() {
+        this.watsonBegin -= Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        this.watsonEnd -= Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        if (this.crickSequence != null) {
+            this.crickBegin -= Globals.getINSTANCE().getALIGNMENT_BEGIN();
+            this.crickEnd -= Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        }
+    }
 }
