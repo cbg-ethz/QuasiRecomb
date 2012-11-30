@@ -19,13 +19,9 @@ package ch.ethz.bsse.quasirecomb.simulation;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
-import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
-import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMM;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,8 +30,6 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.javatuples.Pair;
 
 /**
