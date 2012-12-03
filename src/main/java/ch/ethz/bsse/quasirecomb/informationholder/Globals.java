@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
+import ch.ethz.bsse.quasirecomb.utils.Summary;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -86,6 +87,7 @@ public class Globals {
     private final int cpus = Runtime.getRuntime().availableProcessors();
     private List<Integer> runtime = new LinkedList<>();
     private long start = System.currentTimeMillis();
+    private String GENOME;
     private String OPTIMUM;
     private String[] HAPLOTYPE_ARRAY_EMPIRICAL;
     private String SAVEPATH;
@@ -146,7 +148,7 @@ public class Globals {
             }
             long time = System.currentTimeMillis() - oldTime;
             System.out.print("\r                                                                                                                                                   ");
-            System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]" + "[cK " + K + "]" + "[LLH " + MAX_LLH + "]" + "[BIC " + MIN_BIC + "]" + "[D-LLH " + CURRENT_DELTA_LLH + "]");
+            System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + (int)Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "% [ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]" + "[cK " + K + "]" + "[LLH " + ((int)MAX_LLH *1000)/100d + "]" + "[BIC " + ((int)MIN_BIC *1000)/100d + "]" + "[D-LLH " + Summary.shorten(CURRENT_DELTA_LLH) + "]");
         }
     }
 
@@ -557,5 +559,13 @@ public class Globals {
 
     public void setMULT_MU(double MULT_MU) {
         this.MULT_MU = MULT_MU;
+    }
+
+    public String getGENOME() {
+        return GENOME;
+    }
+
+    public void setGENOME(String GENOME) {
+        this.GENOME = GENOME;
     }
 }

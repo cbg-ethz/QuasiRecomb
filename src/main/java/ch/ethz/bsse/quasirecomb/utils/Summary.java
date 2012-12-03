@@ -18,6 +18,7 @@
 package ch.ethz.bsse.quasirecomb.utils;
 
 import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.File;
@@ -61,7 +62,8 @@ public class Summary extends Utils {
     }
 
     public void circos(int L, int[][] alignment) {
-        String[] genome = FastaParser.parseFarFile("/Users/XLR/Dropbox/references/ENV_clones_MSA.fasta");
+        String[] genome = FastaParser.parseFarFile(Globals.getINSTANCE().getGENOME());
+        //FastaParser.parseFarFile("/Users/XLR/Dropbox/Projects/karin/PacBio/run1/wglobal/ref_5343-8525.fasta");
         int[][][] alignmentG = new int[genome.length][L][5];
         double[][] alignmentE = new double[L][5];
         for (int i = 0; i < genome.length; i++) {
@@ -86,19 +88,42 @@ public class Summary extends Utils {
             for (int x = 0; x < genome.length; x++) {
                 genomeEntropyFill[x] = new StringBuilder();
             }
-            StringBuilder rawEntropy1 = new StringBuilder();
-            StringBuilder rawEntropy2 = new StringBuilder();
-            StringBuilder rawEntropy3 = new StringBuilder();
-            StringBuilder rawEntropy4 = new StringBuilder();
+            StringBuilder ticks = new StringBuilder();
+            ticks.append("show_ticks          = yes\n"
+                    + "show_tick_labels    = yes\n"
+                    + "\n"
+                    + "<ticks>\n"
+                    + "offset = - 50p\n"
+                    + "radius         = dims(ideogram,radius_outer)\n"
+                    + "multiplier     = 1/1u\n"
+                    + "color          = black\n"
+                    + "force_display  = yes\n"
+                    + "thickness      = 2p\n"
+                    + "show_label     = yes\n"
+                    + "format         = %d\n");
             StringBuilder coverage = new StringBuilder();
             int h = 0;
             int g = 0;
+            boolean nextTick = false;
             for (int j = from; j < to; j++) {
                 double max = 0d;
                 for (int v = 0; v < 5; v++) {
                     max = Math.max(max, alignmentE[j][v]);
                 }
+                if ((5433 + j) % 250 == 0) {
+                    nextTick = true;
+                }
                 if (max < 1d) {
+                    if (nextTick) {
+                        nextTick = false;
+                        ticks.append("<tick>\n"
+                                + "show           = yes\n"
+                                + "position       = " + g + "u\n"
+                                + "size           = 15p\n"
+                                + "label_size     = 36p\n"
+                                + "label          = " + (j + 5433) + "\n"
+                                + "</tick>\n");
+                    }
                     double sum = 0d;
                     double sumG[] = new double[genome.length];
                     for (int v = 0; v < alignment[j].length; v++) {
@@ -107,66 +132,28 @@ public class Summary extends Utils {
                             sumG[x] += alignmentG[x][j][v];
                         }
                     }
-                    rawEntropyFill.append("h0 " + g + " " + (g + 1) + " " + alignment[j][0] / sum);
+                    rawEntropyFill.append("h0 ").append(g).append(" ").append(g + 1).append(" ").append(alignment[j][0] / sum);
                     for (int x = 0; x < genome.length; x++) {
-                        genomeEntropyFill[x].append("h0 " + g + " " + (g + 1) + " " + alignmentG[x][j][0] / sumG[x]);
+                        genomeEntropyFill[x].append("h0 ").append(g).append(" ").append(g + 1).append(" ").append(alignmentG[x][j][0] / sumG[x]);
                     }
                     for (int v = 1; v < alignment[j].length; v++) {
-                        rawEntropyFill.append("," + alignment[j][v] / sum);
+                        rawEntropyFill.append(",").append(alignment[j][v] / sum);
                         for (int x = 0; x < genome.length; x++) {
-                            genomeEntropyFill[x].append("," + alignmentG[x][j][v] / sumG[x]);
+                            genomeEntropyFill[x].append(",").append(alignmentG[x][j][v] / sumG[x]);
                         }
                     }
                     rawEntropyFill.append("\n");
                     for (int x = 0; x < genome.length; x++) {
                         genomeEntropyFill[x].append("\n");
                     }
-//                rawEntropy1.append("h0 " + j + " " + (j + 1) + " " + alignment[j][1] / sum + "\n");
-//                rawEntropy2.append("h0 " + j + " " + (j + 1) + " " + alignment[j][1] / sum + "\n");
-//                rawEntropy3.append("h0 " + j + " " + (j + 1) + " " + alignment[j][2] / sum + "\n");
-//                rawEntropy4.append("h0 " + j + " " + (j + 1) + " " + alignment[j][3] / sum + "\n");
-                    coverage.append("h0 " + g + " " + (g + 1) + " " + sum + "\n");
+                    coverage.append("h0 ").append(g).append(" ").append(g + 1).append(" ").append(sum).append("\n");
                     g++;
-//            coverage.append("h0 " + j + " " + (j + 1) + " " + Math.random() + "\n");
-//            if (j < or.getL() - 1) {
-//                boolean flat = false;
-//                for (int k = 0; k < or.getK(); k++) {
-//                    for (int l = 0; l < or.getK(); l++) {
-//                        if (or.getRho()[j][k][l] > 1e-20 && or.getRho()[j][k][l] != 1d) {
-//                            flat = true;
-//                            break;
-//                        }
-//                        if (or.getRho()[j][k][l] == 1d && k != l) {
-//                            flat = true;
-//                            break;
-//                        }
-//                    }
-//                    if (flat) {
-//                        break;
-//                    }
-//                }
-//                if (flat) {
-//                    sb.append(j);
-//                    for (int k = 0; k < or.getK(); k++) {
-//                        sb.append("\t").append(k);
-//                    }
-//                    sb.append("\n");
-//                    for (int k = 0; k < or.getK(); k++) {
-//                        sb.append(k);
-//                        for (int l = 0; l < or.getK(); l++) {
-//                            sb.append(shorten(or.getRho()[j][k][l]));
-//                            sb.append("\t").append(shorten(or.getRho()[j][k][l]));
-//
-//                        }
-//                        sb.append("\n");
-//                    }
-//                }
-//            }
-//            Utils.saveFile(path + "rho_" + j, sb.toString());
                 }
             }
-            dataSB.append("chr - h0 1 " + from + " " + (g-1) + " blue\n");
+            ticks.append("</ticks>\n");
+            dataSB.append("chr - h0 1 ").append(from).append(" ").append(g - 1).append(" blue\n");
             new File("/Users/XLR/Dropbox/basicPlot/" + i + "/support/").mkdirs();
+            Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/ticks.conf", ticks.toString());
             Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/data.txt", dataSB.toString());
             Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/rawEntropy.txt", rawEntropyFill.toString());
             for (int x = 0; x < genome.length; x++) {
@@ -663,7 +650,7 @@ public class Summary extends Utils {
         return sb.toString();
     }
 
-    private String shorten(double value) {
+    public static String shorten(double value) {
         String s;
         if (value < 1e-20) {
             s = "0      ";

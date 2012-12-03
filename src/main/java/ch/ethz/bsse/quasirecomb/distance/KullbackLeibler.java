@@ -44,7 +44,7 @@ public class KullbackLeibler {
         for (int i = 0; i < mu.length; i++) {
             d += single(mu[i][k], mu[i][l]);
             if (Double.isInfinite(d)) {
-                System.err.println("");
+                System.err.println("mu is infinite");
                 single(mu[i][k], mu[i][l]);
             }
         }

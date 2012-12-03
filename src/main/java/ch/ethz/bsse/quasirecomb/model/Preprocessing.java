@@ -98,7 +98,6 @@ public class Preprocessing {
         Globals.getINSTANCE().println("Unique reads\t" + reads.length);
         Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED());
         Globals.getINSTANCE().println("Plotting\t");
-//        System.exit(9);
         if (Globals.getINSTANCE().isPLOT()) {
             Plot.plotCoverage(alignment);
         }

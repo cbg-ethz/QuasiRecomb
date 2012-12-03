@@ -37,7 +37,6 @@ import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import org.javatuples.Pair;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -148,8 +147,10 @@ public class Startup {
     private boolean kl;
     @Option(name = "--intersect")
     private boolean intersect;
-    @Option(name = "-circos")
+    @Option(name = "--circos")
     private boolean circos;
+    @Option(name = "-g")
+    private String genome;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -183,6 +184,8 @@ public class Startup {
                 summary();
             } else if (this.distance) {
                 distance();
+            } else if (this.circos) {
+                circos();
             } else if (cut) {
                 cut();
             } else {
@@ -225,7 +228,6 @@ public class Startup {
 //            System.err.println(" === SUMMARY of model === ");
 //            System.err.println("  --sample ");
 //            System.err.println("  -i FILE\t\t: Summary of given trained model");
-//            System.err.println("  -h FILE\t\t: Calculates phi distance to this true haplotypes");
 //            System.err.println("");
 //            System.err.println("  Example for summary:\n   java -jar QuasiRecomb.jar --summary -i path/to/optimumJava");
 //            System.err.println("");
@@ -451,6 +453,12 @@ public class Startup {
     private void cut() {
         Cutter.cut(input, output, begin, end);
     }
+    
+    private void circos(){
+        Globals.getINSTANCE().setCIRCOS(this.circos);
+        Globals.getINSTANCE().setGENOME(this.genome);
+        Preprocessing.workflow(this.input, 0, 0);
+    }
 
     private void train() throws NumberFormatException, CmdLineException {
         if (this.input == null) {
@@ -467,7 +475,6 @@ public class Startup {
 
         Globals.getINSTANCE().setMULT_MU(this.multMu);
         Globals.getINSTANCE().setMULT_RHO(this.multRho);
-        Globals.getINSTANCE().setCIRCOS(this.circos);
         Globals.getINSTANCE().setNOSAMPLE(this.nosample);
         Globals.getINSTANCE().setALPHA_H(this.alphah);
         Globals.getINSTANCE().setPDELTA(this.pdelta);

@@ -49,7 +49,7 @@ public class Frequency<T> {
             Double key = Math.random() * max;
             return table.higherEntry(key).getValue();
         } catch (Exception e) {
-            System.out.println("");
+            System.out.println("error rolling");
             return null;
         }
     }
