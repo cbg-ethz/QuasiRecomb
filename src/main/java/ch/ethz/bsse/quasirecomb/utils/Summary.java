@@ -58,7 +58,7 @@ public class Summary extends Utils {
                 sb.append(BitMagic.toString(currentRead.getSequence())).append("\n");
             }
         }
-        Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + "alignment.txt", sb.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "alignment.txt", sb.toString());
     }
 
     public void circos(int L, int[][] alignment) {

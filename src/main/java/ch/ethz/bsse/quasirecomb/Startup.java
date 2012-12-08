@@ -151,6 +151,8 @@ public class Startup {
     private boolean circos;
     @Option(name = "-g")
     private String genome;
+    @Option(name = "-printAlignment")
+    private boolean printAlignment;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -456,8 +458,8 @@ public class Startup {
     
     private void circos(){
         Globals.getINSTANCE().setCIRCOS(this.circos);
-        Globals.getINSTANCE().setGENOME(this.genome);
-        Preprocessing.workflow(this.input, 0, 0);
+        Globals.getINSTANCE().setGENOME(this.genome); 
+       Preprocessing.workflow(this.input, 0, 0);
     }
 
     private void train() throws NumberFormatException, CmdLineException {
@@ -473,6 +475,7 @@ public class Startup {
             Kmax = Integer.parseInt(K);
         }
 
+        Globals.getINSTANCE().setPRINT_ALIGNMENT(this.printAlignment);
         Globals.getINSTANCE().setMULT_MU(this.multMu);
         Globals.getINSTANCE().setMULT_RHO(this.multRho);
         Globals.getINSTANCE().setNOSAMPLE(this.nosample);

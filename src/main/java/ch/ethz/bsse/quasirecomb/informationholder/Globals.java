@@ -46,6 +46,7 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean PRINT_ALIGNMENT;
     private boolean CIRCOS;
     private boolean NOSAMPLE;
     private boolean OVERLAP;
@@ -568,4 +569,13 @@ public class Globals {
     public void setGENOME(String GENOME) {
         this.GENOME = GENOME;
     }
+
+    public boolean isPRINT_ALIGNMENT() {
+        return PRINT_ALIGNMENT;
+    }
+
+    public void setPRINT_ALIGNMENT(boolean PRINT_ALIGNMENT) {
+        this.PRINT_ALIGNMENT = PRINT_ALIGNMENT;
+    }
+    
 }

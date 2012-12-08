@@ -38,7 +38,7 @@ import java.util.Map;
 public class Preprocessing {
 
     private static int N = 0;
-    
+
     /**
      * Entry point. Forwards invokes of the specified workflow.
      *
@@ -65,10 +65,10 @@ public class Preprocessing {
         for (Read r : reads) {
             r.shrink();
         }
-        
+
         Globals.getINSTANCE().print("Parsing\t25%");
-        int[][] alignment = countPos(reads,L);
-        
+        int[][] alignment = countPos(reads, L);
+
 
 //        saveUnique(reads);
         Globals.getINSTANCE().print("Parsing\t50%");
@@ -101,9 +101,10 @@ public class Preprocessing {
         if (Globals.getINSTANCE().isPLOT()) {
             Plot.plotCoverage(alignment);
         }
-        if (Globals.getINSTANCE().isCIRCOS()) {
         new Summary().printAlignment(reads);
-            new Summary().circos(L,alignment);
+        if (Globals.getINSTANCE().isCIRCOS()) {
+//            new Summary().printAlignment(reads);
+            new Summary().circos(L, alignment);
             System.exit(0);
         }
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
@@ -113,8 +114,8 @@ public class Preprocessing {
             System.out.println("Quasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
         }
     }
-    
-    public static int[][] countPos(Read[] reads, int L){
+
+    public static int[][] countPos(Read[] reads, int L) {
         int[][] alignment = new int[L][5];
         for (Read r : reads) {
             int begin = r.getWatsonBegin();

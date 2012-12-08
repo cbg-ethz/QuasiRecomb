@@ -141,7 +141,23 @@ public class JHMM extends JHMMBasics {
         double[] muJKV;
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                muJKV = Regularizations.regularizeOnce(this.nJKV[j][k], restart, muPrior, Globals.getINSTANCE().getMULT_MU());
+                double[] muPriorLocal = new double[n];
+                System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
+                boolean repeat = true;
+                do {
+                    muJKV = Regularizations.regularizeOnce(this.nJKV[j][k], restart, muPriorLocal, Globals.getINSTANCE().getMULT_MU());
+                    double prev = muJKV[0];
+                    for (int v = 1; v < n; v++) {
+                        if (prev != muJKV[v]) {
+                            repeat = false;
+                        }
+                    }
+                    if (repeat) {
+                        for (int v = 0; v < n; v++) {
+                            muPriorLocal[v] *= 10;
+                        }
+                    }
+                } while (repeat);
                 for (int v = 0; v < n; v++) {
                     this.changed(mu[j][k][v], muJKV[v]);
                     mu[j][k][v] = muJKV[v];

@@ -1,4 +1,4 @@
-#ABSTRACT:
+# QuasiRecomb
 RNA viruses are present in a single host as a population of different
 but related strains. This population, shaped by the combination of
 genetic change and selection, is called quasispecies. Genetic change
@@ -13,37 +13,48 @@ the advantage of explicitly taking the recombination process into
 account, and tested by applying to reads obtained from experimental 
 HIV samples.
 
-#CONTENT:
+#### CONTENT:
 This java command line application is a toolbox, combining all necessary
 steps to infer a viral quasispecies from Next Generation Sequencing (NGS) data.
 
-#PREREQUISITES TO RUN:
+- - -
+
+#### PREREQUISITES TO RUN:
  - JDK 7 (http://jdk7.java.net/)
  - Get latest version: https://github.com/armintoepfer/QuasiRecomb/downloads
 
-#RUN:
- java -jar QuasiRecomb.jar -i alignedReads.fasta
+## RUN:
+#### Local reconstruction
+ `java -jar QuasiRecomb.jar -i alignedReads.fasta`
+
+#### Global reconstruction
+ `java -jar QuasiRecomb.jar -i alignment.bam`
+
+### Use fixed number of generators
+ `java -jar QuasiRecomb.jar -i alignedReads.fasta -K 2`
+
+### Use backward pruning to get better initialization (slower)
+ `java -jar QuasiRecomb.jar -i alignedReads.fasta -prune`
+
+### Output
  The reconstructed quasispecies.fasta will be saved in the working directory.
 
-#USE / SHOW HELP:
- java -jar QuasiRecomb.jar
+### Help:
+ Further help can be showed by running without additional parameters:
+  `java -jar QuasiRecomb.jar`
 
-#USE fixed number of generators
- java -jar QuasiRecomb.jar -i alignedReads.fasta -K 2
-
-#CONTACT:
- Armin Töpfer
- armin.toepfer (at) gmail.com
- http://www.bsse.ethz.ch/cbg/people/toepfera
-
-
-#PREREQUISITES COMPILE (only for dev):
+## PREREQUISITES COMPILE (only for dev):
  - Maven 3 (http://maven.apache.org/)
 
-#INSTALL (only for dev):
- cd QuasiRecomb
- mvn clean package
- java -jar QuasiRecomb/target/QuasiRecomb.jar --help
+## INSTALL (only for dev):
+    cd QuasiRecomb
+    mvn clean package
+    java -jar QuasiRecomb/target/QuasiRecomb.jar
 
-#LICENSE:
+# CONTACT:
+    Armin Töpfer
+    armin.toepfer (at) gmail.com
+    http://www.bsse.ethz.ch/cbg/people/toepfera
+
+# LICENSE:
  GNU GPLv3 http://www.gnu.org/licenses/gpl-3.0
