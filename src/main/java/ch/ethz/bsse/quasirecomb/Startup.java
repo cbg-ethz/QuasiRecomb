@@ -153,6 +153,8 @@ public class Startup {
     private String genome;
     @Option(name = "-printAlignment")
     private boolean printAlignment;
+    @Option(name = "-maxReg")
+    private boolean maximalRegularization;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -455,11 +457,11 @@ public class Startup {
     private void cut() {
         Cutter.cut(input, output, begin, end);
     }
-    
-    private void circos(){
+
+    private void circos() {
         Globals.getINSTANCE().setCIRCOS(this.circos);
-        Globals.getINSTANCE().setGENOME(this.genome); 
-       Preprocessing.workflow(this.input, 0, 0);
+        Globals.getINSTANCE().setGENOME(this.genome);
+        Preprocessing.workflow(this.input, 0, 0);
     }
 
     private void train() throws NumberFormatException, CmdLineException {
@@ -476,10 +478,16 @@ public class Startup {
         }
 
         Globals.getINSTANCE().setPRINT_ALIGNMENT(this.printAlignment);
-        Globals.getINSTANCE().setMULT_MU(this.multMu);
-        Globals.getINSTANCE().setMULT_RHO(this.multRho);
+        if (this.maximalRegularization) {
+            Globals.getINSTANCE().setMULT_MU(1);
+            Globals.getINSTANCE().setMULT_RHO(1);
+            Globals.getINSTANCE().setALPHA_H(1e-6);
+        } else {
+            Globals.getINSTANCE().setMULT_MU(this.multMu);
+            Globals.getINSTANCE().setMULT_RHO(this.multRho);
+            Globals.getINSTANCE().setALPHA_H(this.alphah);
+        }
         Globals.getINSTANCE().setNOSAMPLE(this.nosample);
-        Globals.getINSTANCE().setALPHA_H(this.alphah);
         Globals.getINSTANCE().setPDELTA(this.pdelta);
         Globals.getINSTANCE().setPRUNE(this.prune);
         Globals.getINSTANCE().setPERTURB(this.perturb);

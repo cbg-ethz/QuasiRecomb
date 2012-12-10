@@ -97,11 +97,14 @@ public class Preprocessing {
         Globals.getINSTANCE().print("Parsing\t100%");
         Globals.getINSTANCE().println("Unique reads\t" + reads.length);
         Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED());
-        Globals.getINSTANCE().println("Plotting\t");
         if (Globals.getINSTANCE().isPLOT()) {
+        Globals.getINSTANCE().println("Plotting\t");
             Plot.plotCoverage(alignment);
         }
-        new Summary().printAlignment(reads);
+        if (Globals.getINSTANCE().isPRINT_ALIGNMENT()) {
+        Globals.getINSTANCE().println("Saving alignment\t");
+            new Summary().printAlignment(reads);
+        }
         if (Globals.getINSTANCE().isCIRCOS()) {
 //            new Summary().printAlignment(reads);
             new Summary().circos(L, alignment);

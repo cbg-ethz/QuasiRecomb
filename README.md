@@ -29,6 +29,7 @@ steps to infer a viral quasispecies from Next Generation Sequencing (NGS) data.
 
 #### Global reconstruction
  `java -jar QuasiRecomb.jar -i alignment.bam`
+  In this case, all insertions will be omitted, but deletions are preserved.
 
 ### Use fixed number of generators
  `java -jar QuasiRecomb.jar -i alignedReads.fasta -K 2`

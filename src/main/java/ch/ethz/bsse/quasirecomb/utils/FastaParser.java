@@ -191,7 +191,6 @@ public class FastaParser {
             }
         }
         Map<Integer, Read> hashed = new HashMap<>();
-        int i = 0;
         for (Read r1 : pairedReads1.values()) {
             int hash = r1.hashCode();
             if (hashed.containsKey(hash)) {
@@ -200,66 +199,9 @@ public class FastaParser {
                 hashed.put(hash, r1);
             }
         }
-//        StringBuilder sb = new StringBuilder();
-//        for (Read unique : hashed.values()) {
-//            sb.append(Utils.reverse(unique.getSequence())).append("");
-//            if (unique.isPaired()) {
-//                sb.append(Utils.reverse(unique.getCrickSequence()));
-//            }
-//            sb.append("\n");
-//        }
-//
-//        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "uniques.txt", sb.toString());
         return hashed.values().toArray(new Read[hashed.size()]);
     }
 
-//    public static Read[] parseFastq(String location) {
-//        FastqReader fastqReader = new IlluminaFastqReader();
-//        Map<String, Read> pairedReads = new HashMap<>();
-//        List<Read> hashing = new LinkedList<>();
-//        try {
-//            Iterable<Fastq> reads = fastqReader.read(new File(location));
-//            for (Fastq f : reads) {
-//                //@generator-0_0.25_899_1068_0:0:0_0:0:0_0/2
-//                byte[] seq = Utils.splitReadIntoByteArray(f.getSequence());
-//                String description = f.getDescription();
-//                String tag = description.split(":")[0];
-//                final String[] firstSplit = description.split("_");
-//                //SAMPLED-0_100-300\1
-//                int pairedNumber = Integer.parseInt(description.split("/")[1]);
-//                switch (pairedNumber) {
-//                    case 1:
-//                        int begin = Integer.parseInt(firstSplit[1]);
-//                        int end = begin + seq.length;
-//                        pairedReads.put(tag, new Read(seq, begin, end));
-//                        break;
-//                    case 2:
-//                        Read mate = pairedReads.get(tag);
-//                        int end2 = Integer.parseInt(firstSplit[2]);
-//                        int begin2 = end2 - seq.length;
-//                        mate.setPairedEnd(seq, begin2, end2);
-//                        boolean missing = true;
-//                        for (Read r : hashing) {
-//                            if (r.equals(mate)) {
-//                                r.incCount();
-//                                missing = false;
-//                                break;
-//                            }
-//                        }
-//                        if (missing) {
-//                            mate.setCount(1);
-//                            hashing.add(mate);
-//                        }
-//                        break;
-//                    default:
-//                        throw new IllegalStateException("Do not know paired end number " + pairedNumber + " of read " + firstSplit[0]);
-//                }
-//            }
-//        } catch (IOException ex) {
-//            Logger.getLogger(FastaParser.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        return hashing.toArray(new Read[hashing.size()]);
-//    }
     public static Map<String, byte[]> parseGlobalFarFile(String location) {
         Map<String, byte[]> hapMap = new ConcurrentHashMap<>();
         try {
@@ -285,24 +227,6 @@ public class FastaParser {
             }
             System.gc();
             System.gc();
-//            hapMap.put(head, BitMagic.splitReadIntoBytes(sb.toString()));
-//            try (Scanner scanner = new Scanner(Paths.get(location), StandardCharsets.UTF_8.name())) {
-//                String strLine;
-//                while (scanner.hasNextLine()) {
-//                    strLine = scanner.nextLine();
-//                    if (strLine.startsWith(">")) {
-//                        if (sb.length() > 0) {
-//                            hapMap.put(head, BitMagic.splitReadIntoBytes(sb.toString()));
-//                            sb.setLength(0);
-//                        }
-//                        head = strLine;
-//                    } else {
-//                        sb.append(strLine);
-//                    }
-//                }
-//                hapMap.put(head, BitMagic.splitReadIntoBytes(sb.toString()));
-//
-//            }
         } catch (IOException | NumberFormatException e) {
             System.err.println("Error Far: " + e.getMessage());
         }

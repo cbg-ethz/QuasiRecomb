@@ -17,7 +17,6 @@
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
-import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
@@ -178,7 +177,7 @@ public class Utils extends FastaParser {
     }
 
     public static Read[] parseBAMSAM(String location) {
-        List<Read> readList = new LinkedList<>();
+        Map<String, Read> readMap = new HashMap<>();
         File bam = new File(location);
         SAMFileReader sfr = new SAMFileReader(bam);
         for (final SAMRecord samRecord : sfr) {
@@ -199,7 +198,8 @@ public class Utils extends FastaParser {
                                 System.out.println("U1");
                                 System.exit(9);
                             }
-                            buildRead.add(samRecord.getReadBases()[readStart++]);
+                            byte b = samRecord.getReadBases()[readStart++];
+                            buildRead.add(b);
                         }
                         break;
                     case I:
@@ -242,30 +242,23 @@ public class Utils extends FastaParser {
                 }
             }
             byte[] readBases = convertRead(buildRead.toArray(new Byte[buildRead.size()]));
-            Read r = new Read(readBases, refStart, refStart + readBases.length);
-            if (r.getLength() != r.getEnd() - r.getBegin()) {
-                System.out.println("U2");
-                System.exit(9);
-            }
-            readList.add(r);
-        }
-        List<Read> hashing = new ArrayList<>();
-        for (Read r0 : readList) {
-            boolean missing = true;
-            for (Read r : hashing) {
-                if (Arrays.equals(r.getSequence(), r0.getSequence())
-                        && r.getBegin() == r0.getBegin()
-                        && r.getEnd() == r0.getEnd()) {
-                    r.incCount();
-                    missing = false;
-                    break;
-                }
-            }
-            if (missing) {
-                hashing.add(new Read(r0.getSequence(), r0.getBegin(), r0.getEnd(), 1));
+            String name = samRecord.getReadName();
+            if (readMap.containsKey(name)) {
+                readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
+            } else {
+                readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length));
             }
         }
-        return hashing.toArray(new Read[hashing.size()]);
+        Map<Integer, Read> hashed = new HashMap<>();
+        for (Read r1 : readMap.values()) {
+            int hash = r1.hashCode();
+            if (hashed.containsKey(hash)) {
+                hashed.get(hash).incCount();
+            } else {
+                hashed.put(hash, r1);
+            }
+        }
+        return hashed.values().toArray(new Read[hashed.size()]);
     }
 
     private static byte[] convertRead(Byte[] readSplit) {
@@ -286,10 +279,8 @@ public class Utils extends FastaParser {
                     rs[i] = 3;
                     break;
                 case 45:
-                    rs[i] = 4;
-                    break;
                 case 78:
-                    rs[i] = 5;
+                    rs[i] = 4;
                     break;
                 default:
                     System.out.println("Unknown " + (char) ((byte) readSplit[i]) + " " + readSplit[i]);

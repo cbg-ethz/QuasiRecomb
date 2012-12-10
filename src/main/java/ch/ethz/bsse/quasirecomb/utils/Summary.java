@@ -55,7 +55,11 @@ public class Summary extends Utils {
                 for (int i = min; i < item; i++) {
                     sb.append(" ");
                 }
-                sb.append(BitMagic.toString(currentRead.getSequence())).append("\n");
+                String s = BitMagic.toString(currentRead.getSequence());
+                for (char c : s.toCharArray()) {
+                    sb.append(reverse(Integer.parseInt(""+c)));
+                }
+                sb.append("\n");
             }
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "alignment.txt", sb.toString());

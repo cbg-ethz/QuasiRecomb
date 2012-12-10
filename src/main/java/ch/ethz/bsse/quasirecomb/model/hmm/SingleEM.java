@@ -27,6 +27,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.javatuples.Triplet;
@@ -127,8 +128,38 @@ public class SingleEM {
         }
 
         double oldllh;
-        List<Double> history = new ArrayList<>();
+        List<Double> history = new LinkedList<>();
         do {
+            if (history.size() == 5) {
+                int up = 0;
+                int down = 0;
+                for (int i = 1; i < 5; i++) {
+                    if (history.get(i) < history.get(i - 1)) {
+                        down++;
+                    } else {
+                        up++;
+                    }
+                }
+                if (up >=2 && down >= 2) {
+                    Globals.getINSTANCE().log("break loop;\t");
+                    break;
+                }
+
+
+//                mean /= 5;
+//                double sd = 0;
+//                for (Double d : history) {
+//                    sd += Math.pow(d - mean, 2);
+//                }
+//                sd = Math.sqrt(sd / 4);
+//                mean = Math.abs(mean);
+//
+//                if (mean + sd > loglikelihood || mean - sd < loglikelihood) {
+//                    Globals.getINSTANCE().log("break loop;\t");
+//                    break;
+//                }
+                history = history.subList(1, 5);
+            }
 //            System.out.println("FLATS:"+flats);
             Globals.getINSTANCE().maxMAX_LLH(loglikelihood);
             Globals.getINSTANCE().minMIN_BIC(maxBIC);
