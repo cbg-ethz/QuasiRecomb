@@ -114,7 +114,7 @@ public class Preprocessing {
         if (!Globals.getINSTANCE().isNOSAMPLE()) {
             ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
             modelSampling.save();
-            System.out.println("Quasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
+            System.out.println("\nQuasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
         }
     }
 
