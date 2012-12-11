@@ -5,7 +5,7 @@
 
     <groupId>ch.ethz.bsse</groupId>
     <artifactId>QuasiRecomb</artifactId>
-    <version>0.4</version>
+    <version>0.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <url>http://www.cbg.ethz.ch/software/quasirecomb</url>
     <name>QuasiRecomb</name>
@@ -19,8 +19,8 @@
     </developers>
     
      <scm>
-        <connection>scm:git:[fetch=]git://github.com/armintoepfer/QuasiRecomb.git</connection>
-        <developerConnection>scm:git:[fetch=]git://github.com/armintoepfer/QuasiRecomb.git</developerConnection>
+        <connection>scm:git:git://github.com/armintoepfer/QuasiRecomb.git</connection>
+        <developerConnection>scm:git:git://github.com/armintoepfer/QuasiRecomb.git</developerConnection>
         <url>https://github.com/armintoepfer/QuasiRecomb</url>
     </scm>
     
