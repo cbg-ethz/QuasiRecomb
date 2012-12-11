@@ -50,4 +50,12 @@ The model with the best likehood gets additional restarts to converge
 
 ###Output
 After the model has been trained, 10,000 haplotypes are sampled at the MAP estimate. The distribution of haplotypes is saved in the file `quasispecies.fasta`.  
-In addition, a HTML `K?-summary.html` file  visualizes the position wise mutation vectors and recombination rates of the generators. Furthermore, the initial probability vector pi and the estimated error-rate is shown. The file `K?-result.txt` is a text representation of the HTML visualization and `K?-minimal.txt` only shows 
+In addition, a HTML `K?-summary.html` file  visualizes the position wise mutation vectors and recombination rates of the generators. Furthermore, the initial probability vector pi and the estimated error-rate is shown. The file `K?-result.txt` is a text representation of the HTML visualization and `K?-minimal.txt` only shows the position, at which mutation or recombination distributions are flat.
+
+#Intermediate files
+One interesting overview is `support/hit_dist.txt`, which shows the position-wise allel frequencies of the input alignment. This gives a comprehensive overview of the dataset.
+
+During training, intermediate results, as long as they are better then their predecessors, are saved in `support/snapshots/training/`. Files have the naming pattern `R(restart)_K(current generator)_(number of restarts until converged)` and the suffix *.txt* or *.optimum*
+
+###R012_K3_0054.txt
+Files with the suffix *.txt* have structure as the *K?-result.txt* results. 
