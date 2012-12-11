@@ -90,3 +90,17 @@ The fields flat mu's and rho's are of following structure `?(R|E)`, where E is t
 #ADVANCED
 ###Backward pruning
 Model initialization is a crucial point and one main aspect, why the EM may not find the global optimum. Therefore, backward pruning has been implemented and can be activated by `-prune`. With pruning, each restart for given *K*, starts with *K**2 and then one EM round is done. After that, the most similar generators are merged (Kullback Leibler divergence) or the generator with the highest entropy. This is done until *K* is reached. This provides more stable solutions.
+
+###Maximal regularization
+In the case that only the major haplotypes are of interest, regularization can be set to the maximum with `-maxReg`
+
+###Save alignment
+The alignment can be saved with `-printAlignment`, which will be saved as `alignment.txt`.
+
+###Plot coverage
+A coverage plot can be produced with `-plot` and will be saved as `coverage.png`.
+
+###No recombination
+Recombination can be deactivated with `-noRecomb`.
+
+###
