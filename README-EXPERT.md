@@ -52,10 +52,34 @@ The model with the best likehood gets additional restarts to converge
 After the model has been trained, 10,000 haplotypes are sampled at the MAP estimate. The distribution of haplotypes is saved in the file `quasispecies.fasta`.  
 In addition, a HTML `K?-summary.html` file  visualizes the position wise mutation vectors and recombination rates of the generators. Furthermore, the initial probability vector pi and the estimated error-rate is shown. The file `K?-result.txt` is a text representation of the HTML visualization and `K?-minimal.txt` only shows the position, at which mutation or recombination distributions are flat.
 
+The file `support/best.optimum` is the binary java version of the results. 
+
+####Haplotype sampling
+The binary java *optimum* files can be used to sample the haplotype distribution with  
+`qr --sample -i support/best.optimum`
+
+####Training from intermediate
+Furthermore, the binary java *optimum* files can be used as initialization for training  
+`qr -i reads.sam -optimum support/best.optimum`
+#####Convergence
+In combination with `-optimum`, the convergence criterium can be switched to number of parameters changed `-pdelta`. The EM will converge, if no parameter has changed in the last EM step. Otherwise the delta likelihood `-dd 1e-8` can be tweaked.
+
 #Intermediate files
 One interesting overview is `support/hit_dist.txt`, which shows the position-wise allel frequencies of the input alignment. This gives a comprehensive overview of the dataset.
 
-During training, intermediate results, as long as they are better then their predecessors, are saved in `support/snapshots/training/`. Files have the naming pattern `R(restart)_K(current generator)_(number of restarts until converged)` and the suffix *.txt* or *.optimum*
+During training, intermediate results, as long as they are better then their predecessors, are saved in `support/snapshots/training/`. Files have the naming pattern `R(restart)_K(current generator)_(number of restarts until converged)` and the suffix *.txt* or *.optimum*. The *txt* file has the same structure as the *K?-result.txt*. The *.optimum* file is like the *support/best.optimum*, from which can be sampled or used as initialization.
 
-###R012_K3_0054.txt
-Files with the suffix *.txt* have structure as the *K?-result.txt* results. 
+#DEBUG
+Debugging is important, but the normal command line output gives you some insights during execution.  
+````
+00:00:01:639 Model training [K 2]:      0% [ETA:00:03:01:420][cK 2]
+|----------| |------------| |---|  |-----| |----------------| |---|
+  Elapsed     Training or   fix K        |  Remaining time     current K
+   time       Modelselect.              /   for current EM     (only import for pruning)
+                                 Elapsed         step
+                                restarts
+`````
+
+#ADVANCED
+###Backward pruning
+Model initialization is a crucial point and one main aspect, why the EM may not find the global optimum. Therefore, backward pruning has been implemented and can be activated by `-prune`. With pruning, each restart for given *K*, starts with *K**2 and then one EM round is done. After that, the most similar generators are merged (Kullback Leibler divergence) or the generator with the highest entropy. This is done until *K* is reached. This provides more stable solutions.
