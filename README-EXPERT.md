@@ -13,10 +13,13 @@ qr () {
 }
 ````
 
-#Input
-QuasiRecomb accepts **FASTA** and **BAM** files. All insertions in the BAM will be ignored! If you want to study small insertions, please re-align your reads again the consensus sequence of the MSA.
 
 #Standard parameters
+
+##Input
+QuasiRecomb accepts **FASTA** and **BAM** files. All insertions in the BAM will be ignored! If you want to study small insertions, please re-align your reads again the consensus sequence of the MSA.
+
+###Local reconstruction
 A typical execution for a local reconstruction looks like:
 
 ````
@@ -33,22 +36,33 @@ Quasispecies saved: quasispecies.fasta
 ````
 In the pre-processing step, the input file is parsed and the unique reads get hashed.
 
-###Model selection
+###Global reconstruction
+`qr -i reads.bam`
+
+###Global reconstruction with paired end reads
+`qr -i reads.bam -paired`
+
+
+##Model selection
 In the next step model selection is performed. The default range is `-K 1:5`, where *K* is the number of generators and `1:5` is the interval for model selection. Model selection can be skipped by fixing the number of generators, e.g., `-K 2`.  
 For each *K* in the interval, 5 EM restarts are performed. The *K* with the largest BIC is selected. The number of EM restarts can be changed with  
 `-t 10 [5]`
 
-###Training
+####Convergence
+During model selection of the 5 EM restarts per *K*, the convergence criterion is defined as the delta loglikelihood  
+`-d 1e-4 [1e-6]`
+
+##Training
 The model gets trained with the given number of generators, otherwise *K* has been be chosen by model selection. The number of EM restarts can be changed with   
 `-m 30 [50]`
 ####Convergence
-During training of the 50 EM restarts, the convergence criterion is a defined delta loglikelihood  
+The convergence criterium for the 50 EM restarts, is the same as during model selection  
 `-d 1e-4 [1e-6]`
 
 The model with the best likehood gets additional restarts to converge  
 `-dd 1e-6 [1e-8]`
 
-###Output
+##Output
 After the model has been trained, 10,000 haplotypes are sampled at the MAP estimate. The distribution of haplotypes is saved in the file `quasispecies.fasta`.  
 In addition, a HTML `K?-summary.html` file  visualizes the position wise mutation vectors and recombination rates of the generators. Furthermore, the initial probability vector pi and the estimated error-rate is shown. The file `K?-result.txt` is a text representation of the HTML visualization and `K?-minimal.txt` only shows the position, at which mutation or recombination distributions are flat.
 
@@ -103,4 +117,5 @@ A coverage plot can be produced with `-plot` and will be saved as `coverage.png`
 ###No recombination
 Recombination can be deactivated with `-noRecomb`.
 
-###
+##Technical error rate
+The technical error rate gets estimated and has an informative prior: a beta distribution with mode 0.008. This is the typical error rate of common sequencing platforms.
