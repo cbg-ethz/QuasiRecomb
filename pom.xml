@@ -19,7 +19,7 @@
     
      <scm>
         <connection>scm:git:ssh://github.com/armintoepfer/QuasiRecomb.git</connection>
-        <developerConnection>scm:git:git@github.com:armintoepfer/QuasiRecomb.git</developerConnection>
+        <developerConnection>scm:git@github.com:armintoepfer/QuasiRecomb.git</developerConnection>
         <url>https://github.com/armintoepfer/QuasiRecomb</url>
     </scm>
     
