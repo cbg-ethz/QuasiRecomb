@@ -72,14 +72,21 @@ During training, intermediate results, as long as they are better then their pre
 #DEBUG
 Debugging is important, but the normal command line output gives you some insights during execution.  
 ````
-00:00:01:639 Model training [K 2]:      0% [ETA:00:03:01:420][cK 2]
-|----------| |------------| |---|  |-----| |----------------| |---|
-  Elapsed     Training or   fix K        |  Remaining time     current K
-   time       Modelselect.              /   for current EM     (only import for pruning)
-                                 Elapsed         step
-                                restarts
+00:00:01:639 Model training [K 2]:          0% [ETA:00:03:01:420][cK 2]
+|----------| |------------| |---|  |---------| |----------------| |---|
+  Elapsed     Training or   fix K    Elapsed     Remaining time    current K
+   time       Modelselect.           restarts    for current EM (only import for pruning)
+                                                      step
 `````
 
+Additional information can be printed after each EM step with `-verbose -print`. The normal line gets extended by:
+````
+    5            62     0.04311297852050573    m(11|17)    r(82|98)     232     -11851.217734419906
+|--------| |-------|   |-------------------|  |-------|   |--------|  |-------| |------------------|  
+   EM      Millisecs   delta log-likelihood   flat mu's   flat rho's   #param    log-likelihood
+iteration    taken                                                     changed
+````
+The fields flat mu's and rho's are of following structure `?(R|E)`, where E is the number of flat distributions of the expected counts and R is the number of flat distributions after regularization. Here, the incremental regularization can be observed.
 #ADVANCED
 ###Backward pruning
 Model initialization is a crucial point and one main aspect, why the EM may not find the global optimum. Therefore, backward pruning has been implemented and can be activated by `-prune`. With pruning, each restart for given *K*, starts with *K**2 and then one EM round is done. After that, the most similar generators are merged (Kullback Leibler divergence) or the generator with the highest entropy. This is done until *K* is reached. This provides more stable solutions.
