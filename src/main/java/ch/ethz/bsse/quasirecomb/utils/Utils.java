@@ -246,7 +246,7 @@ public class Utils extends FastaParser {
             if (readMap.containsKey(name)) {
                 readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
             } else {
-                readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length));
+                readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, 1));
             }
         }
         Map<Integer, Read> hashed = new HashMap<>();

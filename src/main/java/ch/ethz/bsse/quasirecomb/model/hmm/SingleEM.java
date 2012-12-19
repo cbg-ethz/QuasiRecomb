@@ -120,53 +120,65 @@ public class SingleEM {
     }
 
     private void start() {
-        this.loglikelihood = Double.MIN_VALUE;
+        this.loglikelihood = Double.NEGATIVE_INFINITY;
         this.maxBIC = calcBIC(jhmm);
 
         if (Globals.getINSTANCE().isSNAPSHOTS()) {
             this.snapshot();
         }
 
+        if (Globals.getINSTANCE().isML()) {
+            Globals.getINSTANCE().setBIAS_MU(false);
+            Globals.getINSTANCE().setML(false);
+            double alphah = Globals.getINSTANCE().getALPHA_H();
+            double multMu = Globals.getINSTANCE().getMULT_MU();
+//            double alphaZ = Globals.getINSTANCE().getALPHA_Z();
+//            double multRho = Globals.getINSTANCE().getMULT_RHO();
+            Globals.getINSTANCE().setALPHA_H(0.01);
+            Globals.getINSTANCE().setMULT_MU(1000);
+//            Globals.getINSTANCE().setML(true);
+            this.iterateRho();
+            
+            Globals.getINSTANCE().log("switch\n");
+            Globals.getINSTANCE().setBIAS_MU(true);
+            Globals.getINSTANCE().setALPHA_H(alphah);
+            Globals.getINSTANCE().setMULT_MU(multMu);
+            jhmm.restart();
+            this.iterate();
+            Globals.getINSTANCE().setML(true);
+        } else {
+            this.iterate();
+        }
+
+        Globals.getINSTANCE().log("###c(" + jhmm.getMuChanged() +"|"+jhmm.getRhoChanged() + ")\n");
+
+        Globals.getINSTANCE().incPercentage();
+
+        Globals.getINSTANCE().maxMAX_LLH(loglikelihood);
+        this.calcBic();
+
+        if (Globals.getINSTANCE().isDEBUG()) {
+            Globals.getINSTANCE().log("####");
+            Globals.getINSTANCE().log("\n");
+        }
+    }
+
+    private void iterateRho() {
         double oldllh;
         List<Double> history = new LinkedList<>();
         do {
-            if (history.size() == 5) {
-                int up = 0;
-                int down = 0;
-                for (int i = 1; i < 5; i++) {
-                    if (history.get(i) < history.get(i - 1)) {
-                        down++;
-                    } else {
-                        up++;
-                    }
-                }
-                if (up >=2 && down >= 2) {
-                    Globals.getINSTANCE().log("break loop;\t");
-                    break;
-                }
-
-
-//                mean /= 5;
-//                double sd = 0;
-//                for (Double d : history) {
-//                    sd += Math.pow(d - mean, 2);
-//                }
-//                sd = Math.sqrt(sd / 4);
-//                mean = Math.abs(mean);
-//
-//                if (mean + sd > loglikelihood || mean - sd < loglikelihood) {
-//                    Globals.getINSTANCE().log("break loop;\t");
-//                    break;
-//                }
-                history = history.subList(1, 5);
-            }
-//            System.out.println("FLATS:"+flats);
-            Globals.getINSTANCE().maxMAX_LLH(loglikelihood);
             Globals.getINSTANCE().minMIN_BIC(maxBIC);
             iterations++;
             history.add(loglikelihood);
             oldllh = loglikelihood;
             loglikelihood = jhmm.getLoglikelihood();
+            if (Globals.getINSTANCE().isSTOP_QUICK() && Math.abs((oldllh - loglikelihood) / loglikelihood) < 1e-2 && loglikelihood != Globals.getINSTANCE().getMAX_LLH()
+                    && ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) > 0.1) {
+                if (Globals.getINSTANCE().isDEBUG()) {
+                    System.out.println("too small");
+                }
+                break;
+            }
             if (iterations > 500) {
                 if (history.get(iterations - 500) - loglikelihood > -1) {
                     Globals.getINSTANCE().log("break 500;\t");
@@ -177,11 +189,11 @@ public class SingleEM {
             Globals.getINSTANCE().setCURRENT_DELTA_LLH((oldllh - loglikelihood) / loglikelihood);
             if (Globals.getINSTANCE().isDEBUG()) {
                 if (loglikelihood < 0 && oldllh < 0) {
-                    Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
+                    Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
                 } else if (loglikelihood > 0 && oldllh > 0) {
-                    Globals.getINSTANCE().log((loglikelihood - oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
+                    Globals.getINSTANCE().log((loglikelihood - oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
                 } else if (loglikelihood > 0 && oldllh < 0) {
-                    Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\t" + jhmm.getParametersChanged() + "\t");
+                    Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
 
                 }
                 Globals.getINSTANCE().log(loglikelihood + "\n");
@@ -193,20 +205,57 @@ public class SingleEM {
                 jhmm.restart();
             }
 
-//            Globals.getINSTANCE().printPercentage(K);
             if (Globals.getINSTANCE().isSNAPSHOTS()) {
                 this.snapshot();
             }
-        } while ((Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta && !Globals.getINSTANCE().isPDELTA()) || (Globals.getINSTANCE().isPDELTA() && jhmm.getParametersChanged() != 0));
-        Globals.getINSTANCE().log("###\t" + jhmm.getParametersChanged() + "\n");
+        } while (jhmm.getRhoChanged() > 0 && Math.abs((oldllh - loglikelihood) / loglikelihood) > 1e-4);
+    }
+    private void iterate() {
+        double oldllh;
+        List<Double> history = new LinkedList<>();
+        do {
+            Globals.getINSTANCE().minMIN_BIC(maxBIC);
+            iterations++;
+            history.add(loglikelihood);
+            oldllh = loglikelihood;
+            loglikelihood = jhmm.getLoglikelihood();
+            if (Globals.getINSTANCE().isSTOP_QUICK() && Math.abs((oldllh - loglikelihood) / loglikelihood) < 1e-2 && loglikelihood != Globals.getINSTANCE().getMAX_LLH()
+                    && ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) > 0.1) {
+                if (Globals.getINSTANCE().isDEBUG()) {
+                    System.out.println("too small");
+                }
+                break;
+            }
+            if (iterations > 500) {
+                if (history.get(iterations - 500) - loglikelihood > -1) {
+                    Globals.getINSTANCE().log("break 500;\t");
+                    break;
+                }
+            }
+            log(loglikelihood);
+            Globals.getINSTANCE().setCURRENT_DELTA_LLH((oldllh - loglikelihood) / loglikelihood);
+            if (Globals.getINSTANCE().isDEBUG()) {
+                if (loglikelihood < 0 && oldllh < 0) {
+                    Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
+                } else if (loglikelihood > 0 && oldllh > 0) {
+                    Globals.getINSTANCE().log((loglikelihood - oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
+                } else if (loglikelihood > 0 && oldllh < 0) {
+                    Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
 
-        Globals.getINSTANCE().incPercentage();
-        this.calcBic();
+                }
+                Globals.getINSTANCE().log(loglikelihood + "\n");
+            }
 
-        if (Globals.getINSTANCE().isDEBUG()) {
-            Globals.getINSTANCE().log("####");
-            Globals.getINSTANCE().log("\n");
-        }
+            if (Globals.getINSTANCE().isPRUNE() && K > Kmin) {
+                this.jhmm = prune();
+            } else {
+                jhmm.restart();
+            }
+
+            if (Globals.getINSTANCE().isSNAPSHOTS()) {
+                this.snapshot();
+            }
+        } while ((Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta && !Globals.getINSTANCE().isPDELTA()) || (Globals.getINSTANCE().isPDELTA() && (jhmm.getRhoChanged() + jhmm.getMuChanged()) != 0));
     }
 
     private JHMM prune() {

@@ -17,7 +17,6 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
-import ch.ethz.bsse.quasirecomb.utils.Summary;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -46,6 +45,10 @@ public class Globals {
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+    private boolean BIAS_MU;
+    private boolean SILENT;
+    private boolean ML;
+    private boolean STOP_QUICK;
     private boolean PRINT_ALIGNMENT;
     private boolean CIRCOS;
     private boolean NOSAMPLE;
@@ -65,6 +68,8 @@ public class Globals {
     private boolean PRINT = true;
     private boolean MODELSELECTION;
     private boolean PAIRED = false;
+    private boolean PRIORMU;
+    private boolean SPIKERHO;
     private double PCHANGE;
     private double MULT_RHO;
     private double MULT_MU;
@@ -77,8 +82,8 @@ public class Globals {
     private double DELTA_REFINE_LLH;
     private boolean PRUNE;
     private double CURRENT_DELTA_LLH = 0;
-    private double MAX_LLH = Double.NEGATIVE_INFINITY;
-    private double MIN_BIC = Double.NEGATIVE_INFINITY;
+    private double MAX_LLH = -1;
+    private double MIN_BIC = Double.MIN_VALUE;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
     private int REPEATS;
@@ -91,6 +96,7 @@ public class Globals {
     private String GENOME;
     private String OPTIMUM;
     private String[] HAPLOTYPE_ARRAY_EMPIRICAL;
+    private int[][] MU_PRIOR;
     private String SAVEPATH;
     private StringBuilder LOG = new StringBuilder();
     private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
@@ -142,15 +148,17 @@ public class Globals {
     }
 
     public void printPercentage(int K, double read, double Kmin) {
-        if (!oldOut.equals(time())) {
-            this.oldOut = time();
-            if (oldTime == 0) {
-                oldTime = System.currentTimeMillis();
-            }
-            long time = System.currentTimeMillis() - oldTime;
-            System.out.print("\r                                                                                                                                                   ");
+        if (!SILENT) {
+            if (!oldOut.equals(time())) {
+                this.oldOut = time();
+                if (oldTime == 0) {
+                    oldTime = System.currentTimeMillis();
+                }
+                long time = System.currentTimeMillis() - oldTime;
+                System.out.print("\r                                                                                                                                                   ");
 //            System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + (int)Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "% [ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]" + "[cK " + K + "]" + "[LLH " + ((int)MAX_LLH *1000)/100d + "]" + "[BIC " + ((int)MIN_BIC *1000)/100d + "]" + "[D-LLH " + Summary.shorten(CURRENT_DELTA_LLH) + "]");
-            System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + (int)Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "% [ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]" + "[cK " + K + "]");
+                System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + (int) Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "% [ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]" + "[cK " + K + "]");
+            }
         }
     }
 
@@ -165,6 +173,30 @@ public class Globals {
 
     public String time() {
         return df.format(new Date(System.currentTimeMillis() - start));
+    }
+
+    public void setSPIKERHO(boolean SPIKERHO) {
+        this.SPIKERHO = SPIKERHO;
+    }
+
+    public boolean isSPIKERHO() {
+        return SPIKERHO;
+    }
+
+    public boolean isPRIORMU() {
+        return PRIORMU;
+    }
+
+    public void setPRIORMU(boolean PRIORMU) {
+        this.PRIORMU = PRIORMU;
+    }
+
+    public int[][] getMU_PRIOR() {
+        return MU_PRIOR;
+    }
+
+    public void setMU_PRIOR(int[][] MU_PRIOR) {
+        this.MU_PRIOR = MU_PRIOR;
     }
 
     public double getCURRENT_DELTA_LLH() {
@@ -272,7 +304,17 @@ public class Globals {
     }
 
     public synchronized void maxMAX_LLH(double llh) {
-        MAX_LLH = Math.max(MAX_LLH, llh);
+        if (MAX_LLH == -1 || llh > MAX_LLH) {
+            MAX_LLH = llh;
+        }
+    }
+
+    public void setSTOP_QUICK(boolean STOP_QUICK) {
+        this.STOP_QUICK = STOP_QUICK;
+    }
+
+    public boolean isSTOP_QUICK() {
+        return STOP_QUICK;
     }
 
     public static Globals getINSTANCE() {
@@ -578,5 +620,28 @@ public class Globals {
     public void setPRINT_ALIGNMENT(boolean PRINT_ALIGNMENT) {
         this.PRINT_ALIGNMENT = PRINT_ALIGNMENT;
     }
-    
+
+    public boolean isML() {
+        return ML;
+    }
+
+    public void setML(boolean ML) {
+        this.ML = ML;
+    }
+
+    public boolean isSILENT() {
+        return SILENT;
+    }
+
+    public void setSILENT(boolean SILENT) {
+        this.SILENT = SILENT;
+    }
+
+    public boolean isBIAS_MU() {
+        return BIAS_MU;
+    }
+
+    public void setBIAS_MU(boolean BIAS_MU) {
+        this.BIAS_MU = BIAS_MU;
+    }
 }

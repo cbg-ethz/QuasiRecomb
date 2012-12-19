@@ -65,12 +65,10 @@ public class Startup {
     private String K = "1:5";
     @Option(name = "-prune")
     private boolean prune;
-    @Option(name = "-spikeRho")
-    private boolean spikeRho;
     @Option(name = "-multMu")
-    private double multMu = 100;
+    private double multMu = 10;
     @Option(name = "-multRho")
-    private double multRho = 100;
+    private double multRho = 10;
     @Option(name = "-nosample")
     private boolean nosample;
     @Option(name = "-m")
@@ -84,11 +82,13 @@ public class Startup {
     @Option(name = "-noInfoEps")
     private boolean noInfoEps;
     @Option(name = "-d")
-    private double d = 1e-6;
+    private double d = 1e-4;
     @Option(name = "-dd")
     private double dd = 1e-8;
     @Option(name = "-alphah")
-    private double alphah = 1e-3;
+    private double alphah = 1e-4;
+    @Option(name = "-alphaz")
+    private double alphaz = 1e-4;
     @Option(name = "-p")
     private double p = 1e-10;
     @Option(name = "-noRecomb")
@@ -155,6 +155,24 @@ public class Startup {
     private boolean printAlignment;
     @Option(name = "-maxReg")
     private boolean maximalRegularization;
+    @Option(name = "-amplicons")
+    private String amplicons;
+    @Option(name = "-ampliconDist")
+    private String ampliconDist;
+    @Option(name = "-length")
+    private int length;
+    @Option(name = "-muPrior")
+    private boolean muPrior;
+    @Option(name = "-stopQuick")
+    private boolean stopQuick;
+    @Option(name = "-ML")
+    private boolean ML;
+    @Option(name = "-spikeRho")
+    private boolean spikeRho;
+    @Option(name = "-global")
+    private boolean global;
+    @Option(name = "-silent")
+    private boolean silent;
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -264,6 +282,7 @@ public class Startup {
     }
 
     private void setMainParameters() {
+        Globals.getINSTANCE().setSILENT(this.silent);
         Globals.getINSTANCE().setSTORAGE(!this.minmem);
         Globals.getINSTANCE().setSNAPSHOTS(this.snapshots);
         Globals.getINSTANCE().setDEBUG(this.verbose || this.debug);
@@ -298,7 +317,11 @@ public class Startup {
         if (paired) {
             Simulator.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.e, fArray, this.output);
         } else {
-            Simulator.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.e, fArray, 4, this.output);
+            if (this.amplicons != null) {
+                Simulator.fromHaplotypesGlobalAmplicon(FastaParser.parseFarFile(input), N, L, this.e, fArray, this.output, this.amplicons, this.ampliconDist, this.length);
+            } else {
+                Simulator.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.e, fArray, 4, this.output);
+            }
         }
     }
 
@@ -476,16 +499,26 @@ public class Startup {
             Kmin = Integer.parseInt(K);
             Kmax = Integer.parseInt(K);
         }
-
+        if (this.global) {
+            Globals.getINSTANCE().setSPIKERHO(true);
+            Globals.getINSTANCE().setML(true);
+        } else {
+            Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
+            Globals.getINSTANCE().setML(this.ML);
+        }
+        Globals.getINSTANCE().setSTOP_QUICK(this.stopQuick);
         Globals.getINSTANCE().setPRINT_ALIGNMENT(this.printAlignment);
+        Globals.getINSTANCE().setPRIORMU(this.muPrior);
         if (this.maximalRegularization) {
             Globals.getINSTANCE().setMULT_MU(1);
             Globals.getINSTANCE().setMULT_RHO(1);
             Globals.getINSTANCE().setALPHA_H(1e-6);
+            Globals.getINSTANCE().setALPHA_Z(1e-6);
         } else {
             Globals.getINSTANCE().setMULT_MU(this.multMu);
             Globals.getINSTANCE().setMULT_RHO(this.multRho);
             Globals.getINSTANCE().setALPHA_H(this.alphah);
+            Globals.getINSTANCE().setALPHA_Z(this.alphaz);
         }
         Globals.getINSTANCE().setNOSAMPLE(this.nosample);
         Globals.getINSTANCE().setPDELTA(this.pdelta);

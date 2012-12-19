@@ -104,17 +104,20 @@ public class ReadHMMStatic {
                     }
                     bJK[j][k] *= c[j];
                 }
-//                if (Double.isInfinite(bJK[j][k])) {
-//                    //this is infinite, because the char has not been observed and there no probability to emit it
-//                    //thus we divide 0 by a very small number, i.e. 1e-300.
-//                    bJK[j][k] = 0d;
-//                }
+                if (Double.isInfinite(bJK[j][k])) {
+                    //this is infinite, because the char has not been observed and there no probability to emit it
+                    //thus we divide 0 by a very small number, i.e. 1e-300.
+                    bJK[j][k] = 0d;
+                }
                 gammaSum += fJK[j][k] * bJK[j][k];
             }
             if (read.isHit(j)) {
                 double xiSum = 0d;
                 for (int k = 0; k < jhmm.getK(); k++) {
-                    if (gammaSum == 0) {
+                    if (Double.isNaN(gammaSum)) {
+                        System.err.println("XXX");
+                        System.exit(0);
+                    } else if (gammaSum == 0) {
                         for (int v = 0; v < jhmm.getn(); v++) {
                             storage.addnJKV(jGlobal, k, v, ((double) read.getCount()) / jhmm.getn());
                         }
@@ -124,6 +127,7 @@ public class ReadHMMStatic {
                             storage.addnJKV(jGlobal, k, v, gamma);
                             if (Double.isNaN(gamma)) {
                                 System.out.println("#####");
+                                System.exit(0);
                             }
                             if (read.getBase(j) != v) {
                                 storage.addnneqPos(j, gamma);
@@ -151,6 +155,7 @@ public class ReadHMMStatic {
                             double xi = read.getCount() * fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l] / xiSum;
                             if (Double.isNaN(xi)) {
                                 System.err.println("xi nan");
+                                System.exit(0);
                             }
                             storage.addnJKL(jGlobal, k, l, xi);
                         }
@@ -161,7 +166,11 @@ public class ReadHMMStatic {
 
         likelihood *= read.getCount();
 
-        jhmm.free(storage.getId());
+        free(jhmm,storage);
         return likelihood;
+    }
+
+    private static void free(JHMM jhmm, TempJHMMStorage storage) {
+        jhmm.free(storage.getId());
     }
 }

@@ -25,50 +25,25 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
  */
 public class Random {
 
+    public static Dirichlet muDir;
+    private static Dirichlet[] rhoDir;
+
     public static double[][][] generateInitRho(int Ldec, int K) {
-        Dirichlet dirichlet = new Dirichlet(K, Globals.getINSTANCE().getBETA_Z());
+        if (rhoDir == null || rhoDir.length != K) {
+            rhoDir = new Dirichlet[K];
+            for (int k = 0; k < K; k++) {
+                double[] d = new double[K];
+                for (int l = 0; l < K; l++) {
+                    d[l] = k == l ? 1 : 0.001;
+                }
+                rhoDir[k] = new Dirichlet(d);
+            }
+        }
         double[][][] rho = new double[Ldec][K][K];
         if (!Globals.getINSTANCE().isNO_RECOMB()) {
             for (int j = 0; j < Ldec; j++) {
                 for (int k = 0; k < K; k++) {
-//                    for (int l = 0; l < K; l++) {
-//                        if (l == k) {
-//                            rho[j][k][l] = 0.99;
-//                        } else {
-//                            rho[j][k][l] = (1-rho[j][k][k])/(K-1);
-//                        }
-//                    }
-                    boolean retry;
-                    do {
-                        retry = false;
-                        rho[j][k] = dirichlet.nextDistribution();
-                        int maxIndex = 0;
-                        double max = 0;
-                        for (int l = 0; l < K; l++) {
-                            if (rho[j][k][l] > max) {
-                                max = rho[j][k][l];
-                                maxIndex = l;
-                            }
-                        }
-                        rho[j][k][maxIndex] = rho[j][k][k];
-                        rho[j][k][k] = max;
-                        if (max < 0.90 || max >= 1) {
-                            retry = true;
-                        }
-                    } while (retry);
-                    double max = 0;
-                    for (int l = 0; l < K; l++) {
-                        max = Math.max(max, rho[j][k][l]);
-                    }
-                    if (Math.abs(max - 1d) < 1e-8) {
-                        for (int l = 0; l < K; l++) {
-                            if (rho[j][k][l] < max) {
-                                rho[j][k][l] = 0d;
-                            } else {
-                                rho[j][k][l] = 1;
-                            }
-                        }
-                    }
+                    rho[j][k] = rhoDir[k].nextDistribution();
                 }
             }
         } else {
@@ -96,18 +71,23 @@ public class Random {
     }
 
     public static double[][][] generateMuInit(int L, int K, int n) {
+        if (muDir == null) {
+            muDir = new Dirichlet(n, 2);
+        }
         double[][][] mu = new double[L][K][n];
 
         for (int j = L - 1; j >= 0; j--) {
-//            Dirichlet d = new Dirichlet(Globals.getINSTANCE().getMU_PRIOR()[j]);
             for (int k = K - 1; k >= 0; k--) {
-//                if (Globals.getINSTANCE().isNO_RECOMB()) {
-                    mu[j][k] = new Dirichlet(n, 100).nextDistribution();
-//                } else {
-//                    for (int i = n - 1; i >= 0; i--) {
-//                        mu[j][k][i] = 1d / n;
-//                    }
-//                }
+                if (Globals.getINSTANCE().isPRIORMU()) {
+                    double[] d = new double[n];
+                    for (int v = 0; v < n; v++) {
+//                        d[v] = (double) Globals.getINSTANCE().getMU_PRIOR()[j][v] + 1;
+                        d[v] = 1d/n;
+                    }
+                    mu[j][k] = new Dirichlet(d).nextDistribution();
+                } else {
+                    mu[j][k] = muDir.nextDistribution();
+                }
             }
         }
         return mu;

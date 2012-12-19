@@ -74,7 +74,8 @@ public class JHMM extends JHMMBasics {
 
     public void restart() {
         this.restart++;
-        this.parametersChanged = 0;
+        this.muChanged = 0;
+        this.rhoChanged = 0;
         this.compute();
     }
 
@@ -138,28 +139,39 @@ public class JHMM extends JHMMBasics {
     }
 
     private void maximizeMu() {
+        int repeats = 0;
         double[] muJKV;
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double[] muPriorLocal = new double[n];
-                System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
-                boolean repeat = true;
-                do {
-                    muJKV = Regularizations.regularizeOnce(this.nJKV[j][k], restart, muPriorLocal, Globals.getINSTANCE().getMULT_MU());
-                    double prev = muJKV[0];
-                    for (int v = 1; v < n; v++) {
-                        if (prev != muJKV[v]) {
+                if (Globals.getINSTANCE().isML()) {
+                    muJKV = Regularizations.ml(this.nJKV[j][k]);
+                } else {
+                    double mult = Globals.getINSTANCE().getMULT_MU();
+                    double[] muPriorLocal = new double[n];
+                    System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
+                    boolean repeat = true;
+                    do {
+                        muJKV = Regularizations.regularizeOnce(this.nJKV[j][k], restart, muPriorLocal, mult);
+                        double prev = muJKV[0];
+                        for (int v = 1; v < n; v++) {
+                            if (prev != muJKV[v]) {
+                                repeat = false;
+                            }
+                        }
+                        if (repeat) {
+                            mult *= 2;
+                            for (int v = 0; v < n; v++) {
+                                muPriorLocal[v] *= 10;
+                                repeats++;
+                            }
+                        }
+                        if (mult > 1000) {
                             repeat = false;
                         }
-                    }
-                    if (repeat) {
-                        for (int v = 0; v < n; v++) {
-                            muPriorLocal[v] *= 10;
-                        }
-                    }
-                } while (repeat);
+                    } while (repeat);
+                }
                 for (int v = 0; v < n; v++) {
-                    this.changed(mu[j][k][v], muJKV[v]);
+                    this.changedMu(mu[j][k][v], muJKV[v]);
                     mu[j][k][v] = muJKV[v];
                     if (Double.isNaN(muJKV[v])) {
                         System.out.println("R nan, j " + j + ", k " + k);
@@ -170,53 +182,87 @@ public class JHMM extends JHMMBasics {
                 }
             }
         }
+//        System.out.println("\nREP:"+repeats+"\n");
     }
 
-    private void maximizeRho() {
+    private boolean maximizeRho() {
+//        int repeats = 0;
+        boolean forceRho = false;
         double[] rhoJKL;
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-
-                double mult = Globals.getINSTANCE().getMULT_RHO();
-                double[] rhoPrior = new double[K];
-
-                double max = 0d;
-                int lPrime = -1;
-                double sum = 0d;
-                double[] intermediate = new double[K];
-                for (int l = 0; l < K; l++) {
-                    intermediate[l] = this.nJKL[j][k][l];
-                    sum += intermediate[l];
-                }
-                for (int l = 0; l < K; l++) {
-                    intermediate[l] /= sum;
-                    if (intermediate[l] > max) {
-                        max = intermediate[l];
-                        lPrime = l;
+//                if (Globals.getINSTANCE().isML()) {
+//                    rhoJKL = Regularizations.ml(this.nJKL[j][k]);
+//                } else 
+                {
+                    double max = 0d;
+                    int lPrime = -1;
+                    double sum = 0d;
+                    double[] intermediate = new double[K];
+                    for (int l = 0; l < K; l++) {
+                        intermediate[l] = this.nJKL[j][k][l];
+                        sum += intermediate[l];
                     }
-                }
-
-                for (int l = 0; l < K; l++) {
-                    if (k == l) {
-//                        if (Math.abs(max - 1d) < 1e-8 && lPrime != k) {
-                        if (max > 0.5 && lPrime != k) {
-                            mult = 10;
-                            rhoPrior[l] = 10;
-                        } else {
-                            rhoPrior[l] = 0.001;
+                    for (int l = 0; l < K; l++) {
+                        intermediate[l] /= sum;
+                        if (intermediate[l] > max) {
+                            max = intermediate[l];
+                            lPrime = l;
                         }
-                    } else {
-                        rhoPrior[l] = 0.0001;
+                    }
+
+                    double mult = Globals.getINSTANCE().getMULT_RHO();
+                    double[] rhoPrior = new double[K];
+                    boolean fix = false;
+                    for (int l = 0; l < K; l++) {
+                        if (k == l) {
+                            if (max > 0.5 && lPrime != k && Globals.getINSTANCE().isSPIKERHO()) {
+                                if (mult > 10) {
+                                    mult = 10;
+                                }
+                                rhoPrior[l] = 1e10;
+                                fix = true;
+                                forceRho = true;
+                                break;
+//                                repeats++;
+                            } else {
+                                rhoPrior[l] = Globals.getINSTANCE().getALPHA_Z() * 10;
+                            }
+                        } else {
+                            rhoPrior[l] = Globals.getINSTANCE().getALPHA_Z();
+                        }
+                    }
+                    rhoJKL = null;
+                    if (!fix) {
+                        rhoJKL = Regularizations.regularizeOnceRho(k, this.nJKL[j][k], restart, rhoPrior, mult);
+                        lPrime = -1;
+                        max = -1;
+                        for (int l = 0; l < K; l++) {
+                            if (rhoJKL[l] > max) {
+                                max = rhoJKL[l];
+                                lPrime = l;
+                            }
+                        }
+                        if (max > 0.5 && lPrime != k && Globals.getINSTANCE().isSPIKERHO()) {
+                            fix = true;
+                            forceRho = true;
+                        }
+                    }
+                    if (fix) {
+                        rhoJKL = new double[K];
+                        for (int l = 0; l < K; l++) {
+                            rhoJKL[l] = l == k ? 1 : 0;
+                        }
                     }
                 }
-                rhoJKL = Regularizations.regularizeOnce(this.nJKL[j][k], restart, rhoPrior, mult);
 
                 for (int l = 0; l < K; l++) {
-                    this.changed(rho[j - 1][k][l], rhoJKL[l]);
+                    this.changedRho(rho[j - 1][k][l], rhoJKL[l]);
                     rho[j - 1][k][l] = rhoJKL[l];
                 }
             }
         }
+        return forceRho;
     }
 
     private void maximizePi() {
@@ -233,15 +279,95 @@ public class JHMM extends JHMMBasics {
             pi[k] /= sumK;
         }
     }
+    private int oldFlatMu = -1;
+    private boolean biasMu = false;
+    private int biasCounter = 0;
+    private int unBiasCounter = 0;
+    private double bias = 50d;
 
     private void mStep() {
+        boolean forceRho = false;
         if (!Globals.getINSTANCE().isNO_RECOMB()) {
-            this.maximizeRho();
+            forceRho = this.maximizeRho();
         }
         this.maximizePi();
         this.maximizeMu();
+        if (forceRho) {
+            for (int j = 0; j < L; j++) {
+                for (int k = 0; k < K; k++) {
+                    double sum = 0;
+                    for (int v = 0; v < n; v++) {
+                        this.mu[j][k][v] += Math.random() / 100d;
+                        sum += this.mu[j][k][v];
+                    }
+                    for (int v = 0; v < n; v++) {
+                        this.mu[j][k][v] /= sum;
+                    }
+                }
+            }
+        }
+        if (Globals.getINSTANCE().isBIAS_MU()) {
+            int currentFlatMu = getMuFlats();
+            if (biasCounter < 1) {
+                this.biasMu = true;
+            } else {
+                this.unBiasCounter++;
+                this.biasMu = false;
+                if (unBiasCounter > 200) {
+                    this.biasCounter = 0;
+                    this.unBiasCounter = 0;
+                    this.bias *= 2;
+                }
+            }
+            if (oldFlatMu == currentFlatMu) {
+                if (biasMu) {
+                    this.biasMu();
+                    System.out.print("BIAS\t");
+                    biasCounter++;
+                } else {
+                    System.out.print("UNB\t");
+                }
+            } else {
+                System.out.print("DIFF\t");
+            }
+//            }
+            oldFlatMu = currentFlatMu;
+        }
         if (!Globals.getINSTANCE().isFLAT_EPSILON_PRIOR()) {
             this.maximizeEps();
+        }
+    }
+
+    private void biasMu() {
+        for (int j = 0; j < L; j++) {
+            boolean flat = false;
+            for (int k = 0; k < K; k++) {
+                double max = 0;
+                double sum = 0;
+                for (int v = 0; v < n; v++) {
+                    max = Math.max(this.mu[j][k][v], max);
+                    sum += this.mu[j][k][v];
+//                    max = Math.max(this.nJKV[j][k][v], max);
+//                    sum += this.nJKV[j][k][v];
+                }
+                if (max < sum) {
+                    flat = true;
+                    break;
+                }
+            }
+            if (flat) {
+                for (int k = 0; k < K; k++) {
+//                    this.mu[j][k] = Random.muDir.nextDistribution();
+                    double sum = 0;
+                    for (int v = 0; v < n; v++) {
+                        this.mu[j][k][v] += Math.random() / 10d;
+                        sum += this.mu[j][k][v];
+                    }
+                    for (int v = 0; v < n; v++) {
+                        this.mu[j][k][v] /= sum;
+                    }
+                }
+            }
         }
     }
 

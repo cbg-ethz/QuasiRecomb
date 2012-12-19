@@ -37,8 +37,6 @@ import java.util.Map;
  */
 public class Preprocessing {
 
-    private static int N = 0;
-
     /**
      * Entry point. Forwards invokes of the specified workflow.
      *
@@ -88,6 +86,7 @@ public class Preprocessing {
                 System.out.println("Position " + i + " is not covered.");
             }
         }
+        Globals.getINSTANCE().setMU_PRIOR(alignment);
         Globals.getINSTANCE().print("Parsing\t75%");
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
         sb = null;

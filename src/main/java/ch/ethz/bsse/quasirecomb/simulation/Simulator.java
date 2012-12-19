@@ -123,6 +123,97 @@ public class Simulator {
 
     }
 
+    public static void fromHaplotypesGlobalAmplicon(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, String savePath, String amplicons, String ampliconDistribution, int length) {
+        int ampliconPos[];
+        String[] split = amplicons.split(",");
+        ampliconPos = new int[split.length];
+        int x = 0;
+        for (String s : split) {
+            ampliconPos[x++] = Integer.parseInt(s);
+        }
+
+        double ampliconDist[];
+        split = ampliconDistribution.split(",");
+        ampliconDist = new double[split.length];
+        x = 0;
+        double sum = 0d;
+        for (String s : split) {
+            ampliconDist[x++] = Double.parseDouble(s);
+            sum += ampliconDist[x - 1];
+        }
+        if (sum != 1d && Math.abs(sum - 1d) > 1e-6) {
+            throw new RuntimeException("Amplicon distribution do not add up to 1, instead to " + sum);
+        }
+
+        Map<Integer, Double> ampliconMap = new ConcurrentHashMap<>();
+        for (int i = 0; i < ampliconDist.length; i++) {
+            ampliconMap.put(i, ampliconDist[i]);
+        }
+        Frequency<Integer> ampliconFreq = new Frequency<>(ampliconMap);
+
+
+        Map<Byte, Boolean> map = new HashMap<>();
+        for (String h : haplotypes) {
+            for (int i = 0; i < h.length(); i++) {
+                map.put((byte) h.charAt(i), Boolean.TRUE);
+            }
+        }
+        int n = map.keySet().size();
+        L = haplotypes[0].length();
+        Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
+        for (int i = 0; i < hapProb.length; i++) {
+            freqMap.put(i, hapProb[i]);
+        }
+        Frequency<Integer> frequency = new Frequency<>(freqMap);
+
+        List<FutureTask<Read>> taskList = new ArrayList<>();
+        int coverage[] = new int[L];
+        for (int i = 0; i < N; i++) {
+            int l = length;
+            int start = ampliconPos[ampliconFreq.roll()];
+            if (length + start > haplotypes[0].length()) {
+                l = haplotypes[0].length() - start;
+            }
+
+            for (int j = 0; j < l; j++) {
+                coverage[start + j]++;
+            }
+            int hap = frequency.roll();
+            FutureTask<Read> futureTask_1 = new FutureTask<>(new CallableSimulatorSingle(l, epsilon, n, haplotypes, hap, start));
+            taskList.add(futureTask_1);
+            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
+            Globals.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");
+        }
+        System.out.println("");
+
+
+        StringBuilder sb = new StringBuilder();
+        for (int j = 0; j < taskList.size(); j++) {
+            FutureTask<Read> futureTask = taskList.get(j);
+            try {
+                Read r = futureTask.get();
+                sb.append(">SAMPLED").append(j).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(j).append("/1").append("\n");
+                sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
+                Globals.getINSTANCE().print("Simulation\t" + Math.round((100d * j) / taskList.size()) + "%");
+            } catch (InterruptedException | ExecutionException ex) {
+                System.err.println("Problem");
+                System.err.println(ex);
+            }
+        }
+        System.out.println("");
+        if (savePath.endsWith(".fasta")) {
+            Utils.saveFile(savePath, sb.toString());
+        } else {
+            Utils.saveFile(savePath + ".fasta", sb.toString());
+        }
+        sb.setLength(0);
+        for (int i = 0; i < L; i++) {
+            sb.append(coverage[i]).append("\n");
+        }
+        Utils.saveFile(savePath + "_coverage.txt", sb.toString());
+
+    }
+
     public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
         Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {

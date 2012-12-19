@@ -41,7 +41,7 @@ public class EM extends Utils {
 
     private void blackbox(Read[] reads, int N, int L, int K, int n) {
         Globals.getINSTANCE().setLOG(new StringBuilder());
-        Globals.getINSTANCE().setMAX_LLH(Double.NEGATIVE_INFINITY);
+        Globals.getINSTANCE().setMAX_LLH(-1);
         Globals.getINSTANCE().setMIN_BIC(Double.MAX_VALUE);
         String pathOptimum = null;
         if (K == 1 || Globals.getINSTANCE().isFORCE_NO_RECOMB()) {

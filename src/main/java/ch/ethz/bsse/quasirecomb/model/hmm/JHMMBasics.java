@@ -52,7 +52,8 @@ public class JHMMBasics {
     protected Read[] reads;
     protected int restart = 0;
     protected int coverage[];
-    protected int parametersChanged = 0;
+    protected int muChanged = 0;
+    protected int rhoChanged = 0;
     protected boolean paired;
     protected Map<Integer, TempJHMMStorage> garage = new ConcurrentHashMap<>();
     protected final List<Integer> available = new ArrayList<>();
@@ -76,9 +77,14 @@ public class JHMMBasics {
     }
     
     
-    protected void changed(double a, double b) {
+    protected void changedMu(double a, double b) {
         if (Math.abs(a - b) > Globals.getINSTANCE().getPCHANGE()) {
-            this.parametersChanged++;
+            this.muChanged++;
+        }
+    }
+    protected void changedRho(double a, double b) {
+        if (Math.abs(a - b) > Globals.getINSTANCE().getPCHANGE()) {
+            this.rhoChanged++;
         }
     }
 
@@ -275,7 +281,12 @@ public class JHMMBasics {
         return restart;
     }
 
-    public int getParametersChanged() {
-        return parametersChanged;
+    public int getMuChanged() {
+        return muChanged;
     }
+
+    public int getRhoChanged() {
+        return rhoChanged;
+    }
+
 }
