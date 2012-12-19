@@ -24,12 +24,23 @@ import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMM;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.javatuples.Pair;
@@ -87,6 +98,9 @@ public class JHMM extends JHMMBasics {
         this.eStep();
         this.mStep();
     }
+    protected BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(10*Runtime.getRuntime().availableProcessors() - 1);
+    protected RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
+    protected ExecutorService executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
 
     private void eStep() {
         if (Globals.getINSTANCE().isSTORAGE()) {
@@ -98,23 +112,24 @@ public class JHMM extends JHMMBasics {
             }
         }
         this.loglikelihood = 0d;
-        List<FutureTask<Double>> taskList = new ArrayList<>();
+        List<Future<Double>> results = new ArrayList<>();
+        Collections.shuffle(Arrays.asList(this.reads));
 
         for (int i = 0; i < reads.length; i++) {
-            FutureTask<Double> futureTask_1 = new FutureTask<>(new CallableReadHMM(this, reads[i]));
-            taskList.add(futureTask_1);
-            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
+            results.add(executor.submit(new CallableReadHMM(this, reads[i])));
+            Globals.getINSTANCE().printPercentage(K, (double) i / reads.length, Kmin);
         }
 
-        for (int j = 0; j < taskList.size(); j++) {
-            FutureTask<Double> futureTask = taskList.get(j);
+
+        for (int i = 0; i < results.size(); i++) {
             try {
-                loglikelihood += futureTask.get();
-                Globals.getINSTANCE().printPercentage(K, (double) j / reads.length, Kmin);
+                Double llh = results.get(i).get();
+                loglikelihood += llh;
             } catch (InterruptedException | ExecutionException ex) {
                 Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
         if (Globals.getINSTANCE().isSTORAGE()) {
             if (available.size() != Globals.getINSTANCE().getCpus()) {
                 throw new IllegalStateException("Not all storages have been returned");

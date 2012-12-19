@@ -50,8 +50,6 @@ public class Startup {
     //GENERAL
     @Option(name = "-i")
     private String input;
-    @Option(name = "-i2")
-    private String input2;
     @Option(name = "-print")
     private boolean print;
     @Option(name = "-o", usage = "Path to the output directory (default: current directory)", metaVar = "PATH")
