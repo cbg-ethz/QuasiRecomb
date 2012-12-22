@@ -26,6 +26,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
 public class ReadHMMStatic {
 
     public static double computeFB(JHMM jhmm, Read read) {
+        try {
         TempJHMMStorage storage = jhmm.getStorage();
         int begin = read.getBegin();
         int length = read.getLength();
@@ -168,6 +169,10 @@ public class ReadHMMStatic {
 
         free(jhmm,storage);
         return likelihood;
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+        return 0;
     }
 
     private static void free(JHMM jhmm, TempJHMMStorage storage) {

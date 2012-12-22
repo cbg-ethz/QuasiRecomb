@@ -128,24 +128,22 @@ public class SingleEM {
         }
 
         if (Globals.getINSTANCE().isML()) {
-            Globals.getINSTANCE().setBIAS_MU(false);
-            Globals.getINSTANCE().setML(false);
-            double alphah = Globals.getINSTANCE().getALPHA_H();
-            double multMu = Globals.getINSTANCE().getMULT_MU();
-//            double alphaZ = Globals.getINSTANCE().getALPHA_Z();
-//            double multRho = Globals.getINSTANCE().getMULT_RHO();
-            Globals.getINSTANCE().setALPHA_H(0.01);
-            Globals.getINSTANCE().setMULT_MU(1000);
-//            Globals.getINSTANCE().setML(true);
-            this.iterateRho();
-            
-            Globals.getINSTANCE().log("switch\n");
-            Globals.getINSTANCE().setBIAS_MU(true);
-            Globals.getINSTANCE().setALPHA_H(alphah);
-            Globals.getINSTANCE().setMULT_MU(multMu);
-            jhmm.restart();
             this.iterate();
-            Globals.getINSTANCE().setML(true);
+//            Globals.getINSTANCE().setBIAS_MU(false);
+//            Globals.getINSTANCE().setML(false);
+//            double alphah = Globals.getINSTANCE().getALPHA_H();
+//            double multMu = Globals.getINSTANCE().getMULT_MU();
+//            Globals.getINSTANCE().setALPHA_H(0.01);
+//            Globals.getINSTANCE().setMULT_MU(1000);
+//            this.iterateRho();
+//            
+//            Globals.getINSTANCE().log("switch\n");
+//            Globals.getINSTANCE().setBIAS_MU(true);
+//            Globals.getINSTANCE().setALPHA_H(alphah);
+//            Globals.getINSTANCE().setMULT_MU(multMu);
+//            jhmm.restart();
+//            this.iterate();
+//            Globals.getINSTANCE().setML(true);
         } else {
             this.iterate();
         }

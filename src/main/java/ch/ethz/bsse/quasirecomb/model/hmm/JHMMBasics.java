@@ -26,6 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -49,7 +52,8 @@ public class JHMMBasics {
     protected double[][][] nJKV;
     protected double[] nneqPos;
     protected double[] muPrior;
-    protected Read[] reads;
+//    protected Read[] currentReads;
+    protected Read[] allReads;
     protected int restart = 0;
     protected int coverage[];
     protected int muChanged = 0;
@@ -57,16 +61,23 @@ public class JHMMBasics {
     protected boolean paired;
     protected Map<Integer, TempJHMMStorage> garage = new ConcurrentHashMap<>();
     protected final List<Integer> available = new ArrayList<>();
-    
+    int s = 0;
+
     public TempJHMMStorage getStorage() {
         synchronized (this.available) {
-            if (available.iterator().hasNext()) {
-                Integer i = available.iterator().next();
-                available.remove(i);
-                return garage.get(i);
-            } else {
-                throw new IllegalStateException("No storages left");
+            while (!available.iterator().hasNext()) {
+                try {
+                    notify();
+                    TimeUnit.MILLISECONDS.sleep(10);
+                    System.err.println("sleep");
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(JHMMBasics.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
+//            System.out.println("GET " + s++);
+            Integer i = available.iterator().next();
+            available.remove(i);
+            return garage.get(i);
         }
     }
 
@@ -75,13 +86,13 @@ public class JHMMBasics {
             this.available.add(id);
         }
     }
-    
-    
+
     protected void changedMu(double a, double b) {
         if (Math.abs(a - b) > Globals.getINSTANCE().getPCHANGE()) {
             this.muChanged++;
         }
     }
+
     protected void changedRho(double a, double b) {
         if (Math.abs(a - b) > Globals.getINSTANCE().getPCHANGE()) {
             this.rhoChanged++;
@@ -93,7 +104,7 @@ public class JHMMBasics {
         this.L = L;
         this.K = K;
         this.n = n;
-        this.reads = reads;
+        this.allReads = reads;
         this.rho = rho;
         this.mu = mu;
         this.pi = pi;
@@ -124,7 +135,7 @@ public class JHMMBasics {
         int[] tau2 = new int[L + 1];
         int[] omega1 = new int[L + 1];
         int[] omega2 = new int[L + 1];
-        for (Read r : reads) {
+        for (Read r : allReads) {
             for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
                 this.coverage[i] += r.getCount();
             }
@@ -157,8 +168,7 @@ public class JHMMBasics {
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "twtw", sb.toString());
     }
-    
-    
+
     public int getMuFlats() {
         int flats = 0;
         for (int j = 0; j < L; j++) {
@@ -288,5 +298,4 @@ public class JHMMBasics {
     public int getRhoChanged() {
         return rhoChanged;
     }
-
 }

@@ -18,13 +18,57 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import cc.mallet.types.Dirichlet;
-import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class Regularizations {
 
+    public static double[] step(double[] estCounts, double[] previous, double eta) {
+        int x = estCounts.length;
+        double[] regCounts = new double[x];
+
+        double sum = 0d;
+        double max = Double.MIN_VALUE;
+        for (int v = 0; v < x; v++) {
+            sum += estCounts[v];
+            max = Math.max(estCounts[v], max);
+        }
+        if (sum == 0) {
+            for (int v = 0; v < x; v++) {
+                regCounts[v] = 1d / x;
+            }
+            return regCounts;
+        }
+        if (Math.abs(max - sum) < 1e-8) {
+            for (int v = 0; v < x; v++) {
+                if (estCounts[v] < max) {
+                    regCounts[v] = 0d;
+                } else {
+                    regCounts[v] = 1;
+                }
+            }
+            return regCounts;
+        }
+        for (int v = 0; v < x; v++) {
+            regCounts[v] = Math.abs(((1-eta)*(estCounts[v] / sum))+(eta*previous[v]));
+        }
+
+        max = Double.MIN_VALUE;
+        for (int v = 0; v < x; v++) {
+            max = Math.max(max, regCounts[v]);
+        }
+        if (Math.abs(max - 1d) < 1e-8) {
+            for (int v = 0; v < x; v++) {
+                if (regCounts[v] < max) {
+                    regCounts[v] = 0d;
+                } else {
+                    regCounts[v] = 1;
+                }
+            }
+        }
+        return regCounts;
+    }
     public static double[] ml(double[] estCounts) {
 //        double hyperParameter = 0.001;
         int x = estCounts.length;

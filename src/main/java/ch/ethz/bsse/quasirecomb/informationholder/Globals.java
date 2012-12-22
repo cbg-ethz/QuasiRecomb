@@ -24,9 +24,14 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -81,11 +86,14 @@ public class Globals {
     private double DELTA_LLH;
     private double DELTA_REFINE_LLH;
     private boolean PRUNE;
+    private double INTERPOLATE_MU;
+    private double INTERPOLATE_RHO;
     private double CURRENT_DELTA_LLH = 0;
     private double MAX_LLH = -1;
     private double MIN_BIC = Double.MIN_VALUE;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
+    private int STEPS;
     private int REPEATS;
     private int DESIRED_REPEATS;
     private int SAMPLING_NUMBER;
@@ -100,7 +108,10 @@ public class Globals {
     private String SAVEPATH;
     private StringBuilder LOG = new StringBuilder();
     private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
-    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+    private static final BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(Runtime.getRuntime().availableProcessors() - 1);
+    private static final RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
+    private static ExecutorService executor = refreshExecutor();
+//    private final ExecutorService executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
     private final ForkJoinPool fjPool = new ForkJoinPool();
     private final AtomicInteger MERGED = new AtomicInteger(0);
     private double PERCENTAGE = 0;
@@ -108,6 +119,14 @@ public class Globals {
     private String oldOut = "";
     private double hammingCount = 0;
     private int hammingMax = 0;
+    
+    public static void renewExecutor() {
+        executor = refreshExecutor();
+    }
+    private static ExecutorService refreshExecutor() {
+//        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+        return new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
+    }
 
     public synchronized void log(Object o) {
         if (PRINT) {
@@ -643,5 +662,29 @@ public class Globals {
 
     public void setBIAS_MU(boolean BIAS_MU) {
         this.BIAS_MU = BIAS_MU;
+    }
+
+    public int getSTEPS() {
+        return STEPS;
+    }
+
+    public void setSTEPS(int STEPS) {
+        this.STEPS = STEPS;
+    }
+
+    public double getINTERPOLATE_MU() {
+        return INTERPOLATE_MU;
+    }
+
+    public void setINTERPOLATE_MU(double INTERPOLATE_MU) {
+        this.INTERPOLATE_MU = INTERPOLATE_MU;
+    }
+
+    public double getINTERPOLATE_RHO() {
+        return INTERPOLATE_RHO;
+    }
+
+    public void setINTERPOLATE_RHO(double INTERPOLATE_RHO) {
+        this.INTERPOLATE_RHO = INTERPOLATE_RHO;
     }
 }

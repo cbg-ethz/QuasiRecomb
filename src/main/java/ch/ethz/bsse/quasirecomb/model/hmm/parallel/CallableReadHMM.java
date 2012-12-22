@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
 import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMMStatic;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)

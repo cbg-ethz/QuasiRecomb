@@ -171,6 +171,13 @@ public class Startup {
     private boolean global;
     @Option(name = "-silent")
     private boolean silent;
+    @Option(name = "-steps")
+    private int steps = 100;
+    @Option(name = "-interpolateMu")
+    private double interpolateMu = 0.7;
+    @Option(name = "-interpolateRho")
+    private double interpolateRho = 0.7;
+    
 
     public static void main(String[] args) throws IOException {
         new Startup().doMain(args);
@@ -499,11 +506,19 @@ public class Startup {
         }
         if (this.global) {
             Globals.getINSTANCE().setSPIKERHO(true);
-            Globals.getINSTANCE().setML(true);
+            Globals.getINSTANCE().setALPHA_H(0.0001);
+            Globals.getINSTANCE().setALPHA_Z(0.0001);
+            Globals.getINSTANCE().setMULT_MU(10);
+            Globals.getINSTANCE().setMULT_RHO(10);
+            Globals.getINSTANCE().setINTERPOLATE_MU(1);
+            Globals.getINSTANCE().setINTERPOLATE_RHO(0.5);
         } else {
             Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
             Globals.getINSTANCE().setML(this.ML);
         }
+        Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
+        Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
+        Globals.getINSTANCE().setSTEPS(this.steps);
         Globals.getINSTANCE().setSTOP_QUICK(this.stopQuick);
         Globals.getINSTANCE().setPRINT_ALIGNMENT(this.printAlignment);
         Globals.getINSTANCE().setPRIORMU(this.muPrior);

@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import java.io.*;
@@ -245,6 +246,7 @@ public class Utils extends FastaParser {
             String name = samRecord.getReadName();
             if (readMap.containsKey(name)) {
                 readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
+                Globals.getINSTANCE().incMERGED();
             } else {
                 readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, 1));
             }
