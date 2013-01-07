@@ -63,30 +63,6 @@ public class JHMMBasics {
     protected final List<Integer> available = new ArrayList<>();
     int s = 0;
 
-    public TempJHMMStorage getStorage() {
-        synchronized (this.available) {
-            while (!available.iterator().hasNext()) {
-                try {
-                    notify();
-                    TimeUnit.MILLISECONDS.sleep(10);
-                    System.err.println("sleep");
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(JHMMBasics.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-//            System.out.println("GET " + s++);
-            Integer i = available.iterator().next();
-            available.remove(i);
-            return garage.get(i);
-        }
-    }
-
-    public void free(int id) {
-        synchronized (this.available) {
-            this.available.add(id);
-        }
-    }
-
     protected void changedMu(double a, double b) {
         if (Math.abs(a - b) > Globals.getINSTANCE().getPCHANGE()) {
             this.muChanged++;
@@ -167,6 +143,30 @@ public class JHMMBasics {
             sb.append("\n");
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "twtw", sb.toString());
+    }
+
+    public TempJHMMStorage getStorage() {
+        synchronized (this.available) {
+            while (!available.iterator().hasNext()) {
+                try {
+                    notify();
+                    TimeUnit.MILLISECONDS.sleep(10);
+                    System.err.println("sleep");
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(JHMMBasics.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+//            System.out.println("GET " + s++);
+            Integer i = available.iterator().next();
+            available.remove(i);
+            return garage.get(i);
+        }
+    }
+
+    public void free(int id) {
+        synchronized (this.available) {
+            this.available.add(id);
+        }
     }
 
     public int getMuFlats() {

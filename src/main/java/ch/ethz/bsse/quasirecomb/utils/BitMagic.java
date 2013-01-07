@@ -239,4 +239,13 @@ public class BitMagic {
             return 0;
         }
     }
+    
+    public static byte[] unpack(byte[] packed) {
+        int length = getLength(packed);
+        byte[] plain = new byte[length];
+        for (int i = 0; i < length; i++) {
+            plain[i] = getPosition(packed, i);
+        }
+        return plain;
+    }
 }

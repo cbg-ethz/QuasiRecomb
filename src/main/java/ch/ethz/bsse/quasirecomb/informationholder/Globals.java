@@ -42,13 +42,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Globals {
 
     private static final Globals INSTANCE = new Globals();
+    private static final BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(Runtime.getRuntime().availableProcessors() - 1);
+    private static final RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
+    private static ExecutorService executor = refreshExecutor();
 
-    public Globals getInstance() {
-        return INSTANCE;
+    private static ExecutorService refreshExecutor() {
+//        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+        return new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
     }
 
-    private Globals() {
-        df.setTimeZone(TimeZone.getTimeZone("GMT"));
+    public static void renewExecutor() {
+        executor = refreshExecutor();
+    }
+
+    public static Globals getINSTANCE() {
+        return INSTANCE;
     }
     private boolean BIAS_MU;
     private boolean SILENT;
@@ -108,9 +116,6 @@ public class Globals {
     private String SAVEPATH;
     private StringBuilder LOG = new StringBuilder();
     private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
-    private static final BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(Runtime.getRuntime().availableProcessors() - 1);
-    private static final RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
-    private static ExecutorService executor = refreshExecutor();
 //    private final ExecutorService executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
     private final ForkJoinPool fjPool = new ForkJoinPool();
     private final AtomicInteger MERGED = new AtomicInteger(0);
@@ -120,12 +125,11 @@ public class Globals {
     private double hammingCount = 0;
     private int hammingMax = 0;
     
-    public static void renewExecutor() {
-        executor = refreshExecutor();
+    private Globals() {
+        df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
-    private static ExecutorService refreshExecutor() {
-//        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
-        return new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
+    public Globals getInstance() {
+        return INSTANCE;
     }
 
     public synchronized void log(Object o) {
@@ -334,10 +338,6 @@ public class Globals {
 
     public boolean isSTOP_QUICK() {
         return STOP_QUICK;
-    }
-
-    public static Globals getINSTANCE() {
-        return INSTANCE;
     }
 
     public int getALIGNMENT_BEGIN() {

@@ -17,15 +17,15 @@ import static org.junit.Assert.*;
  */
 public class BitMagicTest {
 
-    public BitMagicTest() {
-    }
-
     @BeforeClass
     public static void setUpClass() {
     }
 
     @AfterClass
     public static void tearDownClass() {
+    }
+
+        public BitMagicTest() {
     }
 
     @Before

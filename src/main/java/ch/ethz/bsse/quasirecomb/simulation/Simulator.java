@@ -260,7 +260,7 @@ public class Simulator {
                 //error
                 Map<Character, Double> baseMap = new ConcurrentHashMap<>();
                 for (int v = 0; v < n; v++) {
-                    char x = reverse(v);
+                    char x = Utils.reverseChar(v);
                     if (haplotypes[hap].charAt(j + start) == x) {
                         baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
                     } else {
@@ -306,7 +306,7 @@ public class Simulator {
                 //error
                 Map<Character, Double> baseMap = new ConcurrentHashMap<>();
                 for (int v = 0; v < n; v++) {
-                    char x = reverse(v);
+                    char x = Utils.reverseChar(v);
                     if (haplotypes[hap].charAt(j) == x) {
                         baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
                     } else {
@@ -366,7 +366,7 @@ public class Simulator {
                 //error
                 Map<Character, Double> baseMap = new ConcurrentHashMap<>();
                 for (int v = 0; v < n; v++) {
-                    char x = reverse(v);
+                    char x = Utils.reverseChar(v);
                     if (haplotypes[hap].charAt(j) == x) {
                         baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
                     } else {
@@ -394,22 +394,5 @@ public class Simulator {
         Utils.saveFile(savePath + "_dist", sb.toString());
         Utils.saveFile(savePath + ".fasta", sb2.toString());
         return map;
-    }
-
-    private static char reverse(int v) {
-        switch ((short) v) {
-            case 0:
-                return 'A';
-            case 1:
-                return 'C';
-            case 2:
-                return 'G';
-            case 3:
-                return 'T';
-            case 4:
-                return '-';
-            default:
-                throw new IllegalStateException("cannot reverse " + v);
-        }
     }
 }

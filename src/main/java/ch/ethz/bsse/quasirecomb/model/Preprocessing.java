@@ -37,6 +37,41 @@ import java.util.Map;
  */
 public class Preprocessing {
 
+    private static int countChars(Read[] rs) {
+        Map<Byte, Boolean> map = new HashMap<>();
+        for (Read r : rs) {
+            if (r.isPaired()) {
+                for (int i = 0; i < r.getLength(); i++) {
+                    if (r.isHit(i)) {
+                        map.put(r.getBase(i), Boolean.TRUE);
+                    }
+                }
+            } else {
+                for (int i = 0; i < r.getWatsonLength(); i++) {
+                    map.put(r.getBase(i), Boolean.TRUE);
+                }
+            }
+        }
+        return map.keySet().size();
+    }
+
+    private static void saveUnique(Read[] reads) {
+        if (Globals.getINSTANCE().isDEBUG()) {
+            StringBuilder sb = new StringBuilder();
+            for (Read r : reads) {
+                sb.append(r.getCount()).append("\t");
+                if (r.getCount() < 1000) {
+                    sb.append("\t");
+                }
+                for (int i = 0; i < r.getBegin(); i++) {
+                    sb.append(" ");
+                }
+                sb.append(Utils.reverse(r.getSequence())).append("\n");
+            }
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "in.fasta", sb.toString());
+        }
+    }
+
     /**
      * Entry point. Forwards invokes of the specified workflow.
      *
@@ -136,40 +171,5 @@ public class Preprocessing {
             }
         }
         return alignment;
-    }
-
-    private static int countChars(Read[] rs) {
-        Map<Byte, Boolean> map = new HashMap<>();
-        for (Read r : rs) {
-            if (r.isPaired()) {
-                for (int i = 0; i < r.getLength(); i++) {
-                    if (r.isHit(i)) {
-                        map.put(r.getBase(i), Boolean.TRUE);
-                    }
-                }
-            } else {
-                for (int i = 0; i < r.getWatsonLength(); i++) {
-                    map.put(r.getBase(i), Boolean.TRUE);
-                }
-            }
-        }
-        return map.keySet().size();
-    }
-
-    private static void saveUnique(Read[] reads) {
-        if (Globals.getINSTANCE().isDEBUG()) {
-            StringBuilder sb = new StringBuilder();
-            for (Read r : reads) {
-                sb.append(r.getCount()).append("\t");
-                if (r.getCount() < 1000) {
-                    sb.append("\t");
-                }
-                for (int i = 0; i < r.getBegin(); i++) {
-                    sb.append(" ");
-                }
-                sb.append(Utils.reverse(r.getSequence())).append("\n");
-            }
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "in.fasta", sb.toString());
-        }
     }
 }

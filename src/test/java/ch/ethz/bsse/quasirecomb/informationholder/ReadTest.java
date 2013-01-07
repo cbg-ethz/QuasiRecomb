@@ -17,6 +17,14 @@ import org.junit.Test;
  */
 public class ReadTest {
 
+    @BeforeClass
+    public static void setUpClass() {
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+    }
+
     private Read read;
 
     public ReadTest() {
@@ -32,14 +40,6 @@ public class ReadTest {
         //        Globals.getINSTANCE().setALIGNMENT_END(Math.max(read.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
     }
 
-    @BeforeClass
-    public static void setUpClass() {
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
     @Before
     public void setUp() {
     }
@@ -51,7 +51,7 @@ public class ReadTest {
     /**
      * Test of setCount method, of class Read.
      */
-    @Test
+@Test
     public void testInsertSize() {
         Globals.getINSTANCE().setDEBUG(true);
         Read read1 = new Read(BitMagic.splitReadIntoBytes("ACGT"), 0, 4, BitMagic.splitReadIntoBytes("GTAC"), 2, 6);

@@ -52,6 +52,7 @@ public class SingleEM {
     private double loglikelihood;
     private int Kmin;
     private double maxBIC;
+    private List<Long> times = new ArrayList<>();
 
     public SingleEM(int N, int K, int L, int n, Read[] reads, double delta, int repeat) {
         this.N = N;
@@ -87,23 +88,6 @@ public class SingleEM {
         start();
     }
 
-    public String getOptimumPath() {
-        if (!Globals.getINSTANCE().isSNAPSHOTS()) {
-            this.snapshot();
-        }
-
-        String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
-        OptimalResult localOr = new OptimalResult(N, K, L, n,
-                jhmm.getRho(),
-                jhmm.getPi(),
-                jhmm.getMu(),
-                this.jhmm.getLoglikelihood(),
-                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
-        Utils.saveOptimum(save + ".optimum", localOr);
-
-        return Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations + ".optimum";
-    }
-
     private void snapshot() {
         String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
         OptimalResult localOr = new OptimalResult(N, K, L, n,
@@ -127,28 +111,9 @@ public class SingleEM {
             this.snapshot();
         }
 
-        if (Globals.getINSTANCE().isML()) {
-            this.iterate();
-//            Globals.getINSTANCE().setBIAS_MU(false);
-//            Globals.getINSTANCE().setML(false);
-//            double alphah = Globals.getINSTANCE().getALPHA_H();
-//            double multMu = Globals.getINSTANCE().getMULT_MU();
-//            Globals.getINSTANCE().setALPHA_H(0.01);
-//            Globals.getINSTANCE().setMULT_MU(1000);
-//            this.iterateRho();
-//            
-//            Globals.getINSTANCE().log("switch\n");
-//            Globals.getINSTANCE().setBIAS_MU(true);
-//            Globals.getINSTANCE().setALPHA_H(alphah);
-//            Globals.getINSTANCE().setMULT_MU(multMu);
-//            jhmm.restart();
-//            this.iterate();
-//            Globals.getINSTANCE().setML(true);
-        } else {
-            this.iterate();
-        }
+        this.iterate();
 
-        Globals.getINSTANCE().log("###c(" + jhmm.getMuChanged() +"|"+jhmm.getRhoChanged() + ")\n");
+        Globals.getINSTANCE().log("###c(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\n");
 
         Globals.getINSTANCE().incPercentage();
 
@@ -161,53 +126,6 @@ public class SingleEM {
         }
     }
 
-    private void iterateRho() {
-        double oldllh;
-        List<Double> history = new LinkedList<>();
-        do {
-            Globals.getINSTANCE().minMIN_BIC(maxBIC);
-            iterations++;
-            history.add(loglikelihood);
-            oldllh = loglikelihood;
-            loglikelihood = jhmm.getLoglikelihood();
-            if (Globals.getINSTANCE().isSTOP_QUICK() && Math.abs((oldllh - loglikelihood) / loglikelihood) < 1e-2 && loglikelihood != Globals.getINSTANCE().getMAX_LLH()
-                    && ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) > 0.1) {
-                if (Globals.getINSTANCE().isDEBUG()) {
-                    System.out.println("too small");
-                }
-                break;
-            }
-            if (iterations > 500) {
-                if (history.get(iterations - 500) - loglikelihood > -1) {
-                    Globals.getINSTANCE().log("break 500;\t");
-                    break;
-                }
-            }
-            log(loglikelihood);
-            Globals.getINSTANCE().setCURRENT_DELTA_LLH((oldllh - loglikelihood) / loglikelihood);
-            if (Globals.getINSTANCE().isDEBUG()) {
-                if (loglikelihood < 0 && oldllh < 0) {
-                    Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
-                } else if (loglikelihood > 0 && oldllh > 0) {
-                    Globals.getINSTANCE().log((loglikelihood - oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
-                } else if (loglikelihood > 0 && oldllh < 0) {
-                    Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
-
-                }
-                Globals.getINSTANCE().log(loglikelihood + "\n");
-            }
-
-            if (Globals.getINSTANCE().isPRUNE() && K > Kmin) {
-                this.jhmm = prune();
-            } else {
-                jhmm.restart();
-            }
-
-            if (Globals.getINSTANCE().isSNAPSHOTS()) {
-                this.snapshot();
-            }
-        } while (jhmm.getRhoChanged() > 0 && Math.abs((oldllh - loglikelihood) / loglikelihood) > 1e-4);
-    }
     private void iterate() {
         double oldllh;
         List<Double> history = new LinkedList<>();
@@ -427,17 +345,13 @@ public class SingleEM {
             argMax.restart();
         }
         this.K = argMax.getK();
-//        System.out.print(s);
         return argMax;
     }
 
     private double calcBIC(JHMM jhmm) {
         // count free parameters
-
-//        double BIC_current = (-jhmm.getLoglikelihood()) + Math.log(N) * jhmm.K * (jhmm.K - 1) / 2 + (freeParameters(jhmm) * Math.log(N)) / 2;
-//        BIC_current -= (freeParameters / 2d) * Math.log(N);
-        double BIC_current = this.jhmm.getLoglikelihood();
-        BIC_current -= (freeParameters(this.jhmm) / 2d) * Math.log(N);
+        double BIC_current = jhmm.getLoglikelihood();
+        BIC_current -= (freeParameters(jhmm) / 2d) * Math.log(N);
         return BIC_current;
     }
 
@@ -485,67 +399,49 @@ public class SingleEM {
     }
 
     private double calcBIC() {
-//        // count free parameters
-//        int freeParameters = 0;
-//        double ERROR = 1e-15;
-//
-//        double[][][] rho = jhmm.getRho();
-//        double[][][] mu = jhmm.getMu();
-//        double[] pi = jhmm.getPi();
-//        double[] eps = jhmm.getEps();
-//
-//        for (int j = 0; j < mu.length; j++) {
-//            for (int k = 0; k < mu[j].length; k++) {
-//
-//                //mu
-//                boolean different = false;
-//                for (int v = 1; v < mu[j][k].length; v++) {
-//                    if (Math.abs(mu[j][k][v - 1] - mu[j][k][v]) > ERROR) {
-//                        different = true;
-//                        break;
-//                    }
-//                }
-//                if (different) {
-//                    for (int v = 0; v < mu[j][k].length; v++) {
-//                        if (mu[j][k][v] > ERROR) {
-//                            freeParameters++;
-//                        }
-//                    }
-//                }
-//
-//                //rho
-//                if (j < L - 1) {
-//                    if (!Globals.getINSTANCE().isNO_RECOMB()) {
-//                        different = false;
-//                        for (int l = 1; l < rho[j][k].length; l++) {
-//                            if (Math.abs(rho[j][k][l - 1] - rho[j][k][l]) > ERROR) {
-//                                different = true;
-//                                break;
-//                            }
-//                        }
-//                        if (different) {
-//                            for (int l = 0; l < rho[j][k].length; l++) {
-//                                if (rho[j][k][l] > ERROR) {
-//                                    freeParameters++;
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//                if (eps[j] > ERROR) {
-//                    freeParameters++;
-//                }
-//            }
-//
-//            for (int k = 0; k < pi.length; k++) {
-//                if (pi[k] > ERROR) {
-//                    freeParameters++;
-//                }
-//            }
-//        }
         double BIC_current = this.jhmm.getLoglikelihood();
         BIC_current -= (freeParameters(this.jhmm) / 2d) * Math.log(N);
         return BIC_current;
+    }
+
+    private long time(boolean show) {
+        long t = 0;
+        if (time == -1) {
+            time = System.currentTimeMillis();
+        } else {
+            t = (System.currentTimeMillis() - time);
+            times.add(t);
+            if (show) {
+                sb.append(t).append("\t\t");
+                if (Globals.getINSTANCE().isDEBUG()) {
+                    Globals.getINSTANCE().log(iterations + "\t" + t + "\t\t");
+                }
+            }
+            time = System.currentTimeMillis();
+        }
+        return t;
+    }
+
+    private void log(double llh) {
+        Globals.getINSTANCE().getRuntime().add((int) time(true));
+        sb.append(llh).append("\t\t").append("\n");
+    }
+
+    public String getOptimumPath() {
+        if (!Globals.getINSTANCE().isSNAPSHOTS()) {
+            this.snapshot();
+        }
+
+        String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
+        OptimalResult localOr = new OptimalResult(N, K, L, n,
+                jhmm.getRho(),
+                jhmm.getPi(),
+                jhmm.getMu(),
+                this.jhmm.getLoglikelihood(),
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega());
+        Utils.saveOptimum(save + ".optimum", localOr);
+
+        return Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations + ".optimum";
     }
 
     public void calcBic() {
@@ -573,7 +469,6 @@ public class SingleEM {
                 this.jhmm.getLoglikelihood(),
                 BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart(), tauOmegaCopy);
     }
-    private List<Long> times = new ArrayList<>();
 
     public void printMeanTime() {
         long sum = 0;
@@ -581,29 +476,6 @@ public class SingleEM {
             sum += l;
         }
         System.out.println("Mean:" + ((double) sum) / times.size());
-    }
-
-    private long time(boolean show) {
-        long t = 0;
-        if (time == -1) {
-            time = System.currentTimeMillis();
-        } else {
-            t = (System.currentTimeMillis() - time);
-            times.add(t);
-            if (show) {
-                sb.append(t).append("\t\t");
-                if (Globals.getINSTANCE().isDEBUG()) {
-                    Globals.getINSTANCE().log(iterations + "\t" + t + "\t\t");
-                }
-            }
-            time = System.currentTimeMillis();
-        }
-        return t;
-    }
-
-    private void log(double llh) {
-        Globals.getINSTANCE().getRuntime().add((int) time(true));
-        sb.append(llh).append("\t\t").append("\n");
     }
 
     public OptimalResult getOptimalResult() {

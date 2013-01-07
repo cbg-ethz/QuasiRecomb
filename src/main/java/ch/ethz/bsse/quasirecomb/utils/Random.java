@@ -25,8 +25,8 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
  */
 public class Random {
 
-    public static Dirichlet muDir;
     private static Dirichlet[] rhoDir;
+    public static Dirichlet muDir;
 
     public static double[][][] generateInitRho(int Ldec, int K) {
         if (rhoDir == null || rhoDir.length != K) {
@@ -82,7 +82,7 @@ public class Random {
                     double[] d = new double[n];
                     for (int v = 0; v < n; v++) {
 //                        d[v] = (double) Globals.getINSTANCE().getMU_PRIOR()[j][v] + 1;
-                        d[v] = 1d/n;
+                        d[v] = 1d / n;
                     }
                     mu[j][k] = new Dirichlet(d).nextDistribution();
                 } else {

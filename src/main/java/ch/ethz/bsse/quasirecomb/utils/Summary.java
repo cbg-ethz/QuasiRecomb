@@ -37,6 +37,41 @@ import org.javatuples.Pair;
  */
 public class Summary extends Utils {
 
+    public static String shorten(double value) {
+        String s;
+        if (value < 1e-20) {
+            s = "0      ";
+        } else if (value == 1.0) {
+            s = "1      ";
+        } else {
+            String t = "" + value;
+            String r;
+            if (t.length() > 7) {
+                r = t.substring(0, 7);
+                if (t.contains("E")) {
+                    r = r.substring(0, 4);
+                    r += "E" + t.split("E")[1];
+                }
+                s = r;
+            } else {
+                s = String.valueOf(value);
+            }
+        }
+        return s;
+    }
+
+    private String opacity(double value) {
+        String s;
+        if (value < 1e-3) {
+            s = "0";
+        } else if (value == 1.0) {
+            s = "1";
+        } else {
+            s = "" + value;
+        }
+        return s;
+    }
+
     public void printAlignment(Read[] reads) {
         Map<Integer, List<Read>> readMap = new HashMap<>();
         for (Read r : reads) {
@@ -652,40 +687,5 @@ public class Summary extends Utils {
         sb.append("</table></body></html>");
 
         return sb.toString();
-    }
-
-    public static String shorten(double value) {
-        String s;
-        if (value < 1e-20) {
-            s = "0      ";
-        } else if (value == 1.0) {
-            s = "1      ";
-        } else {
-            String t = "" + value;
-            String r;
-            if (t.length() > 7) {
-                r = t.substring(0, 7);
-                if (t.contains("E")) {
-                    r = r.substring(0, 4);
-                    r += "E" + t.split("E")[1];
-                }
-                s = r;
-            } else {
-                s = String.valueOf(value);
-            }
-        }
-        return s;
-    }
-
-    private String opacity(double value) {
-        String s;
-        if (value < 1e-3) {
-            s = "0";
-        } else if (value == 1.0) {
-            s = "1";
-        } else {
-            s = "" + value;
-        }
-        return s;
     }
 }

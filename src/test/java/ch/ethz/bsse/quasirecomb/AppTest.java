@@ -10,22 +10,6 @@ import junit.framework.TestSuite;
 public class AppTest
         extends TestCase {
 
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public AppTest(String testName) {
-        super(testName);
-    }
-
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite() {
-        return new TestSuite(AppTest.class);
-    }
-
     private static int getBit(byte[] data, int pos) {
         int posByte = pos / 8;
         int posBit = pos % 8;
@@ -49,6 +33,13 @@ public class AppTest
             buf.append((int) (b >> (8 - (i + 1)) & 0x0001));
         }
         return buf.toString();
+    }
+
+    /**
+     * @return the suite of tests being tested
+     */
+    public static Test suite() {
+        return new TestSuite(AppTest.class);
     }
 
     public static byte[] charToBytes(String s) {
@@ -99,6 +90,15 @@ public class AppTest
         } else {
             return 'A';
         }
+    }
+
+    /**
+     * Create the test case
+     *
+     * @param testName name of the test case
+     */
+    public AppTest(String testName) {
+        super(testName);
     }
 
     /**

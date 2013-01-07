@@ -44,6 +44,13 @@ import org.javatuples.Triplet;
  */
 public class JHMM extends JHMMBasics {
 
+    private int oldFlatMu = -1;
+    private boolean biasMu = false;
+    private int biasCounter = 0;
+    private int unBiasCounter = 0;
+    int currentIndex = 0;
+    int s = 0;
+
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon, int Kmin) {
         this(reads, N, L, K, n, epsilon,
                 Random.generateInitRho(L - 1, K),
@@ -74,38 +81,7 @@ public class JHMM extends JHMMBasics {
         this.compute();
     }
 
-    public void restart() {
-        this.restart++;
-        this.muChanged = 0;
-        this.rhoChanged = 0;
-        this.compute();
-    }
-    int currentIndex = 0;
-
-//    private void prepareReads() {
-//        final int readCount = this.allReads.length;
-//        final int stepSize = Globals.getINSTANCE().getSTEPS();
-//
-//        if (currentIndex >= 0 && currentIndex < readCount) {
-//            if (currentIndex + stepSize >= readCount) {
-//                currentReads = new Read[readCount - currentIndex];
-//                for (int j = 0; j < readCount - currentIndex; j++) {
-//                    currentReads[j] = allReads[currentIndex + j];
-//                }
-//            } else {
-//                currentReads = new Read[stepSize];
-//                for (int j = 0; j < stepSize; j++) {
-//                    currentReads[j] = allReads[currentIndex + j];
-//                }
-//            }
-//            currentIndex += stepSize;
-//        } else {
-//            Collections.shuffle(Arrays.asList(this.allReads));
-//            currentIndex = 0;
-//        }
-//    }
     private void compute() {
-//        prepareReads();
         this.nJKL = new double[L][K][K];
         this.nJKV = new double[L][K][n];
         this.nneqPos = new double[L];
@@ -114,7 +90,6 @@ public class JHMM extends JHMMBasics {
         this.mStep();
         s++;
     }
-    int s = 0;
 
     private void clearGarage() {
         if (Globals.getINSTANCE().isSTORAGE()) {
@@ -188,31 +163,12 @@ public class JHMM extends JHMMBasics {
         Globals.renewExecutor();
     }
 
-//    private void maximizeStep() {
-//        for (int j = 0; j < L; j++) {
-//            for (int k = 0; k < K; k++) {
-//                double eta = Math.pow(s++ + 2, -Globals.getINSTANCE().getINTERPOLATE_MU());
-//                this.mu[j][k] = Regularizations.step(this.nJKV[j][k], this.mu[j][k], eta);
-//                if (j > 0) {
-//                    eta = Math.pow(s++ + 2, -Globals.getINSTANCE().getINTERPOLATE_RHO());
-//                    this.rho[j - 1][k] = Regularizations.step(this.nJKL[j][k], this.rho[j - 1][k], eta);
-//                }
-//            }
-//        }
-//    }
-//    private boolean iterationCompleted() {
-//        return currentIndex >= this.allReads.length;
-//    }
     private void maximizeMu() {
         double[] muJKV;
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-//                if (Globals.getINSTANCE().isML()) {
-//                    muJKV = Regularizations.ml(this.nJKV[j][k]);
                 double eta = Math.pow(s + 2, -Globals.getINSTANCE().getINTERPOLATE_MU());
                 muJKV = Regularizations.step(this.nJKV[j][k], this.mu[j][k], eta);
-//                } else {
-//                if (iterationCompleted()) {
                 double mult = Globals.getINSTANCE().getMULT_MU();
                 double[] muPriorLocal = new double[n];
                 System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
@@ -229,14 +185,12 @@ public class JHMM extends JHMMBasics {
                         mult *= 2;
                         for (int v = 0; v < n; v++) {
                             muPriorLocal[v] *= 10;
-//                            repeats++;
                         }
                     }
                     if (mult > 1000) {
                         repeat = false;
                     }
                 } while (repeat);
-//                }
                 for (int v = 0; v < n; v++) {
                     this.changedMu(mu[j][k][v], muJKV[v]);
                     mu[j][k][v] = muJKV[v];
@@ -247,24 +201,17 @@ public class JHMM extends JHMMBasics {
                         }
                     }
                 }
-//                }
             }
         }
     }
 
     private boolean maximizeRho() {
-//        int repeats = 0;
         boolean forceRho = false;
         double[] rhoJKL = null;
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-//                if (Globals.getINSTANCE().isML()) {
                 double eta = Math.pow(s + 2, -Globals.getINSTANCE().getINTERPOLATE_RHO());
                 rhoJKL = Regularizations.step(this.nJKL[j][k], this.rho[j - 1][k], eta);
-//                rhoJKL = Regularizations.ml(this.nJKL[j][k]);
-//                } else {
-//                if (iterationCompleted()) {
-//                System.out.println("BAM");
                 double max = 0d;
                 int lPrime = -1;
                 double sum = 0d;
@@ -287,14 +234,10 @@ public class JHMM extends JHMMBasics {
                 for (int l = 0; l < K; l++) {
                     if (k == l) {
                         if (max > 0.5 && lPrime != k && Globals.getINSTANCE().isSPIKERHO()) {
-//                                if (mult > 10) {
-//                                    mult = 10;
-//                                }
                             rhoPrior[l] = 100;
                             fix = true;
                             forceRho = true;
                             break;
-//                                repeats++;
                         } else {
                             rhoPrior[l] = Globals.getINSTANCE().getALPHA_Z() * 10;
                         }
@@ -302,7 +245,6 @@ public class JHMM extends JHMMBasics {
                         rhoPrior[l] = Globals.getINSTANCE().getALPHA_Z();
                     }
                 }
-//                rhoJKL = null;
                 if (!fix) {
                     rhoJKL = Regularizations.regularizeOnceRho(k, rhoJKL, restart, rhoPrior, mult);
                     lPrime = -1;
@@ -324,8 +266,6 @@ public class JHMM extends JHMMBasics {
                         rhoJKL[l] = l == k ? 1 : 0;
                     }
                 }
-//            }
-//        }
                 for (int l = 0; l < K; l++) {
                     this.changedRho(rho[j - 1][k][l], rhoJKL[l]);
                     rho[j - 1][k][l] = rhoJKL[l];
@@ -348,10 +288,6 @@ public class JHMM extends JHMMBasics {
         double eta = Math.pow(s + 2, -1);
         pi = Regularizations.step(piTmp, pi, eta);
     }
-    private int oldFlatMu = -1;
-    private boolean biasMu = false;
-    private int biasCounter = 0;
-    private int unBiasCounter = 0;
 
     private void mStep() {
         boolean forceRho = false;
@@ -397,7 +333,6 @@ public class JHMM extends JHMMBasics {
             } else {
                 System.out.print("DIFF\t");
             }
-//            }
             oldFlatMu = currentFlatMu;
         }
         if (!Globals.getINSTANCE().isFLAT_EPSILON_PRIOR()) {
@@ -414,8 +349,6 @@ public class JHMM extends JHMMBasics {
                 for (int v = 0; v < n; v++) {
                     max = Math.max(this.mu[j][k][v], max);
                     sum += this.mu[j][k][v];
-//                    max = Math.max(this.nJKV[j][k][v], max);
-//                    sum += this.nJKV[j][k][v];
                 }
                 if (max < sum) {
                     flat = true;
@@ -424,7 +357,6 @@ public class JHMM extends JHMMBasics {
             }
             if (flat) {
                 for (int k = 0; k < K; k++) {
-//                    this.mu[j][k] = Random.muDir.nextDistribution();
                     double sum = 0;
                     for (int v = 0; v < n; v++) {
                         this.mu[j][k][v] += Math.random() / 10d;
@@ -439,51 +371,22 @@ public class JHMM extends JHMMBasics {
     }
 
     private void maximizeEps() {
-        double ew = .008;
-//        if (Globals.getINSTANCE().isUNINFORMATIVE_EPSILON_PRIOR()) {
-//            for (int j = 0; j < L; j++) {
-//                if (this.nneqPos[j] != 0d) {
-//                    ew += this.nneqPos[j] / N;
-//                }
-//            }
-//            if (ew != 0d) {
-//                ew /= L;
-//            }
-//        } else {
-//            ew = 
-//        }
         double a = 20;
-        double b = (-a * ew + a + 2 * ew - 1) / ew;
+        double b = 2357;//(-a * ew + a + 2 * ew - 1) / ew;//double ew = .008;
         for (int j = 0; j < L; j++) {
-            if (ew == 0d) {
-                this.eps[j] = 0;
-                this.antieps[j] = 1;
-            } else {
-                this.eps[j] = Regularizations.f(this.nneqPos[j] + a) / Regularizations.f((coverage[j] * (n - 1)) + a + b);
-                if (this.eps[j] > 1d / n) {
-                    this.eps[j] = 0.05;
-                }
-                this.antieps[j] = 1 - (n - 1) * eps[j];
+            this.eps[j] = Regularizations.f(this.nneqPos[j] + a) / Regularizations.f((coverage[j] * (n - 1)) + a + b);
+            if (this.eps[j] > 1d / n) {
+                this.eps[j] = 0.05;
             }
+            this.antieps[j] = 1 - (n - 1) * eps[j];
         }
     }
 
-//    @Override
-//    protected JHMM clone() {
-//        double[][][] muClone = new double[L][K][n];
-//        double[][][] rhoClone = new double[L][K][K];
-//        double[] epsClone = Arrays.copyOf(eps, eps.length);
-//        double[] piClone = Arrays.copyOf(pi, pi.length);
-//        for (int j = 0; j < L; j++) {
-//            for (int k = 0; k < K; k++) {
-//                System.arraycopy(this.mu[j][k], 0, muClone[j][k], 0, n);
-//                System.arraycopy(this.rho[j][k], 0, rhoClone[j][k], 0, L);
-//
-//            }
-//        }
-//        return new JHMM(reads, N, L, K, n, epsClone, rhoClone, piClone, muClone, Kmin);
-//    }
-    public void merge() {
+    public void restart() {
+        this.restart++;
+        this.muChanged = 0;
+        this.rhoChanged = 0;
+        this.compute();
     }
 
     public Triplet<Integer, Integer, Double> minKL() {

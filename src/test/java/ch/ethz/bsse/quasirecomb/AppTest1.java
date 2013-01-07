@@ -13,10 +13,15 @@ public class AppTest1 {
      */
     @org.junit.Test
     public void testApp() {
-        Dirichlet dirichlet = new Dirichlet(4, 100000);
-        for (int i = 0; i < 100; i++) {
-            System.out.println(Arrays.toString(dirichlet.nextDistribution()));
+        long a = System.currentTimeMillis();
+        Dirichlet d = new Dirichlet(4, 100);
+        double[][][] mu = new double[10000][5][4];
+        for (int j = 0; j < 10000; j++) {
+            for (int k = 0; k < 5; k++) {
+                mu[j][k] = d.nextDistribution();
+            }
         }
+        System.out.println(System.currentTimeMillis()-a);
 
 //        double[] input = new double[]{540, 530, 12, 23};
 //        double[] prior = new double[]{0.001, 0.001, 0.001, 0.001};

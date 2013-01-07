@@ -27,7 +27,6 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.*;
 
-
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
@@ -50,7 +49,7 @@ public final class ModelSampling extends Utils {
     private StringBuilder sb = new StringBuilder();
     private StringBuilder startStopSB = new StringBuilder();
     private int[] coverage;
-    private Map<String,Double> map = new HashMap<>();
+    private Map<String, Double> map = new HashMap<>();
 
     public ModelSampling(OptimalResult or, String savePath) {
         this.K = or.getK();
@@ -78,6 +77,11 @@ public final class ModelSampling extends Utils {
             }
         } catch (IOException | ClassNotFoundException ex) {
             System.err.println(ex);
+            Utils.error();
+            throw new IllegalStateException("Optimal result could not be parsed");
+        }
+        if (or == null) {
+            throw new IllegalStateException("Optimal result could not be parsed");
         }
         this.savePath = path;
         this.K = or.getK();
@@ -139,7 +143,7 @@ public final class ModelSampling extends Utils {
     public Map<String, Double> getMap() {
         return map;
     }
-    
+
     public void saveQuasispeciesOnly(String path) {
         Utils.saveFile(path, sb.toString());
     }
@@ -152,7 +156,7 @@ public final class ModelSampling extends Utils {
         for (int i = 0; i < L; i++) {
             coverageSB.append(i).append("\t").append(coverage[i]).append("\n");
         }
-        Utils.saveFile(savePath+"support"+File.separator + "simCov.txt", coverageSB.toString());
+        Utils.saveFile(savePath + "support" + File.separator + "simCov.txt", coverageSB.toString());
     }
 
     public byte[] single(int currentI) {
@@ -232,6 +236,10 @@ public final class ModelSampling extends Utils {
         return reads;
     }
 
+    public int getK() {
+        return K;
+    }
+
     public static Map sortMapByValue(Map map) {
         List listForSort;
         Map sortedList = new LinkedHashMap();
@@ -249,15 +257,12 @@ public final class ModelSampling extends Utils {
         }
         return sortedList;
     }
-
-    public int getK() {
-        return K;
-    }
 }
+
 class ValueComparator implements Comparator, Serializable {
 
-    Map base;
     private static final long serialVersionUID = 1L;
+    Map base;
 
     public ValueComparator(Map base) {
         this.base = base;

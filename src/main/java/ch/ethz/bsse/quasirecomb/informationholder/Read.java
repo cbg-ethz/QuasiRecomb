@@ -33,6 +33,35 @@ public class Read {
     private int crickBegin;
     private int crickEnd = -1;
 
+    public Read(byte[] sequence, int begin, int end) {
+        this.watsonSequence = sequence;
+        this.watsonBegin = begin;
+        this.watsonEnd = end;
+    }
+
+    public Read(byte[] sequence, int begin, int end, byte[] Csequence, int Cbegin, int Cend) {
+        this.watsonSequence = sequence;
+        this.watsonBegin = begin;
+        this.watsonEnd = end;
+        setPairedEnd(Csequence, Cbegin, Cend);
+        if (end - begin != BitMagic.getLength(sequence)) {
+            throw new IllegalAccessError("length problen: watson. Suggested length: " + (end - begin) + ". Actual length: " + BitMagic.getLength(sequence));
+        }
+        if (Cend - Cbegin != BitMagic.getLength(Csequence)) {
+            throw new IllegalAccessError("length problen: crick");
+        }
+//        rearrange();
+//
+//        merge();
+    }
+
+    public Read(byte[] sequence, int begin, int end, int count) {
+        this.watsonSequence = sequence;
+        this.watsonBegin = begin;
+        this.watsonEnd = end;
+        this.count = count;
+    }
+
     public void merge() {
         if (this.watsonEnd < this.crickBegin) {
             return;
@@ -65,47 +94,6 @@ public class Read {
 //        }
 //        System.out.println("\n");
         Globals.getINSTANCE().incMERGED();
-    }
-
-    public enum Position {
-
-        WATSON_IN,
-        WATSON_HIT,
-        WATSON_OUT,
-        INSERTION,
-        CRICK_IN,
-        CRICK_HIT,
-        CRICK_OUT,
-        ERROR;
-    }
-
-    public Read(byte[] sequence, int begin, int end) {
-        this.watsonSequence = sequence;
-        this.watsonBegin = begin;
-        this.watsonEnd = end;
-    }
-
-    public Read(byte[] sequence, int begin, int end, byte[] Csequence, int Cbegin, int Cend) {
-        this.watsonSequence = sequence;
-        this.watsonBegin = begin;
-        this.watsonEnd = end;
-        setPairedEnd(Csequence, Cbegin, Cend);
-        if (end - begin != BitMagic.getLength(sequence)) {
-            throw new IllegalAccessError("length problen: watson. Suggested length: " + (end - begin) + ". Actual length: " + BitMagic.getLength(sequence));
-        }
-        if (Cend - Cbegin != BitMagic.getLength(Csequence)) {
-            throw new IllegalAccessError("length problen: crick");
-        }
-        rearrange();
-
-        merge();
-    }
-
-    public Read(byte[] sequence, int begin, int end, int count) {
-        this.watsonSequence = sequence;
-        this.watsonBegin = begin;
-        this.watsonEnd = end;
-        this.count = count;
     }
 
     public void setCount(int count) {
@@ -213,6 +201,8 @@ public class Read {
         this.crickSequence = sequence;
         this.crickBegin = begin;
         this.crickEnd = end;
+        rearrange();
+        merge();
     }
 
     public int getCrickEnd() {
@@ -269,5 +259,17 @@ public class Read {
             this.crickBegin -= Globals.getINSTANCE().getALIGNMENT_BEGIN();
             this.crickEnd -= Globals.getINSTANCE().getALIGNMENT_BEGIN();
         }
+    }
+
+    public enum Position {
+
+        WATSON_IN,
+        WATSON_HIT,
+        WATSON_OUT,
+        INSERTION,
+        CRICK_IN,
+        CRICK_HIT,
+        CRICK_OUT,
+        ERROR;
     }
 }

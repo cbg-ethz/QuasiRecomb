@@ -31,6 +31,14 @@ import java.io.File;
  */
 public class ModelSelection {
 
+    private static void checkRho0(int K) {
+        if (K == 1) {
+            Globals.getINSTANCE().setNO_RECOMB(true);
+        } else {
+            Globals.getINSTANCE().setNO_RECOMB(false);
+        }
+    }
+
     private int kMin;
     private int kMax;
     private int N;
@@ -93,14 +101,6 @@ public class ModelSelection {
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
         //save optimumJava
         Utils.saveOptimum(save + File.separator + "best.optimum", or);
-    }
-
-    private static void checkRho0(int K) {
-        if (K == 1) {
-            Globals.getINSTANCE().setNO_RECOMB(true);
-        } else {
-            Globals.getINSTANCE().setNO_RECOMB(false);
-        }
     }
 
     public int getBestK() {

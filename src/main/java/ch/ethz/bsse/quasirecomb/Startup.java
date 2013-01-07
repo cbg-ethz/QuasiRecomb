@@ -47,6 +47,10 @@ import org.kohsuke.args4j.Option;
  */
 public class Startup {
 
+    public static void main(String[] args) throws IOException {
+        new Startup().doMain(args);
+        System.exit(0);
+    }
     //GENERAL
     @Option(name = "-i")
     private String input;
@@ -177,99 +181,6 @@ public class Startup {
     private double interpolateMu = 0.7;
     @Option(name = "-interpolateRho")
     private double interpolateRho = 0.7;
-    
-
-    public static void main(String[] args) throws IOException {
-        new Startup().doMain(args);
-        System.exit(0);
-    }
-
-    public void doMain(String[] args) throws IOException {
-        CmdLineParser parser = new CmdLineParser(this);
-
-        parser.setUsageWidth(80);
-        try {
-            parser.parseArgument(args);
-            setInputOutput();
-            setMainParameters();
-
-            if (this.sample) {
-                sample();
-            } else if (this.simulate) {
-                simulate();
-            } else if (this.recombine) {
-                recombine();
-            } else if (this.hamming) {
-                hamming();
-            } else if (this.intersect) {
-                intersect();
-            } else if (this.kl) {
-                kullbackLeibler();
-            } else if (this.html) {
-                html();
-            } else if (this.summary) {
-                summary();
-            } else if (this.distance) {
-                distance();
-            } else if (this.circos) {
-                circos();
-            } else if (cut) {
-                cut();
-            } else {
-                train();
-            }
-
-        } catch (CmdLineException cmderror) {
-            System.err.println(cmderror.getMessage());
-            System.err.println("java -jar QuasiRecomb.jar options...\n");
-            System.err.println(" ------------------------");
-            System.err.println("  -i INPUT\t\t: Multiple fasta file");
-            System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory)");
-            System.err.println("  -paired\t\t: Reads are paired");
-            System.err.println("");
-            System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
-                    + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached, but will stop at K=5.");
-            System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
-            System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
-            System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
-            System.err.println("  -pdelta\t\t: Stop if no parameters change, convergence criterium");
-            System.err.println("  -e DOUBLE\t\t: Fix error rate of the sequencing machine");
-            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
-            System.err.println("  -noRecomb\t\t: Do not allow recombination");
-            System.err.println("  -plot\t\t: Plot coverage");
-            System.err.println("");
-            System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -i input.fasta");
-            System.err.println(" ------------------------");
-//            System.err.println("");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === SAMPLE from model === ");
-//            System.err.println("  --sample ");
-//            System.err.println("  -i FILE\t\t: Sample from given trained model");
-//            System.err.println("");
-//            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i path/to/optimumJava");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === SUMMARY of model === ");
-//            System.err.println("  --sample ");
-//            System.err.println("  -i FILE\t\t: Summary of given trained model");
-//            System.err.println("");
-//            System.err.println("  Example for summary:\n   java -jar QuasiRecomb.jar --summary -i path/to/optimumJava");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === DISTANCE (phi) === ");
-//            System.err.println("  --distance ");
-//            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
-//            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes sampled from");
-//            System.err.println("");
-//            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasiespecies.fasta -h dataset.fasta");
-//            System.err.println(" ------------------------");
-        }
-    }
 
     private void setInputOutput() {
         if (output == null) {
@@ -555,5 +466,92 @@ public class Startup {
         Globals.getINSTANCE().setFORCE_NO_RECOMB(this.noRecomb);
         Globals.getINSTANCE().setOPTIMUM(this.optimum);
         Preprocessing.workflow(this.input, Kmin, Kmax);
+    }
+
+    public void doMain(String[] args) throws IOException {
+        CmdLineParser parser = new CmdLineParser(this);
+
+        parser.setUsageWidth(80);
+        try {
+            parser.parseArgument(args);
+            setInputOutput();
+            setMainParameters();
+
+            if (this.sample) {
+                sample();
+            } else if (this.simulate) {
+                simulate();
+            } else if (this.recombine) {
+                recombine();
+            } else if (this.hamming) {
+                hamming();
+            } else if (this.intersect) {
+                intersect();
+            } else if (this.kl) {
+                kullbackLeibler();
+            } else if (this.html) {
+                html();
+            } else if (this.summary) {
+                summary();
+            } else if (this.distance) {
+                distance();
+            } else if (this.circos) {
+                circos();
+            } else if (cut) {
+                cut();
+            } else {
+                train();
+            }
+
+        } catch (CmdLineException cmderror) {
+            System.err.println(cmderror.getMessage());
+            System.err.println("java -jar QuasiRecomb.jar options...\n");
+            System.err.println(" ------------------------");
+            System.err.println("  -i INPUT\t\t: Multiple fasta file");
+            System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory)");
+            System.err.println("  -paired\t\t: Reads are paired");
+            System.err.println("");
+            System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
+                    + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached, but will stop at K=5.");
+            System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
+            System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
+            System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
+            System.err.println("  -pdelta\t\t: Stop if no parameters change, convergence criterium");
+            System.err.println("  -e DOUBLE\t\t: Fix error rate of the sequencing machine");
+            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
+            System.err.println("  -noRecomb\t\t: Do not allow recombination");
+            System.err.println("  -plot\t\t: Plot coverage");
+            System.err.println("");
+            System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -i input.fasta");
+            System.err.println(" ------------------------");
+//            System.err.println("");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println(" === SAMPLE from model === ");
+//            System.err.println("  --sample ");
+//            System.err.println("  -i FILE\t\t: Sample from given trained model");
+//            System.err.println("");
+//            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i path/to/optimumJava");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println(" === SUMMARY of model === ");
+//            System.err.println("  --sample ");
+//            System.err.println("  -i FILE\t\t: Summary of given trained model");
+//            System.err.println("");
+//            System.err.println("  Example for summary:\n   java -jar QuasiRecomb.jar --summary -i path/to/optimumJava");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println("");
+//            System.err.println(" ------------------------");
+//            System.err.println(" === DISTANCE (phi) === ");
+//            System.err.println("  --distance ");
+//            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
+//            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes sampled from");
+//            System.err.println("");
+//            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasiespecies.fasta -h dataset.fasta");
+//            System.err.println(" ------------------------");
+        }
     }
 }

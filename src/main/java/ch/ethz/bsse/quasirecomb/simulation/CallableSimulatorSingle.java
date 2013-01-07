@@ -20,6 +20,7 @@ package ch.ethz.bsse.quasirecomb.simulation;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +54,7 @@ public class CallableSimulatorSingle implements Callable<Read> {
             if (epsilon > 0d) {
                 Map<Character, Double> baseMap = new ConcurrentHashMap<>();
                 for (int v = 0; v < n; v++) {
-                    char x = reverse(v);
+                    char x = Utils.reverseChar(v);
                     if (haplotypes[hap].charAt(j + start) == x) {
                         baseMap.put(x, 1.0 - (n - 1.0) * epsilon);
                     } else {
@@ -73,22 +74,5 @@ public class CallableSimulatorSingle implements Callable<Read> {
         Read r1 = new Read(BitMagic.splitReadIntoBytes(sb.toString()), start, start + length);
 
         return r1;
-    }
-
-    private static char reverse(int v) {
-        switch ((short) v) {
-            case 0:
-                return 'A';
-            case 1:
-                return 'C';
-            case 2:
-                return 'G';
-            case 3:
-                return 'T';
-            case 4:
-                return '-';
-            default:
-                throw new IllegalStateException("cannot reverse " + v);
-        }
     }
 }
