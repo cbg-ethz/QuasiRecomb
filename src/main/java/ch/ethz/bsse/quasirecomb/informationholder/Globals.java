@@ -58,6 +58,7 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean USER_OPTIMUM;
     private boolean BIAS_MU;
     private boolean SILENT;
     private boolean ML;
@@ -686,5 +687,13 @@ public class Globals {
 
     public void setINTERPOLATE_RHO(double INTERPOLATE_RHO) {
         this.INTERPOLATE_RHO = INTERPOLATE_RHO;
+    }
+
+    public void setUSER_OPTIMUM(boolean USER_OPTIMUM) {
+        this.USER_OPTIMUM = USER_OPTIMUM;
+    }
+
+    public boolean isUSER_OPTIMUM() {
+        return USER_OPTIMUM;
     }
 }

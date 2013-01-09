@@ -50,8 +50,10 @@ public class Regularizations {
             }
             return regCounts;
         }
-        for (int v = 0; v < x; v++) {
-            regCounts[v] = Math.abs(((1-eta)*(estCounts[v] / sum))+(eta*previous[v]));
+        if (eta > 0) {
+            for (int v = 0; v < x; v++) {
+                regCounts[v] = Math.abs(((1 - eta) * (estCounts[v] / sum)) + (eta * previous[v]));
+            }
         }
 
         max = Double.MIN_VALUE;
@@ -69,6 +71,7 @@ public class Regularizations {
         }
         return regCounts;
     }
+
     public static double[] ml(double[] estCounts) {
 //        double hyperParameter = 0.001;
         int x = estCounts.length;

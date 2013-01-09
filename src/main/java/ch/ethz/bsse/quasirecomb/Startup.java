@@ -178,9 +178,9 @@ public class Startup {
     @Option(name = "-steps")
     private int steps = 100;
     @Option(name = "-interpolateMu")
-    private double interpolateMu = 0.7;
+    private double interpolateMu = 1;
     @Option(name = "-interpolateRho")
-    private double interpolateRho = 0.7;
+    private double interpolateRho = 0.5;
 
     private void setInputOutput() {
         if (output == null) {
@@ -405,7 +405,9 @@ public class Startup {
 
     private void train() throws NumberFormatException, CmdLineException {
         if (this.input == null) {
-            throw new CmdLineException("No input given");
+            System.out.println("No input given");
+            System.exit(0);
+            //throw new CmdLineException("No input given");
         }
         int Kmin, Kmax;
         if (K.contains(":")) {
@@ -465,6 +467,7 @@ public class Startup {
         Globals.getINSTANCE().setNO_RECOMB(this.noRecomb);
         Globals.getINSTANCE().setFORCE_NO_RECOMB(this.noRecomb);
         Globals.getINSTANCE().setOPTIMUM(this.optimum);
+        Globals.getINSTANCE().setUSER_OPTIMUM(this.optimum!=null);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 

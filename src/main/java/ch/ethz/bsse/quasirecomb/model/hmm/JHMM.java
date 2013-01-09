@@ -167,8 +167,13 @@ public class JHMM extends JHMMBasics {
         double[] muJKV;
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double eta = Math.pow(s + 2, -Globals.getINSTANCE().getINTERPOLATE_MU());
-                muJKV = Regularizations.step(this.nJKV[j][k], this.mu[j][k], eta);
+                double eta = 0;
+                if (Globals.getINSTANCE().getINTERPOLATE_MU() > 0) {
+                    eta = Math.pow(Math.pow(s, 2) + 2, -Globals.getINSTANCE().getINTERPOLATE_MU());
+                    muJKV = Regularizations.step(this.nJKV[j][k], this.mu[j][k], eta);
+                } else {
+                    muJKV = Regularizations.ml(this.nJKV[j][k]);
+                }
                 double mult = Globals.getINSTANCE().getMULT_MU();
                 double[] muPriorLocal = new double[n];
                 System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
@@ -177,7 +182,7 @@ public class JHMM extends JHMMBasics {
                     muJKV = Regularizations.regularizeOnce(muJKV, restart, muPriorLocal, mult);
                     double prev = muJKV[0];
                     for (int v = 1; v < n; v++) {
-                        if (prev != muJKV[v]) {
+                        if (prev != muJKV[v] && prev > 0d) {
                             repeat = false;
                         }
                     }
@@ -210,8 +215,13 @@ public class JHMM extends JHMMBasics {
         double[] rhoJKL = null;
         for (int j = 1; j < L; j++) {
             for (int k = 0; k < K; k++) {
-                double eta = Math.pow(s + 2, -Globals.getINSTANCE().getINTERPOLATE_RHO());
-                rhoJKL = Regularizations.step(this.nJKL[j][k], this.rho[j - 1][k], eta);
+                double eta = 0;
+                if (Globals.getINSTANCE().getINTERPOLATE_RHO() > 0) {
+                    eta = Math.pow(Math.pow(s, 2) + 2, -Globals.getINSTANCE().getINTERPOLATE_RHO());
+                    rhoJKL = Regularizations.step(this.nJKL[j][k], this.rho[j - 1][k], eta);
+                } else {
+                    rhoJKL = Regularizations.ml(this.nJKL[j][k]);
+                }
                 double max = 0d;
                 int lPrime = -1;
                 double sum = 0d;
