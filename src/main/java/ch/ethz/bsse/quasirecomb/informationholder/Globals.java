@@ -641,14 +641,6 @@ public class Globals {
         this.PRINT_ALIGNMENT = PRINT_ALIGNMENT;
     }
 
-    public boolean isML() {
-        return ML;
-    }
-
-    public void setML(boolean ML) {
-        this.ML = ML;
-    }
-
     public boolean isSILENT() {
         return SILENT;
     }

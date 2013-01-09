@@ -419,15 +419,14 @@ public class Startup {
         }
         if (this.global) {
             Globals.getINSTANCE().setSPIKERHO(true);
-            Globals.getINSTANCE().setALPHA_H(0.0001);
-            Globals.getINSTANCE().setALPHA_Z(0.0001);
+            Globals.getINSTANCE().setALPHA_H(1e-6);
+            Globals.getINSTANCE().setALPHA_Z(1e-6);
             Globals.getINSTANCE().setMULT_MU(10);
-            Globals.getINSTANCE().setMULT_RHO(10);
+            Globals.getINSTANCE().setMULT_RHO(1);
             Globals.getINSTANCE().setINTERPOLATE_MU(1);
             Globals.getINSTANCE().setINTERPOLATE_RHO(0.5);
         } else {
             Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
-            Globals.getINSTANCE().setML(this.ML);
         }
         Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
         Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
@@ -435,17 +434,6 @@ public class Startup {
         Globals.getINSTANCE().setSTOP_QUICK(this.stopQuick);
         Globals.getINSTANCE().setPRINT_ALIGNMENT(this.printAlignment);
         Globals.getINSTANCE().setPRIORMU(this.muPrior);
-        if (this.maximalRegularization) {
-            Globals.getINSTANCE().setMULT_MU(1);
-            Globals.getINSTANCE().setMULT_RHO(1);
-            Globals.getINSTANCE().setALPHA_H(1e-6);
-            Globals.getINSTANCE().setALPHA_Z(1e-6);
-        } else {
-            Globals.getINSTANCE().setMULT_MU(this.multMu);
-            Globals.getINSTANCE().setMULT_RHO(this.multRho);
-            Globals.getINSTANCE().setALPHA_H(this.alphah);
-            Globals.getINSTANCE().setALPHA_Z(this.alphaz);
-        }
         Globals.getINSTANCE().setNOSAMPLE(this.nosample);
         Globals.getINSTANCE().setPDELTA(this.pdelta);
         Globals.getINSTANCE().setPRUNE(this.prune);
