@@ -26,13 +26,16 @@ steps to infer a viral quasispecies from Next Generation Sequencing (NGS) data.
 ## RUN:
 #### Local reconstruction
  `java -jar QuasiRecomb.jar -i alignedReads.fasta`
+ Reads need to be aligned, therefore it is only useful for local reconstruction.
 
 #### Global reconstruction
- `java -jar QuasiRecomb.jar -i alignment.bam`
+ `java -jar QuasiRecomb.jar -i alignment.bam -global`
   In this case, all insertions will be omitted, but deletions are preserved.
 
 ### Use fixed number of generators
  `java -jar QuasiRecomb.jar -i alignedReads.fasta -K 2`
+ 
+ 
 
 ### Use backward pruning to get better initialization (slower)
  `java -jar QuasiRecomb.jar -i alignedReads.fasta -prune`
