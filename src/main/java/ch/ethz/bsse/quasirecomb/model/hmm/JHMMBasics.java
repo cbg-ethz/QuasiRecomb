@@ -125,24 +125,26 @@ public class JHMMBasics {
                 omega2[r.getCrickEnd()] += r.getCount();
             }
         }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < L + 1; i++) {
-            this.tauOmega[0][i] = tau1[i] / (double) N;
-            this.tauOmega[1][i] = omega1[i] / (double) N;
-            sb.append(this.tauOmega[0][i]);
-            sb.append("\t");
-            sb.append(this.tauOmega[1][i]);
-            sb.append("\t");
-            if (this.paired) {
-                this.tauOmega[2][i] = tau2[i] / (double) N;
-                this.tauOmega[3][i] = omega2[i] / (double) N;
-                sb.append(this.tauOmega[2][i]);
+        if (Globals.getINSTANCE().isDEBUG()) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < L + 1; i++) {
+                this.tauOmega[0][i] = tau1[i] / (double) N;
+                this.tauOmega[1][i] = omega1[i] / (double) N;
+                sb.append(this.tauOmega[0][i]);
                 sb.append("\t");
-                sb.append(this.tauOmega[3][i]);
+                sb.append(this.tauOmega[1][i]);
+                sb.append("\t");
+                if (this.paired) {
+                    this.tauOmega[2][i] = tau2[i] / (double) N;
+                    this.tauOmega[3][i] = omega2[i] / (double) N;
+                    sb.append(this.tauOmega[2][i]);
+                    sb.append("\t");
+                    sb.append(this.tauOmega[3][i]);
+                }
+                sb.append("\n");
             }
-            sb.append("\n");
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "twtw", sb.toString());
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "twtw", sb.toString());
     }
 
     public TempJHMMStorage getStorage() {

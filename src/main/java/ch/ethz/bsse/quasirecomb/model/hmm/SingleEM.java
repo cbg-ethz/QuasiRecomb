@@ -129,6 +129,9 @@ public class SingleEM {
     private void iterate() {
         double oldllh;
         List<Double> history = new LinkedList<>();
+        if (Globals.getINSTANCE().isDEBUG()) {
+            Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", "" + jhmm.getLoglikelihood());
+        }
         do {
             Globals.getINSTANCE().minMIN_BIC(maxBIC);
             iterations++;
@@ -157,7 +160,6 @@ public class SingleEM {
                     Globals.getINSTANCE().log((loglikelihood - oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
                 } else if (loglikelihood > 0 && oldllh < 0) {
                     Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
-
                 }
                 Globals.getINSTANCE().log(loglikelihood + "\n");
             }
@@ -167,11 +169,17 @@ public class SingleEM {
             } else {
                 jhmm.restart();
             }
+            if (Globals.getINSTANCE().isDEBUG()) {
+                Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", " " + jhmm.getLoglikelihood());
+            }
 
             if (Globals.getINSTANCE().isSNAPSHOTS()) {
                 this.snapshot();
             }
         } while ((Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta && !Globals.getINSTANCE().isPDELTA()) || (Globals.getINSTANCE().isPDELTA() && (jhmm.getRhoChanged() + jhmm.getMuChanged()) != 0));
+        if (Globals.getINSTANCE().isDEBUG()) {
+            Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", "\n");
+        }
     }
 
     private JHMM prune() {

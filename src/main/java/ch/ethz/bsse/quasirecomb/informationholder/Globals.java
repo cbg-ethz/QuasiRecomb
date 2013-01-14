@@ -27,7 +27,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -58,10 +57,10 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean UNPAIRED;
     private boolean USER_OPTIMUM;
     private boolean BIAS_MU;
     private boolean SILENT;
-    private boolean ML;
     private boolean STOP_QUICK;
     private boolean PRINT_ALIGNMENT;
     private boolean CIRCOS;
@@ -119,7 +118,8 @@ public class Globals {
     private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
 //    private final ExecutorService executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
     private final ForkJoinPool fjPool = new ForkJoinPool();
-    private final AtomicInteger MERGED = new AtomicInteger(0);
+    private final AtomicInteger MERGED_COUNT = new AtomicInteger(0);
+    private final AtomicInteger PAIRED_COUNT = new AtomicInteger(0);
     private double PERCENTAGE = 0;
     private long oldTime = 0;
     private String oldOut = "";
@@ -243,12 +243,19 @@ public class Globals {
         return PRUNE;
     }
 
+    public int getPAIRED_COUNT() {
+        return PAIRED_COUNT.get();
+    }
+
+    public void incPAIRED() {
+        PAIRED_COUNT.getAndIncrement();
+    }
     public int getMERGED() {
-        return MERGED.get();
+        return MERGED_COUNT.get();
     }
 
     public void incMERGED() {
-        MERGED.getAndIncrement();
+        MERGED_COUNT.getAndIncrement();
     }
 
     public void setOVERLAP(boolean OVERLAP) {
@@ -687,5 +694,13 @@ public class Globals {
 
     public boolean isUSER_OPTIMUM() {
         return USER_OPTIMUM;
+    }
+
+    public void setUNPAIRED(boolean UNPAIRED) {
+        this.UNPAIRED = UNPAIRED;
+    }
+
+    public boolean isUNPAIRED() {
+        return UNPAIRED;
     }
 }

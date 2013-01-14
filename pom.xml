@@ -17,7 +17,7 @@
         </developer>
     </developers>
     
-     <scm>
+    <scm>
         <connection>scm:git@github.com:armintoepfer/QuasiRecomb.git</connection>
         <developerConnection>scm:git@github.com:armintoepfer/QuasiRecomb.git</developerConnection>
         <url>https://github.com/armintoepfer/QuasiRecomb</url>
@@ -122,6 +122,11 @@
             <artifactId>jfreechart</artifactId>
             <version>1.0.13</version>
         </dependency>
+        <dependency>
+            <groupId>com.boundary</groupId>
+            <artifactId>high-scale-lib</artifactId>
+            <version>1.0.3</version>
+        </dependency>
     </dependencies>
     <pluginRepositories>
         <pluginRepository>
@@ -138,7 +143,11 @@
             <id>snapshots</id>
             <url>https://repository.apache.org/content/repositories/snapshots</url>
         </repository>
-<!--        <repository>
+        <repository>
+            <id>boundary-site</id>
+            <url>http://maven.boundary.com/artifactory/repo</url>
+        </repository>
+        <!--        <repository>
             <id>biojava-maven-repo</id>
             <name>BioJava repository</name>
             <url>http://www.biojava.org/download/maven/</url>			

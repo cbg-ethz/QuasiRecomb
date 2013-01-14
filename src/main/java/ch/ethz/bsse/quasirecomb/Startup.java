@@ -155,8 +155,6 @@ public class Startup {
     private String genome;
     @Option(name = "-printAlignment")
     private boolean printAlignment;
-    @Option(name = "-maxReg")
-    private boolean maximalRegularization;
     @Option(name = "-amplicons")
     private String amplicons;
     @Option(name = "-ampliconDist")
@@ -175,12 +173,14 @@ public class Startup {
     private boolean global;
     @Option(name = "-silent")
     private boolean silent;
+    @Option(name = "-unpaired")
+    private boolean unpaired;
     @Option(name = "-steps")
     private int steps = 100;
     @Option(name = "-interpolateMu")
     private double interpolateMu = 1;
     @Option(name = "-interpolateRho")
-    private double interpolateRho = 0.5;
+    private double interpolateRho = 1;
 
     private void setInputOutput() {
         if (output == null) {
@@ -405,9 +405,9 @@ public class Startup {
 
     private void train() throws NumberFormatException, CmdLineException {
         if (this.input == null) {
-            System.out.println("No input given");
-            System.exit(0);
-            //throw new CmdLineException("No input given");
+//            System.out.println("No input given");
+//            System.exit(0);
+            throw new CmdLineException("No input given");
         }
         int Kmin, Kmax;
         if (K.contains(":")) {
@@ -418,18 +418,23 @@ public class Startup {
             Kmax = Integer.parseInt(K);
         }
         if (this.global) {
-            Globals.getINSTANCE().setSPIKERHO(true);
             Globals.getINSTANCE().setALPHA_H(1e-6);
             Globals.getINSTANCE().setALPHA_Z(1e-6);
             Globals.getINSTANCE().setMULT_MU(10);
             Globals.getINSTANCE().setMULT_RHO(1);
+            Globals.getINSTANCE().setSPIKERHO(true);
             Globals.getINSTANCE().setINTERPOLATE_MU(1);
-            Globals.getINSTANCE().setINTERPOLATE_RHO(0.5);
+            Globals.getINSTANCE().setINTERPOLATE_RHO(1);
         } else {
+            Globals.getINSTANCE().setALPHA_H(this.alphah);
+            Globals.getINSTANCE().setALPHA_Z(this.alphaz);
+            Globals.getINSTANCE().setMULT_MU(this.multMu);
+            Globals.getINSTANCE().setMULT_RHO(this.multRho);
             Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
+            Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
+            Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
         }
-        Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
-        Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
+        Globals.getINSTANCE().setUNPAIRED(this.unpaired);
         Globals.getINSTANCE().setSTEPS(this.steps);
         Globals.getINSTANCE().setSTOP_QUICK(this.stopQuick);
         Globals.getINSTANCE().setPRINT_ALIGNMENT(this.printAlignment);
@@ -455,7 +460,7 @@ public class Startup {
         Globals.getINSTANCE().setNO_RECOMB(this.noRecomb);
         Globals.getINSTANCE().setFORCE_NO_RECOMB(this.noRecomb);
         Globals.getINSTANCE().setOPTIMUM(this.optimum);
-        Globals.getINSTANCE().setUSER_OPTIMUM(this.optimum!=null);
+        Globals.getINSTANCE().setUSER_OPTIMUM(this.optimum != null);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 
@@ -500,18 +505,18 @@ public class Startup {
             System.err.println(" ------------------------");
             System.err.println("  -i INPUT\t\t: Multiple fasta file");
             System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory)");
-            System.err.println("  -paired\t\t: Reads are paired");
+//            System.err.println("  -paired\t\t: Reads are paired");
             System.err.println("");
             System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
                     + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached, but will stop at K=5.");
             System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
             System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
-            System.err.println("  -pdelta\t\t: Stop if no parameters change, convergence criterium");
-            System.err.println("  -e DOUBLE\t\t: Fix error rate of the sequencing machine");
-            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
+            System.err.println("  -pdelta\t\t: Stop if there is no change of parameters, convergence criterium");
+//            System.err.println("  -e DOUBLE\t\t: Fix error rate of the sequencing machine");
+//            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
             System.err.println("  -noRecomb\t\t: Do not allow recombination");
-            System.err.println("  -plot\t\t: Plot coverage");
+            System.err.println("  -plot\t\t\t: Plot coverage");
             System.err.println("");
             System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -i input.fasta");
             System.err.println(" ------------------------");

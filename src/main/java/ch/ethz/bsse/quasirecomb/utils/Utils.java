@@ -342,7 +342,14 @@ public class Utils extends FastaParser {
             String name = samRecord.getReadName();
             if (readMap.containsKey(name)) {
                 readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
-                Globals.getINSTANCE().incMERGED();
+                if (Globals.getINSTANCE().isUNPAIRED()) {
+                    Read r = readMap.get(name);
+                    if (r.isPaired()) {
+                        r.unpair();
+                        readMap.put(name+"_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, 1));
+                    }
+                }
+                Globals.getINSTANCE().incPAIRED();
             } else {
                 readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, 1));
             }

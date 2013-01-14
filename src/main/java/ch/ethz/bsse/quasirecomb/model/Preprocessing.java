@@ -27,6 +27,8 @@ import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,6 +38,98 @@ import java.util.Map;
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class Preprocessing {
+
+    /**
+     * Entry point. Forwards invokes of the specified workflow.
+     *
+     * @param L length of the reads
+     * @param exp is it an experimental dataset
+     * @param input path to the fasta file
+     * @param Kmin minimal amount of generators
+     * @param Kmax minimal amount of generators
+     * @param n size of the alphabet
+     * @param f distribution of the haplotypes if sampling has to be done
+     * @param N amount of reads in case exp is false
+     */
+    public static void workflow(String input, int Kmin, int Kmax) {
+        Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
+        Globals.getINSTANCE().print("Parsing");
+        Read[] reads = Utils.parseInput(input);
+
+        for (Read r : reads) {
+            Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
+            Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
+        }
+        int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        Globals.getINSTANCE().setALIGNMENT_END(L);
+        for (Read r : reads) {
+            r.shrink();
+        }
+//        List<Read> newList = new LinkedList<>();
+//        for (Read r : reads) {
+//            if (r.getBegin() == 0) {
+//                newList.add(r);
+//            }
+//        }
+//        reads = newList.toArray(new Read[newList.size()]);
+
+        Globals.getINSTANCE().print("Parsing\t25%");
+        int[][] alignment = countPos(reads, L);
+
+
+//        saveUnique(reads);
+        Globals.getINSTANCE().print("Parsing\t50%");
+        StringBuilder sb = new StringBuilder();
+        sb.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
+        for (int i = 0; i < L; i++) {
+            int hits = 0;
+            sb.append(i);
+            for (int v = 0; v < alignment[i].length; v++) {
+                sb.append("\t").append(alignment[i][v]);
+                if (alignment[i][v] != 0) {
+                    hits++;
+                }
+            }
+            sb.append("\n");
+            if (hits == 0) {
+                System.out.println("Position " + i + " is not covered.");
+            }
+        }
+        Globals.getINSTANCE().setMU_PRIOR(alignment);
+        Globals.getINSTANCE().print("Parsing\t75%");
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
+        sb = null;
+        System.gc();
+        System.gc();
+        int n = countChars(reads);
+        Globals.getINSTANCE().print("Parsing\t100%");
+        Globals.getINSTANCE().println("Unique reads\t" + reads.length);
+        Globals.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
+        Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED() + "\n");
+        if (Globals.getINSTANCE().isPLOT()) {
+            Globals.getINSTANCE().println("Plotting\t");
+            Plot.plotCoverage(alignment);
+        }
+        if (Globals.getINSTANCE().isPRINT_ALIGNMENT()) {
+            Globals.getINSTANCE().println("Saving alignment\t");
+            new Summary().printAlignment(reads);
+        }
+        if (Globals.getINSTANCE().isCIRCOS()) {
+//            new Summary().printAlignment(reads);
+            new Summary().circos(L, alignment);
+            System.exit(0);
+        }
+        if (Globals.getINSTANCE().isDEBUG()) {
+            new File(Globals.getINSTANCE().getSAVEPATH() + "support/log/").mkdirs();
+        }
+
+        ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
+        if (!Globals.getINSTANCE().isNOSAMPLE()) {
+            ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
+            modelSampling.save();
+            System.out.println("\nQuasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
+        }
+    }
 
     private static int countChars(Read[] rs) {
         Map<Byte, Boolean> map = new HashMap<>();
@@ -69,86 +163,6 @@ public class Preprocessing {
                 sb.append(Utils.reverse(r.getSequence())).append("\n");
             }
             Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "in.fasta", sb.toString());
-        }
-    }
-
-    /**
-     * Entry point. Forwards invokes of the specified workflow.
-     *
-     * @param L length of the reads
-     * @param exp is it an experimental dataset
-     * @param input path to the fasta file
-     * @param Kmin minimal amount of generators
-     * @param Kmax minimal amount of generators
-     * @param n size of the alphabet
-     * @param f distribution of the haplotypes if sampling has to be done
-     * @param N amount of reads in case exp is false
-     */
-    public static void workflow(String input, int Kmin, int Kmax) {
-        Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
-        Globals.getINSTANCE().print("Parsing");
-        Read[] reads = Utils.parseInput(input);
-
-        for (Read r : reads) {
-            Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
-            Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
-        }
-        int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
-        Globals.getINSTANCE().setALIGNMENT_END(L);
-        for (Read r : reads) {
-            r.shrink();
-        }
-
-        Globals.getINSTANCE().print("Parsing\t25%");
-        int[][] alignment = countPos(reads, L);
-
-
-//        saveUnique(reads);
-        Globals.getINSTANCE().print("Parsing\t50%");
-        StringBuilder sb = new StringBuilder();
-        sb.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
-        for (int i = 0; i < L; i++) {
-            int hits = 0;
-            sb.append(i);
-            for (int v = 0; v < alignment[i].length; v++) {
-                sb.append("\t").append(alignment[i][v]);
-                if (alignment[i][v] != 0) {
-                    hits++;
-                }
-            }
-            sb.append("\n");
-            if (hits == 0) {
-                System.out.println("Position " + i + " is not covered.");
-            }
-        }
-        Globals.getINSTANCE().setMU_PRIOR(alignment);
-        Globals.getINSTANCE().print("Parsing\t75%");
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
-        sb = null;
-        System.gc();
-        System.gc();
-        int n = countChars(reads);
-        Globals.getINSTANCE().print("Parsing\t100%");
-        Globals.getINSTANCE().println("Unique reads\t" + reads.length);
-        Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED() + "\n");
-        if (Globals.getINSTANCE().isPLOT()) {
-            Globals.getINSTANCE().println("Plotting\t");
-            Plot.plotCoverage(alignment);
-        }
-        if (Globals.getINSTANCE().isPRINT_ALIGNMENT()) {
-            Globals.getINSTANCE().println("Saving alignment\t");
-            new Summary().printAlignment(reads);
-        }
-        if (Globals.getINSTANCE().isCIRCOS()) {
-//            new Summary().printAlignment(reads);
-            new Summary().circos(L, alignment);
-            System.exit(0);
-        }
-        ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
-        if (!Globals.getINSTANCE().isNOSAMPLE()) {
-            ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
-            modelSampling.save();
-            System.out.println("\nQuasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
         }
     }
 

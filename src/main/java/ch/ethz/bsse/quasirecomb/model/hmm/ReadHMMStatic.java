@@ -19,6 +19,8 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
+import ch.ethz.bsse.quasirecomb.utils.BitMagic;
+import java.util.Arrays;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -75,8 +77,6 @@ public class ReadHMMStatic {
                     }
                 }
                 if (c[j] <= 0) {
-//                jhmm.free(storage.getId());
-//                return 0;
                     System.err.println("R");
                 }
                 c[j] = 1d / c[j];
@@ -180,7 +180,6 @@ public class ReadHMMStatic {
                     }
                 }
             }
-
             likelihood *= read.getCount();
 
             free(jhmm, storage);

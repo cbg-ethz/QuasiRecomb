@@ -72,7 +72,7 @@ public class Random {
 
     public static double[][][] generateMuInit(int L, int K, int n) {
         if (muDir == null) {
-            muDir = new Dirichlet(n, 2);
+            muDir = new Dirichlet(n, 100);
         }
         double[][][] mu = new double[L][K][n];
 

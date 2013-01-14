@@ -261,6 +261,12 @@ public class Read {
         }
     }
 
+    public void unpair() {
+        this.crickBegin = -1;
+        this.crickEnd = -1;
+        this.crickSequence = null;
+    }
+
     public enum Position {
 
         WATSON_IN,
