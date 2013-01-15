@@ -17,6 +17,9 @@ HIV samples.
 This java command line application is a toolbox, combining all necessary
 steps to infer a viral quasispecies from Next Generation Sequencing (NGS) data.
 
+### DOWNLOAD:
+Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
+
 - - -
 
 #### PREREQUISITES TO RUN:
