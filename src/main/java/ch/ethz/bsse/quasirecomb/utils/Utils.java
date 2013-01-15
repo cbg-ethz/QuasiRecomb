@@ -283,27 +283,36 @@ public class Utils extends FastaParser {
                 continue;
             }
             int refStart = alignmentBlocks.get(0).getReferenceStart() + alignmentBlocks.get(0).getReadStart() - 1;
-            int readStart = alignmentBlocks.get(0).getReadStart() - 1;
+            int readStart = 0;
+//            int readStart = alignmentBlocks.get(0).getReadStart() - 1;
 //            boolean ignore = false;
             List<Byte> buildRead = new ArrayList<>();
             boolean d = false;
             for (CigarElement c : samRecord.getCigar().getCigarElements()) {
                 switch (c.getOperator()) {
+                    case X:
+                    case EQ:
                     case M:
+                        if ((readStart + c.getLength()) > samRecord.getReadBases().length) {
+                            System.out.println("");
+                            System.out.println("C:" + c.getOperator());
+                            System.out.println("L:" + c.getLength());
+                            System.out.println("N:" + samRecord.getReadBases().length);
+                            System.out.println("R:" + readStart);
+                            System.out.println("S:" + (alignmentBlocks.get(0).getReadStart() - 1));
+                            System.out.println("T:" + samRecord.getCigar().toString());
+                            System.exit(9);
+                        }
                         for (int i = 0; i < c.getLength(); i++) {
-                            if (readStart >= samRecord.getReadBases().length) {
-                                System.out.println("U1");
-                                System.exit(9);
-                            }
                             byte b = samRecord.getReadBases()[readStart++];
                             buildRead.add(b);
                         }
                         break;
                     case I:
-//                        for (int i = 0; i < c.getLength(); i++) {
+                        for (int i = 0; i < c.getLength(); i++) {
 //                            buildRead.add((byte) "-".charAt(0));
-                        readStart++;
-//                        }
+                            readStart++;
+                        }
                         break;
                     case D:
                         d = true;
@@ -313,21 +322,14 @@ public class Utils extends FastaParser {
                         }
                         break;
                     case S:
+                        for (int i = 0; i < c.getLength(); i++) {
+                            readStart++;
+                        }
                         break;
                     case H:
-                        System.out.println("H");
-                        System.exit(9);
                         break;
                     case P:
                         System.out.println("P");
-                        System.exit(9);
-                        break;
-                    case EQ:
-                        System.out.println("EQ");
-                        System.exit(9);
-                        break;
-                    case X:
-                        System.out.println("X");
                         System.exit(9);
                         break;
                     case N:
@@ -346,7 +348,7 @@ public class Utils extends FastaParser {
                     Read r = readMap.get(name);
                     if (r.isPaired()) {
                         r.unpair();
-                        readMap.put(name+"_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, 1));
+                        readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, 1));
                     }
                 }
                 Globals.getINSTANCE().incPAIRED();

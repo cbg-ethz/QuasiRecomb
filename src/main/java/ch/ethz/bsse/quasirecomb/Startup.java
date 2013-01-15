@@ -117,6 +117,8 @@ public class Startup {
     private boolean hamming;
     @Option(name = "--distance")
     private boolean distance;
+    @Option(name = "--distanceDetail")
+    private boolean distanceDetail;
     @Option(name = "-h")
     private String haplotypes;
     @Option(name = "--simulate")
@@ -393,6 +395,32 @@ public class Startup {
         }
     }
 
+    private void distanceDetail() {
+        Map<String, Double> quasiDouble = FastaParser.parseQuasispeciesFile(input);
+        Map<String, String> haps = FastaParser.parseHaplotypeFile(haplotypes);
+        double[][] precision = new double[haps.size()][300];
+        String[] head = new String[haps.size()];
+        int x = 0;
+        for (Entry<String, String> entry : haps.entrySet()) {
+            Map<String, String> h = new HashMap<>();
+            h.put(entry.getKey(), entry.getValue());
+            head[x] = entry.getValue().replaceAll(">", "");
+            precision[x++] = DistanceUtils.calculatePhi2(h, quasiDouble);
+        }
+
+        for (int i = 0; i < head.length; i++) {
+            System.out.print("\t" + head[i]);
+        }
+        System.out.println("");
+        for (int j = 0; j < 200; j++) {
+            System.out.print(j);
+            for (int i = 0; i < precision.length; i++) {
+                System.out.print("\t"+precision[i][j]);
+            }
+            System.out.println("");
+        }
+    }
+
     private void cut() {
         Cutter.cut(input, output, begin, end);
     }
@@ -491,6 +519,8 @@ public class Startup {
                 summary();
             } else if (this.distance) {
                 distance();
+            } else if (this.distanceDetail) {
+                distanceDetail();
             } else if (this.circos) {
                 circos();
             } else if (cut) {
