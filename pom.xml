@@ -4,7 +4,7 @@
 
     <groupId>ch.ethz.bsse</groupId>
     <artifactId>QuasiRecomb</artifactId>
-    <version>0.5</version>
+    <version>0.5.1</version>
     <packaging>jar</packaging>
     <url>http://www.cbg.ethz.ch/software/quasirecomb</url>
     <name>QuasiRecomb</name>
