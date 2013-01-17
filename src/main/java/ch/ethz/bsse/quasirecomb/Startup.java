@@ -70,7 +70,7 @@ public class Startup {
     @Option(name = "-multMu")
     private double multMu = 10;
     @Option(name = "-multRho")
-    private double multRho = 10;
+    private double multRho = 100;
     @Option(name = "-nosample")
     private boolean nosample;
     @Option(name = "-m")
@@ -170,7 +170,7 @@ public class Startup {
     @Option(name = "-ML")
     private boolean ML;
     @Option(name = "-spikeRho")
-    private boolean spikeRho;
+    private boolean spikeRho = true;
     @Option(name = "-global")
     private boolean global;
     @Option(name = "-silent")
@@ -456,7 +456,6 @@ public class Startup {
             Globals.getINSTANCE().setALPHA_Z(1e-6);
             Globals.getINSTANCE().setMULT_MU(10);
             Globals.getINSTANCE().setMULT_RHO(1);
-            Globals.getINSTANCE().setSPIKERHO(true);
             Globals.getINSTANCE().setINTERPOLATE_MU(1);
             Globals.getINSTANCE().setINTERPOLATE_RHO(1);
         } else {
@@ -464,10 +463,10 @@ public class Startup {
             Globals.getINSTANCE().setALPHA_Z(this.alphaz);
             Globals.getINSTANCE().setMULT_MU(this.multMu);
             Globals.getINSTANCE().setMULT_RHO(this.multRho);
-            Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
             Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
             Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
         }
+        Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
         Globals.getINSTANCE().setANNEALING(this.annealing);
         Globals.getINSTANCE().setS_ALPHA(this.sAlpha);
         Globals.getINSTANCE().setS_BETA(this.sBeta);
