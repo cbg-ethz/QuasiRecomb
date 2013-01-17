@@ -19,19 +19,17 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
-import ch.ethz.bsse.quasirecomb.utils.BitMagic;
-import java.util.Arrays;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class ReadHMMStatic {
 
-    private static void free(JHMM jhmm, TempJHMMStorage storage) {
+    private static void free(JHMMInterface jhmm, TempJHMMStorage storage) {
         jhmm.free(storage.getId());
     }
 
-    public static double computeFB(JHMM jhmm, Read read) {
+    public static double computeFB(JHMMInterface jhmm, Read read) {
         try {
             TempJHMMStorage storage = jhmm.getStorage();
             int begin = read.getBegin();
@@ -42,6 +40,7 @@ public class ReadHMMStatic {
             double[] c = new double[length];
             double likelihood = 0;
 
+            /*Forward*/
             for (int j = 0; j < length; j++) {
                 final boolean hit = read.isHit(j);
                 byte b = -1;
@@ -87,6 +86,7 @@ public class ReadHMMStatic {
                     }
                 }
             }
+            /*Backward*/
             for (int j = length - 1; j >= 0; j--) {
                 final boolean hit = read.isHit(j);
                 final boolean hit1 = j < (length - 1) && read.isHit(j + 1);

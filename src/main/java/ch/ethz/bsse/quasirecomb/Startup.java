@@ -183,6 +183,12 @@ public class Startup {
     private double interpolateMu = 1;
     @Option(name = "-interpolateRho")
     private double interpolateRho = 1;
+    @Option(name = "-sBeta")
+    private double sBeta = 0.01;
+    @Option(name = "-sAlpha")
+    private double sAlpha = 1.5;
+    @Option(name = "-annealing")
+    private boolean annealing;
 
     private void setInputOutput() {
         if (output == null) {
@@ -415,7 +421,7 @@ public class Startup {
         for (int j = 0; j < 200; j++) {
             System.out.print(j);
             for (int i = 0; i < precision.length; i++) {
-                System.out.print("\t"+precision[i][j]);
+                System.out.print("\t" + precision[i][j]);
             }
             System.out.println("");
         }
@@ -462,6 +468,9 @@ public class Startup {
             Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
             Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
         }
+        Globals.getINSTANCE().setANNEALING(this.annealing);
+        Globals.getINSTANCE().setS_ALPHA(this.sAlpha);
+        Globals.getINSTANCE().setS_BETA(this.sBeta);
         Globals.getINSTANCE().setUNPAIRED(this.unpaired);
         Globals.getINSTANCE().setSTEPS(this.steps);
         Globals.getINSTANCE().setSTOP_QUICK(this.stopQuick);

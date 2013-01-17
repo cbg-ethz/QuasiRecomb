@@ -34,7 +34,7 @@ public class Random {
             for (int k = 0; k < K; k++) {
                 double[] d = new double[K];
                 for (int l = 0; l < K; l++) {
-                    d[l] = k == l ? 1 : 0.001;
+                    d[l] = k == l ? 1 : 0.01;
                 }
                 rhoDir[k] = new Dirichlet(d);
             }

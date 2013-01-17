@@ -15,12 +15,13 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.model.hmm;
+package ch.ethz.bsse.quasirecomb.model.hmm.interpolated;
 
 import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
+import ch.ethz.bsse.quasirecomb.model.hmm.SingleEMInterface;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -35,11 +36,11 @@ import org.javatuples.Triplet;
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class SingleEM {
+public class SingleEMinterpolated implements SingleEMInterface {
 
     private long time = -1;
     private StringBuilder sb = new StringBuilder();
-    private JHMM jhmm;
+    private JHMMinterpolated jhmm;
     private int iterations = 0;
     private int N;
     private int K;
@@ -54,7 +55,7 @@ public class SingleEM {
     private double maxBIC;
     private List<Long> times = new ArrayList<>();
 
-    public SingleEM(int N, int K, int L, int n, Read[] reads, double delta, int repeat) {
+    public SingleEMinterpolated(int N, int K, int L, int n, Read[] reads, double delta, int repeat) {
         this.N = N;
         this.K = K;
         this.Kmin = K;
@@ -65,15 +66,15 @@ public class SingleEM {
         this.repeat = repeat;
         time(false);
         if (Globals.getINSTANCE().isPRUNE()) {
-            jhmm = new JHMM(reads, N, L, K * 2, n, Globals.getINSTANCE().getESTIMATION_EPSILON(), K);
+            jhmm = new JHMMinterpolated(reads, N, L, K * 2, n, Globals.getINSTANCE().getESTIMATION_EPSILON(), K);
         } else {
-            jhmm = new JHMM(reads, N, L, K, n, Globals.getINSTANCE().getESTIMATION_EPSILON(), K);
+            jhmm = new JHMMinterpolated(reads, N, L, K, n, Globals.getINSTANCE().getESTIMATION_EPSILON(), K);
         }
         this.K = jhmm.getK();
         start();
     }
 
-    public SingleEM(OptimalResult or, double delta, Read[] reads) {
+    public SingleEMinterpolated(OptimalResult or, double delta, Read[] reads) {
         this.N = or.getN();
         this.K = or.getK();
         this.Kmin = K;
@@ -83,7 +84,7 @@ public class SingleEM {
         this.reads = reads;
         this.repeat = -99;
         time(false);
-        jhmm = new JHMM(reads, N, L, K, n, or.getEps(), or.getRho(), or.getPi(), or.getMu(), K);
+        jhmm = new JHMMinterpolated(reads, N, L, K, n, or.getEps(), or.getRho(), or.getPi(), or.getMu(), K);
         this.K = jhmm.getK();
         start();
     }
@@ -182,7 +183,7 @@ public class SingleEM {
         }
     }
 
-    private JHMM prune() {
+    private JHMMinterpolated prune() {
 //        double currentBIC = calcBIC(jhmm);
         double currentBIC = Double.MAX_VALUE;
         Triplet<Integer, Integer, Double> minKL = jhmm.minKL();
@@ -330,13 +331,13 @@ public class SingleEM {
         }
 
 
-        JHMM merge = new JHMM(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoMerging, piMerging, muMerging, Kmin);
+        JHMMinterpolated merge = new JHMMinterpolated(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoMerging, piMerging, muMerging, Kmin);
         double mergeBIC = calcBIC(merge);
-        JHMM del = new JHMM(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoDeletion, piDeletion, muDeletion, Kmin);
+        JHMMinterpolated del = new JHMMinterpolated(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoDeletion, piDeletion, muDeletion, Kmin);
         double delBIC = calcBIC(del);
 
         maxBIC = currentBIC;
-        JHMM argMax = jhmm;
+        JHMMinterpolated argMax = jhmm;
         String s = "C";
         if (delBIC < maxBIC) {
             argMax = del;
@@ -356,14 +357,14 @@ public class SingleEM {
         return argMax;
     }
 
-    private double calcBIC(JHMM jhmm) {
+    private double calcBIC(JHMMinterpolated jhmm) {
         // count free parameters
         double BIC_current = jhmm.getLoglikelihood();
         BIC_current -= (freeParameters(jhmm) / 2d) * Math.log(N);
         return BIC_current;
     }
 
-    private int freeParameters(JHMM jhmm) {
+    private int freeParameters(JHMMinterpolated jhmm) {
         int freeParameters = 0;
         double ERROR = 1e-15;
 

@@ -57,6 +57,7 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean ANNEALING;
     private boolean UNPAIRED;
     private boolean USER_OPTIMUM;
     private boolean BIAS_MU;
@@ -84,6 +85,8 @@ public class Globals {
     private boolean PRIORMU;
     private boolean SPIKERHO;
     private double PCHANGE;
+    private double S_BETA;
+    private double S_ALPHA;
     private double MULT_RHO;
     private double MULT_MU;
     private double BETA_Z;
@@ -702,5 +705,29 @@ public class Globals {
 
     public boolean isUNPAIRED() {
         return UNPAIRED;
+    }
+
+    public double getS_BETA() {
+        return S_BETA;
+    }
+
+    public void setS_BETA(double S_BETA) {
+        this.S_BETA = S_BETA;
+    }
+
+    public double getS_ALPHA() {
+        return S_ALPHA;
+    }
+
+    public void setS_ALPHA(double S_ALPHA) {
+        this.S_ALPHA = S_ALPHA;
+    }
+
+    public boolean isANNEALING() {
+        return ANNEALING;
+    }
+
+    public void setANNEALING(boolean ANNEALING) {
+        this.ANNEALING = ANNEALING;
     }
 }
