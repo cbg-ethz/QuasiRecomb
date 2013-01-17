@@ -27,6 +27,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
+import org.apache.commons.math.stat.descriptive.rank.Median;
 
 /**
  * Responsible for the start of the repeats within the EM algorithm.
@@ -36,6 +38,8 @@ import java.io.ObjectInputStream;
 public class EM extends Utils {
 
     private OptimalResult or;
+    private double medianBIC;
+    private double lowerBoundBIC;
 
     protected EM(int N, int L, int K, int n, Read[] reads) {
         this.blackbox(reads, N, L, K, n);
@@ -53,6 +57,7 @@ public class EM extends Utils {
         }
         if (Globals.getINSTANCE().getOPTIMUM() == null) {
             double maxLLH = Double.NEGATIVE_INFINITY;
+            double bics[] = new double[Globals.getINSTANCE().getREPEATS()];
             for (int i = 0; i < Globals.getINSTANCE().getREPEATS(); i++) {
                 SingleEMInterface sem = null;
                 if (Globals.getINSTANCE().isANNEALING()) {
@@ -60,11 +65,14 @@ public class EM extends Utils {
                 } else {
                     sem = new SingleEMinterpolated(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), i);
                 }
+                bics[i] = sem.getOptimalResult().getBIC();
                 if (sem.getLoglikelihood() > maxLLH) {
                     maxLLH = sem.getLoglikelihood();
                     pathOptimum = sem.getOptimumPath();
                 }
             }
+            medianBIC = new Median().evaluate(bics);
+            lowerBoundBIC = medianBIC - new StandardDeviation().evaluate(bics)*Math.sqrt(1+1d/bics.length);
         } else {
             pathOptimum = Globals.getINSTANCE().getOPTIMUM();
         }
@@ -134,5 +142,13 @@ public class EM extends Utils {
 
     public OptimalResult getOr() {
         return or;
+    }
+
+    public double getMedianBIC() {
+        return medianBIC;
+    }
+
+    public double getLowerBoundBIC() {
+        return lowerBoundBIC;
     }
 }

@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.modelsampling;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
@@ -129,14 +130,17 @@ public final class ModelSampling extends Utils {
         int i = 0;
         for (Object o : sortMapByValue(reads).keySet()) {
             byte[] read = (byte[]) o;
-            sb.append(">read").append(i++).append("_").append(((double) reads.get(read)) / amount).append("\n");
-            StringBuilder sb2 = new StringBuilder();
-            for (int r : read) {
-                sb2.append(reverse(r));
+            double f = ((double) reads.get(read)) / amount;
+            if (f > Globals.getINSTANCE().getCUTOFF()) {
+                sb.append(">read").append(i++).append("_").append(f).append("\n");
+                StringBuilder sb2 = new StringBuilder();
+                for (int r : read) {
+                    sb2.append(reverse(r));
+                }
+                map.put(sb2.toString(), f);
+                sb.append(sb2);
+                sb.append("\n");
             }
-            map.put(sb2.toString(), ((double) reads.get(read)) / amount);
-            sb.append(sb2);
-            sb.append("\n");
         }
     }
 

@@ -76,8 +76,11 @@ public class ModelSelection {
                     Utils.saveFile(save + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
                 }
                 if (em.getOr().getBIC() > optBIC || optBIC == 0) {
+                    if (em.getLowerBoundBIC() < optBIC && optBIC != 0) {
+                        break;
+                    }
                     or = em.getOr();
-                    optBIC = em.getOr().getBIC();
+                    optBIC = em.getMedianBIC();
                     this.bestK = k;
                 } else {
                     break;

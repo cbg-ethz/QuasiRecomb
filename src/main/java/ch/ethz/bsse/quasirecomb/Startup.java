@@ -105,6 +105,8 @@ public class Startup {
     private String spots;
     @Option(name = "--sample", usage = "Sample from given trained model", metaVar = "OPTIMUMJAVA", multiValued = true)
     private boolean sample;
+    @Option(name = "-cutoff")
+    private double cutoff = 0;
     @Option(name = "--summary")
     private boolean summary;
     @Option(name = "--cut")
@@ -214,6 +216,7 @@ public class Startup {
         Globals.getINSTANCE().setLOGGING(this.log);
         Globals.getINSTANCE().setPAIRED(this.paired);
         Globals.getINSTANCE().setPLOT(this.plot);
+        Globals.getINSTANCE().setCUTOFF(this.cutoff);
     }
 
     private void sample() {
