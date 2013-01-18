@@ -169,6 +169,18 @@ public class JHMMinterpolated implements JHMMInterface {
         Globals.renewExecutor();
     }
 
+    @Override
+    public void computeSNVPosterior() {
+        for (int j = 0; j < L; j++) {
+            for (int v = 0; v < n; v++) {
+                this.snv[j][v] = 0;
+                for (int k = 0; k < K; k++) {
+                    this.snv[j][v] += this.nJKV[j][k][v] / this.coverage[j];
+                }
+            }
+        }
+    }
+
     private void maximizeMu() {
         double[] muJKV;
         for (int j = 0; j < L; j++) {
@@ -306,6 +318,7 @@ public class JHMMinterpolated implements JHMMInterface {
     }
 
     private void mStep() {
+        this.computeSNVPosterior();
         boolean forceRho = false;
         if (!Globals.getINSTANCE().isNO_RECOMB()) {
             forceRho = this.maximizeRho();
@@ -425,13 +438,13 @@ public class JHMMinterpolated implements JHMMInterface {
         }
         return Triplet.with(argMin.getValue0(), argMin.getValue1(), min);
     }
-    
     protected int Kmin;
     protected int N;
     protected int L;
     protected int K;
     protected int n;
     //rho[j][k][l] := transition prob. at position j, for l given k
+    protected double[][] snv;
     protected double[][] tauOmega;
     protected double[][][] rho;
     protected double[] pi;
@@ -478,7 +491,7 @@ public class JHMMinterpolated implements JHMMInterface {
         this.mu = mu;
         this.mu_old = mu;
         this.pi = pi;
-
+        this.snv = new double[L][n];
         this.muPrior = new double[n];
         for (int i = 0; i < n; i++) {
             this.muPrior[i] = Globals.getINSTANCE().getALPHA_H();
@@ -715,7 +728,7 @@ public class JHMMinterpolated implements JHMMInterface {
     public int getRhoChanged() {
         return rhoChanged;
     }
-    
+
     @Override
     public void incBeta() {
         throw new UnsupportedOperationException("Inc beta is not supported in interpolated version");
@@ -725,5 +738,9 @@ public class JHMMinterpolated implements JHMMInterface {
     public double getBeta() {
         throw new UnsupportedOperationException("Get beta is not supported in interpolated version");
     }
-    
+
+    @Override
+    public double[][] getSnv() {
+        return this.snv;
+    }
 }

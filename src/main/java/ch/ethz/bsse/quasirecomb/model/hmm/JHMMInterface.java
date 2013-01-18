@@ -8,8 +8,12 @@ import org.javatuples.Triplet;
  * @author toepfera
  */
 public interface JHMMInterface {
+    
+    void computeSNVPosterior();
 
     void free(int id);
+
+    double[][] getSnv();
 
     double[] getAntieps();
 
@@ -56,5 +60,4 @@ public interface JHMMInterface {
     Triplet<Integer, Integer, Double> minKL();
 
     void restart();
-    
 }

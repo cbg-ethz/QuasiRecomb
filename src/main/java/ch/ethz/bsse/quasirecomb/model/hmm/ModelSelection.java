@@ -106,6 +106,7 @@ public class ModelSelection {
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-snvs.txt", new Summary().snvs(or));
         //save optimumJava
         Utils.saveOptimum(save + File.separator + "best.optimum", or);
     }

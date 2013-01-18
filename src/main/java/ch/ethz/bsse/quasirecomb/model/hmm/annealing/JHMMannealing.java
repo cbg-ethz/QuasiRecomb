@@ -748,4 +748,14 @@ public class JHMMannealing implements JHMMInterface {
     public int getRhoChanged() {
         return rhoChanged;
     }
+
+    @Override
+    public double[][] getSnv() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void computeSNVPosterior() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

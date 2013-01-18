@@ -37,6 +37,24 @@ import org.javatuples.Pair;
  */
 public class Summary extends Utils {
 
+    public String snvs(OptimalResult or) {
+        StringBuilder sb = new StringBuilder();
+        char[] alphabet = new char[]{'A', 'C', 'G', 'T', '-'};
+
+        for (int v = 0; v < or.getn(); v++) {
+            sb.append("\t").append(alphabet[v]);
+        }
+        sb.append("\n");
+        for (int j = 0; j < or.getL(); j++) {
+            sb.append(j);
+            for (int v = 0; v < or.getn(); v++) {
+                sb.append("\t").append(shorten(or.getSnv()[j][v]));
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
     public static String shorten(double value) {
         String s;
         if (value < 1e-20) {
@@ -92,7 +110,7 @@ public class Summary extends Utils {
                 }
                 String s = BitMagic.toString(currentRead.getSequence());
                 for (char c : s.toCharArray()) {
-                    sb.append(reverse(Integer.parseInt(""+c)));
+                    sb.append(reverse(Integer.parseInt("" + c)));
                 }
                 sb.append("\n");
             }
