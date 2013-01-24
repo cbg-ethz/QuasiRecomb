@@ -24,7 +24,6 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
 
 #### PREREQUISITES TO RUN:
  - JDK 7 (http://jdk7.java.net/)
- - Get latest version: https://github.com/armintoepfer/QuasiRecomb/downloads
 
 ## RUN:
 #### Local reconstruction
