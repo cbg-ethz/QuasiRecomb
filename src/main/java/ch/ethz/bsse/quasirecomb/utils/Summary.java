@@ -47,12 +47,39 @@ public class Summary extends Utils {
         sb.append("\n");
         for (int j = 0; j < or.getL(); j++) {
             sb.append(j);
+            double sum = 0d;
             for (int v = 0; v < or.getn(); v++) {
-                sb.append("\t").append(shorten(or.getSnv()[j][v]));
+                sum += or.getSnv()[j][v]>1e-5?or.getSnv()[j][v]:0;
+            }
+            for (int v = 0; v < or.getn(); v++) {
+                sb.append("\t").append(shortenSmall(or.getSnv()[j][v]/sum));
             }
             sb.append("\n");
         }
         return sb.toString();
+    }
+    
+    public static String shortenSmall(double value) {
+        String s;
+        if (value < 1e-5) {
+            s = "0      ";
+        } else if (value == 1.0) {
+            s = "1      ";
+        } else {
+            String t = "" + value;
+            String r;
+            if (t.length() > 7) {
+                r = t.substring(0, 7);
+                if (t.contains("E")) {
+                    r = r.substring(0, 4);
+                    r += "E" + t.split("E")[1];
+                }
+                s = r;
+            } else {
+                s = String.valueOf(value);
+            }
+        }
+        return s;
     }
 
     public static String shorten(double value) {
