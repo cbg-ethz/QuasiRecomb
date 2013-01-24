@@ -558,6 +558,7 @@ public class Startup {
 //            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
             System.err.println("  -noRecomb\t\t: Do not allow recombination");
             System.err.println("  -plot\t\t\t: Plot coverage");
+            System.err.println("  -global\t\t\t: USe this if the region is longer than a read");
             System.err.println("");
             System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -i input.fasta");
             System.err.println(" ------------------------");
