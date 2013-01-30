@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2012 Armin Töpfer
+ * Copyright (c) 2011-2013 Armin Töpfer
  *
  * This file is part of QuasiRecomb.
  *

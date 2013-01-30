@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2012 Armin Töpfer
+ * Copyright (c) 2011-2013 Armin Töpfer
  *
  * This file is part of QuasiRecomb.
  *
@@ -26,10 +26,12 @@ import java.util.Arrays;
 public class Read {
 
     private byte[] watsonSequence;
+    private double[] watsonQuality;
     private int watsonBegin;
     private int watsonEnd;
     private int count;
     private byte[] crickSequence;
+    private double[] crickQuality;
     private int crickBegin;
     private int crickEnd = -1;
 
