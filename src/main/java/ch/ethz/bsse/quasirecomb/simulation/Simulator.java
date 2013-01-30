@@ -17,8 +17,8 @@
  */
 package ch.ethz.bsse.quasirecomb.simulation;
 
-import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
@@ -98,11 +98,23 @@ public class Simulator {
             try {
                 Pair<Read, Read> pair = futureTask.get();
                 Read r = pair.getValue0();
-                sb.append(">SAMPLED").append(j).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(j).append("/1").append("\n");
-                sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
+                sb.append("@Read").append(j).append("\n");
+                String s = Utils.reverse(r.getSequence(), r.getLength()).replaceAll("-", "");
+                sb.append(s).append("\n");
+                sb.append("+\n");
+                for (int i = 0; i < s.length(); i++) {
+                    sb.append("I");
+                }
+                sb.append("\n");
                 r = pair.getValue1();
-                sb.append(">SAMPLED").append(j).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(j).append("/2").append("\n");
-                sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
+                sb.append("@Read").append(j).append("\n");
+                s = Utils.reverse(r.getSequence(), r.getLength()).replaceAll("-", "");
+                sb.append(s).append("\n");
+                sb.append("+\n");
+                for (int i = 0; i < s.length(); i++) {
+                    sb.append("I");
+                }
+                sb.append("\n");
                 Globals.getINSTANCE().print("Simulation\t" + Math.round((100d * j) / taskList.size()) + "%");
             } catch (InterruptedException | ExecutionException ex) {
                 System.err.println("Problem");
@@ -110,10 +122,10 @@ public class Simulator {
             }
         }
         System.out.println("");
-        if (savePath.endsWith(".fasta")) {
+        if (savePath.endsWith(".fastq")) {
             Utils.saveFile(savePath, sb.toString());
         } else {
-            Utils.saveFile(savePath + ".fasta", sb.toString());
+            Utils.saveFile(savePath + ".fastq", sb.toString());
         }
         sb.setLength(0);
         for (int i = 0; i < L; i++) {

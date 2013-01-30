@@ -25,11 +25,13 @@ import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Plot;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.math.stat.descriptive.moment.Mean;
+import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 
 /**
  * Responsible for orchestrating parsing, proper read placement in alignment and
@@ -105,6 +107,16 @@ public class Preprocessing {
         Globals.getINSTANCE().print("Parsing\t100%");
         Globals.getINSTANCE().println("Unique reads\t" + reads.length);
         Globals.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
+        if (Globals.getINSTANCE().getPAIRED_COUNT() > 0) {
+            double[] inserts = new double[Globals.getINSTANCE().getPAIRED_COUNT()];
+            int x = 0;
+            for (Read r : reads) {
+                if (r.isPaired()) {
+                    inserts[x++] = r.getCrickBegin() - r.getWatsonEnd();
+                }
+            }
+            Globals.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts))*10)/10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts)*10)/10 + ")");
+        }
         Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED() + "\n");
         if (Globals.getINSTANCE().isPLOT()) {
             Globals.getINSTANCE().println("Plotting\t");
