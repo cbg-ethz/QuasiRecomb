@@ -10,8 +10,7 @@ EM algorithm to find maximum a posteriori estimates of the model
 parameters and a method to estimate the distribution of viral strains
 in the quasispecies. The model is validated on simulated data, showing
 the advantage of explicitly taking the recombination process into
-account, and tested by applying to reads obtained from experimental 
-HIV samples.
+account, and validated on experimental HIV samples.
 
 #### CONTENT:
 This java command line application is a toolbox, combining all necessary
@@ -24,7 +23,6 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
 
 #### PREREQUISITES TO RUN:
  - JDK 7 (http://jdk7.java.net/)
- - Get latest version: https://github.com/armintoepfer/QuasiRecomb/downloads
 
 ## RUN:
 #### Local reconstruction
