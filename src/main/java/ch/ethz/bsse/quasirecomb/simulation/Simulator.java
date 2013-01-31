@@ -47,7 +47,7 @@ public class Simulator {
             }
         }
         int n = map.keySet().size();
-        int insertSize = 100;
+        int insertSize = 200;
         int readLength = 250;
         int fragmentSize = insertSize + 2 * readLength;
         L = haplotypes[0].length();

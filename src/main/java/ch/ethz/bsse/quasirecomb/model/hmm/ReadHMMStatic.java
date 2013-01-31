@@ -44,8 +44,10 @@ public class ReadHMMStatic {
             for (int j = 0; j < length; j++) {
                 final boolean hit = read.isHit(j);
                 byte b = -1;
+                double q = 1;
                 if (hit) {
                     b = read.getBase(j);
+                    q = read.getQuality(j);
                 }
                 int jGlobal = j + begin;
                 for (int k = 0; k < jhmm.getK(); k++) {
@@ -66,6 +68,7 @@ public class ReadHMMStatic {
                         if (hit) {
                             fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]);
                             fJKV[j][k][v] *= jhmm.getMu()[jGlobal][k][v];
+                            fJKV[j][k][v] *= q;
                         }
                         if (Double.isNaN(fJKV[j][k][v])) {
                             System.err.println("fJKV:\t" + fJKV[j][k][v]);
@@ -96,8 +99,10 @@ public class ReadHMMStatic {
                 int jGlobal = j + begin;
                 double gammaSum = 0d;
                 byte b = -1;
+                double q = 1;
                 if (hit1) {
                     b = read.getBase(j + 1);
+                    q = read.getQuality(j + 1);
                 }
                 for (int k = 0; k < jhmm.getK(); k++) {
                     if (j == length - 1) {
@@ -110,6 +115,7 @@ public class ReadHMMStatic {
                                 for (int v = 0; v < jhmm.getn(); v++) {
                                     sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] : jhmm.getEps()[jGlobal + 1]) * jhmm.getMu()[jGlobal + 1][l][v];
                                 }
+                                sumV *= q;
                                 bJK[j][k] += sumV * jhmm.getRho()[jGlobal][k][l] * bJK[j + 1][l];
                             } else {
                                 bJK[j][k] += jhmm.getRho()[jGlobal][k][l] * bJK[j + 1][l];

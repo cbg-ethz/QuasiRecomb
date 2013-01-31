@@ -53,13 +53,13 @@ public class ReadTest {
      */
 @Test
     public void testInsertSize() {
-        Globals.getINSTANCE().setDEBUG(true);
-        Read read1 = new Read(BitMagic.splitReadIntoBytes("ACGT"), 0, 4, BitMagic.splitReadIntoBytes("GTAC"), 2, 6);
-        System.out.println("");
-        for (int i = 0; i < read1.getLength(); i++) {
-            System.out.print(read1.getBase(i));
-        }
-        System.out.println("");
+//        Globals.getINSTANCE().setDEBUG(true);
+//        Read read1 = new Read(BitMagic.splitReadIntoBytes("ACGT"), 0, 4, BitMagic.splitReadIntoBytes("GTAC"), 2, 6);
+//        System.out.println("");
+//        for (int i = 0; i < read1.getLength(); i++) {
+//            System.out.print(read1.getBase(i));
+//        }
+//        System.out.println("");
 //        assertTrue(read1.equals(new Read(new byte[]{1,2,3}, 0, 12,new byte[]{4,5,6,1}, 50, 100)));
 //        assertFalse(read1.equals(new Read(new byte[]{1,1,3}, 0, 12)));
 //        assertFalse(read1.equals(new Read(new byte[]{1,2,3}, 1, 12)));

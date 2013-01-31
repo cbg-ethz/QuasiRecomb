@@ -25,10 +25,8 @@ import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Plot;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
@@ -67,19 +65,11 @@ public class Preprocessing {
         for (Read r : reads) {
             r.shrink();
         }
-//        List<Read> newList = new LinkedList<>();
-//        for (Read r : reads) {
-//            if (r.getBegin() == 0) {
-//                newList.add(r);
-//            }
-//        }
-//        reads = newList.toArray(new Read[newList.size()]);
 
         Globals.getINSTANCE().print("Parsing\t25%");
         int[][] alignment = countPos(reads, L);
 
 
-//        saveUnique(reads);
         Globals.getINSTANCE().print("Parsing\t50%");
         StringBuilder sb = new StringBuilder();
         sb.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
@@ -127,7 +117,6 @@ public class Preprocessing {
             new Summary().printAlignment(reads);
         }
         if (Globals.getINSTANCE().isCIRCOS()) {
-//            new Summary().printAlignment(reads);
             new Summary().circos(L, alignment);
             System.exit(0);
         }

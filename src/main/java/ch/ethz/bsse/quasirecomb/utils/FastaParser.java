@@ -161,13 +161,13 @@ public class FastaParser {
                 if (pairedReads1.containsKey(tag)) {
                     pairedReads1.get(tag).incCount();
                 } else {
-                    pairedReads1.put(tag, new Read(seq, begin, end, 1));
+                    pairedReads1.put(tag, new Read(seq, begin, end));
                 }
             } else {
                 if (pairedReads2.containsKey(tag)) {
                     pairedReads2.get(tag).incCount();
                 } else {
-                    pairedReads2.put(tag, new Read(seq, begin, end, 1));
+                    pairedReads2.put(tag, new Read(seq, begin, end));
                 }
             }
         }

@@ -268,9 +268,7 @@ public class Utils extends FastaParser {
             return parseFastaInput(path);
         } else {
             return parseBAMSAM(path);
-//            return null;
         }
-
     }
 
     public static Read[] parseBAMSAM(String location) {
@@ -278,82 +276,114 @@ public class Utils extends FastaParser {
         File bam = new File(location);
         SAMFileReader sfr = new SAMFileReader(bam);
         for (final SAMRecord samRecord : sfr) {
-            List<AlignmentBlock> alignmentBlocks = samRecord.getAlignmentBlocks();
-            if (alignmentBlocks.isEmpty()) {
-                continue;
-            }
-            int refStart = alignmentBlocks.get(0).getReferenceStart() + alignmentBlocks.get(0).getReadStart() - 1;
-            int readStart = 0;
-//            int readStart = alignmentBlocks.get(0).getReadStart() - 1;
-//            boolean ignore = false;
-            List<Byte> buildRead = new ArrayList<>();
-            boolean d = false;
-            for (CigarElement c : samRecord.getCigar().getCigarElements()) {
-                switch (c.getOperator()) {
-                    case X:
-                    case EQ:
-                    case M:
-                        if ((readStart + c.getLength()) > samRecord.getReadBases().length) {
-                            System.out.println("");
-                            System.out.println("C:" + c.getOperator());
-                            System.out.println("L:" + c.getLength());
-                            System.out.println("N:" + samRecord.getReadBases().length);
-                            System.out.println("R:" + readStart);
-                            System.out.println("S:" + (alignmentBlocks.get(0).getReadStart() - 1));
-                            System.out.println("T:" + samRecord.getCigar().toString());
-                            System.exit(9);
-                        }
-                        for (int i = 0; i < c.getLength(); i++) {
-                            byte b = samRecord.getReadBases()[readStart++];
-                            buildRead.add(b);
-                        }
-                        break;
-                    case I:
-                        for (int i = 0; i < c.getLength(); i++) {
-//                            buildRead.add((byte) "-".charAt(0));
-                            readStart++;
-                        }
-                        break;
-                    case D:
-                        d = true;
-                        for (int i = 0; i < c.getLength(); i++) {
-                            buildRead.add((byte) "-".charAt(0));
-//                            readStart++;
-                        }
-                        break;
-                    case S:
-                        for (int i = 0; i < c.getLength(); i++) {
-                            readStart++;
-                        }
-                        break;
-                    case H:
-                        break;
-                    case P:
-                        System.out.println("P");
-                        System.exit(9);
-                        break;
-                    case N:
-                        System.out.println("N");
-                        System.exit(9);
-                        break;
-                    default:
-                        break;
+            try {
+                List<AlignmentBlock> alignmentBlocks = samRecord.getAlignmentBlocks();
+                if (alignmentBlocks.isEmpty()) {
+                    continue;
                 }
-            }
-            byte[] readBases = convertRead(buildRead.toArray(new Byte[buildRead.size()]));
-            String name = samRecord.getReadName();
-            if (readMap.containsKey(name)) {
-                readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
-                if (Globals.getINSTANCE().isUNPAIRED()) {
-                    Read r = readMap.get(name);
-                    if (r.isPaired()) {
-                        r.unpair();
-                        readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, 1));
+                int refStart = alignmentBlocks.get(0).getReferenceStart() + alignmentBlocks.get(0).getReadStart() - 1;
+                int readStart = 0;
+                List<Byte> buildRead = new ArrayList<>();
+                List<Double> buildQuality = new ArrayList<>();
+                boolean hasQuality = samRecord.getBaseQualities().length > 1;
+                for (CigarElement c : samRecord.getCigar().getCigarElements()) {
+                    switch (c.getOperator()) {
+                        case X:
+                        case EQ:
+                        case M:
+                            if ((readStart + c.getLength()) > samRecord.getReadBases().length) {
+                                System.out.println("");
+                                System.out.println("C:" + c.getOperator());
+                                System.out.println("L:" + c.getLength());
+                                System.out.println("N:" + samRecord.getReadBases().length);
+                                System.out.println("R:" + readStart);
+                                System.out.println("S:" + (alignmentBlocks.get(0).getReadStart() - 1));
+                                System.out.println("T:" + samRecord.getCigar().toString());
+                                System.exit(9);
+                            }
+                            for (int i = 0; i < c.getLength(); i++) {
+                                byte b = samRecord.getReadBases()[readStart];
+                                buildRead.add(b);
+                                double q = 1-Math.pow(10, -(samRecord.getBaseQualities()[readStart]) / 10d);
+                                buildQuality.add(q);
+                                readStart++;
+                            }
+                            break;
+                        case I:
+                            for (int i = 0; i < c.getLength(); i++) {
+                                readStart++;
+                            }
+                            break;
+                        case D:
+                            for (int i = 0; i < c.getLength(); i++) {
+                                buildRead.add((byte) "-".charAt(0));
+
+                                double q = 0.01;
+                                if (c.getLength() % 3 == 0) {
+                                    q = 1;
+                                }
+                                buildQuality.add(q);
+                            }
+                            break;
+                        case S:
+                            for (int i = 0; i < c.getLength(); i++) {
+                                readStart++;
+                            }
+                            break;
+                        case H:
+                            break;
+                        case P:
+                            System.out.println("P");
+                            System.exit(9);
+                            break;
+                        case N:
+                            System.out.println("N");
+                            System.exit(9);
+                            break;
+                        default:
+                            break;
                     }
                 }
-                Globals.getINSTANCE().incPAIRED();
-            } else {
-                readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, 1));
+                double[] quality = new double[buildQuality.size()];
+                if (hasQuality) {
+                    for (int i = 0; i < buildQuality.size(); i++) {
+                        quality[i] = (double) buildQuality.get(i);
+                    }
+                }
+                byte[] readBases = convertRead(buildRead.toArray(new Byte[buildRead.size()]));
+                String name = samRecord.getReadName();
+                if (readMap.containsKey(name)) {
+                    if (hasQuality) {
+                        readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality);
+                    } else {
+                        readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
+                    }
+                    if (Globals.getINSTANCE().isUNPAIRED()) {
+                        Read r = readMap.get(name);
+                        if (r.isPaired()) {
+                            r.unpair();
+                            if (hasQuality) {
+                                readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality));
+                            } else {
+                                readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length));
+                            }
+                        }
+                    }
+                    Globals.getINSTANCE().incPAIRED();
+                } else {
+                    if (hasQuality) {
+                        readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality));
+                    } else {
+                        readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length));
+                    }
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println();
+                System.err.println(e);
+                System.err.println();
+            } catch (Exception e) {
+                System.err.println("WOOT:" + e);
+                // Sometimes CIGAR is not correct. In that case we simply ignore it/
             }
         }
         Map<Integer, Read> hashed = new HashMap<>();
@@ -389,7 +419,7 @@ public class Utils extends FastaParser {
                     }
                 }
                 if (missing) {
-                    hashing.add(new Read(seq, begin, end, 1));
+                    hashing.add(new Read(seq, begin, end));
                 }
             }
         } else {
@@ -397,11 +427,11 @@ public class Utils extends FastaParser {
             String[] parseFarFile = parseFarFile(path);
             for (String s : parseFarFile) {
                 byte[] packed = BitMagic.splitReadIntoBytes(s);
-                Read r = new Read(packed, 0, s.length(), 1);
+                Read r = new Read(packed, 0, s.length());
                 if (hashMap.containsKey(r.hashCode())) {
                     hashMap.get(r.hashCode()).incCount();
                 } else {
-                    hashMap.put(r.hashCode(), new Read(packed, 0, s.length(), 1));
+                    hashMap.put(r.hashCode(), new Read(packed, 0, s.length()));
                 }
             }
             hashing.addAll(hashMap.values());

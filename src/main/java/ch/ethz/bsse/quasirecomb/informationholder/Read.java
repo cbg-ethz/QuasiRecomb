@@ -29,11 +29,18 @@ public class Read {
     private double[] watsonQuality;
     private int watsonBegin;
     private int watsonEnd;
-    private int count;
+    private int count = 1;
     private byte[] crickSequence;
     private double[] crickQuality;
     private int crickBegin;
     private int crickEnd = -1;
+
+    public Read(byte[] sequence, int begin, int end, double[] quality) {
+        this.watsonSequence = sequence;
+        this.watsonBegin = begin;
+        this.watsonEnd = end;
+        this.watsonQuality = quality;
+    }
 
     public Read(byte[] sequence, int begin, int end) {
         this.watsonSequence = sequence;
@@ -52,49 +59,40 @@ public class Read {
         if (Cend - Cbegin != BitMagic.getLength(Csequence)) {
             throw new IllegalAccessError("length problen: crick");
         }
-//        rearrange();
-//
-//        merge();
     }
 
-    public Read(byte[] sequence, int begin, int end, int count) {
+    public Read(byte[] sequence, int begin, int end, double[] quality, byte[] Csequence, int Cbegin, int Cend, double[] Cquality) {
         this.watsonSequence = sequence;
         this.watsonBegin = begin;
         this.watsonEnd = end;
-        this.count = count;
+        this.watsonQuality = quality;
+        setPairedEnd(Csequence, Cbegin, Cend, Cquality);
+        if (end - begin != BitMagic.getLength(sequence)) {
+            throw new IllegalAccessError("length problen: watson. Suggested length: " + (end - begin) + ". Actual length: " + BitMagic.getLength(sequence));
+        }
+        if (Cend - Cbegin != BitMagic.getLength(Csequence)) {
+            throw new IllegalAccessError("length problen: crick");
+        }
     }
 
     public void merge() {
         if (this.watsonEnd < this.crickBegin) {
             return;
         }
-        byte[] consensus = new byte[this.crickEnd - this.watsonBegin];
-//        if (Globals.getINSTANCE().isDEBUG()) {
-//            for (int i = 0; i < BitMagic.getLength(watsonSequence); i++) {
-//                System.out.print(BitMagic.getPosition(this.watsonSequence, i));
-//            }
-//            System.out.println("");
-//            for (int i = 0; i < this.crickBegin - this.watsonBegin; i++) {
-//                System.out.print(" ");
-//            }
-//            for (int i = 0; i < BitMagic.getLength(crickSequence); i++) {
-//                System.out.print(BitMagic.getPosition(this.crickSequence, i));
-//            }
-//            System.out.println("");
-//        }
+        byte[] seqConsensus = new byte[this.crickEnd - this.watsonBegin];
+        double[] qualConsensus = new double[this.crickEnd - this.watsonBegin];
 
         for (int i = 0; i < this.getLength(); i++) {
-            consensus[i] = this.getBase(i);
+            seqConsensus[i] = this.getBase(i);
+            qualConsensus[i] = this.getQuality(i);
         }
         this.watsonEnd = this.crickEnd;
-        this.watsonSequence = BitMagic.pack(consensus);
+        this.watsonSequence = BitMagic.pack(seqConsensus);
+        this.watsonQuality = qualConsensus;
         this.crickEnd = -1;
         this.crickBegin = 0;
         this.crickSequence = null;
-//        for (int i = 0; i < BitMagic.getLength(watsonSequence); i++) {
-//            System.out.print(BitMagic.getPosition(this.watsonSequence, i));
-//        }
-//        System.out.println("\n");
+        this.crickQuality = null;
         Globals.getINSTANCE().incMERGED();
     }
 
@@ -137,7 +135,6 @@ public class Read {
             }
         }
         return Position.ERROR;
-//        throw new IllegalAccessError("No such sequence space for hit. j=" + j);
     }
 
     public boolean isHit(int j) {
@@ -172,13 +169,26 @@ public class Read {
         return this.watsonSequence;
     }
 
+    public double getQuality(int j) {
+        if (watsonQuality != null) {
+            if (j < this.getWatsonLength()) {
+                return this.watsonQuality[j];//BitMagic.getPosition(this.watsonSequence, j);
+            } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
+                return this.crickQuality[j - this.getWatsonLength() - this.getInsertSize()];//BitMagic.getPosition(this.crickSequence, j - this.getWatsonLength() - this.getInsertSize());
+            } else {
+                throw new IllegalAccessError("No such sequence space. j=" + j);
+            }
+        } else {
+            return 1;
+        }
+    }
+
     public byte getBase(int j) {
         if (j < this.getWatsonLength()) {
             return BitMagic.getPosition(this.watsonSequence, j);
         } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
             return BitMagic.getPosition(this.crickSequence, j - this.getWatsonLength() - this.getInsertSize());
         } else {
-//            return -1;
             throw new IllegalAccessError("No such sequence space. j=" + j);
         }
     }
@@ -199,7 +209,16 @@ public class Read {
         return this.crickSequence != null;
     }
 
-    public void setPairedEnd(byte[] sequence, int begin, int end) {
+    public final void setPairedEnd(byte[] sequence, int begin, int end, double[] quality) {
+        this.crickSequence = sequence;
+        this.crickBegin = begin;
+        this.crickEnd = end;
+        this.crickQuality = quality;
+        rearrange();
+        merge();
+    }
+
+    public final void setPairedEnd(byte[] sequence, int begin, int end) {
         this.crickSequence = sequence;
         this.crickBegin = begin;
         this.crickEnd = end;
@@ -232,6 +251,8 @@ public class Read {
         hash = 29 * hash + this.watsonEnd;
         hash = 29 * hash + this.crickBegin;
         hash = 29 * hash + this.crickEnd;
+        hash = 29 * hash + Arrays.hashCode(this.crickQuality);
+        hash = 29 * hash + Arrays.hashCode(this.watsonQuality);
         return hash;
     }
 
@@ -251,6 +272,10 @@ public class Read {
             this.crickBegin = beginTmp;
             this.crickEnd = endTmp;
             this.crickSequence = seqTmp;
+
+            double[] qualTmp = this.watsonQuality;
+            this.watsonQuality = this.crickQuality;
+            this.crickQuality = qualTmp;
         }
     }
 
