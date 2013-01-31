@@ -304,8 +304,10 @@ public class Utils extends FastaParser {
                             for (int i = 0; i < c.getLength(); i++) {
                                 byte b = samRecord.getReadBases()[readStart];
                                 buildRead.add(b);
-                                double q = 1-Math.pow(10, -(samRecord.getBaseQualities()[readStart]) / 10d);
-                                buildQuality.add(q);
+                                if (hasQuality) {
+                                    double q = 1 - Math.pow(10, -(samRecord.getBaseQualities()[readStart]) / 10d);
+                                    buildQuality.add(q);
+                                }
                                 readStart++;
                             }
                             break;
@@ -318,11 +320,13 @@ public class Utils extends FastaParser {
                             for (int i = 0; i < c.getLength(); i++) {
                                 buildRead.add((byte) "-".charAt(0));
 
-                                double q = 0.01;
-                                if (c.getLength() % 3 == 0) {
-                                    q = 1;
+                                if (hasQuality) {
+                                    double q = 0.01;
+                                    if (c.getLength() % 3 == 0) {
+                                        q = 1;
+                                    }
+                                    buildQuality.add(q);
                                 }
-                                buildQuality.add(q);
                             }
                             break;
                         case S:
