@@ -306,6 +306,9 @@ public class Utils extends FastaParser {
                                 buildRead.add(b);
                                 if (hasQuality) {
                                     double q = 1 - Math.pow(10, -(samRecord.getBaseQualities()[readStart]) / 10d);
+                                    if (q == 0) {
+                                        q = 0.01;
+                                    }
                                     buildQuality.add(q);
                                 }
                                 readStart++;

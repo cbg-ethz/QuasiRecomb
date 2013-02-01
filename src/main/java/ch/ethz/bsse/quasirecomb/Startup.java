@@ -191,6 +191,8 @@ public class Startup {
     private double sAlpha = 1.5;
     @Option(name = "-annealing")
     private boolean annealing;
+    @Option(name = "-refine")
+    private boolean refine;
 
     private void setInputOutput() {
         if (output == null) {
@@ -500,6 +502,16 @@ public class Startup {
         Globals.getINSTANCE().setFORCE_NO_RECOMB(this.noRecomb);
         Globals.getINSTANCE().setOPTIMUM(this.optimum);
         Globals.getINSTANCE().setUSER_OPTIMUM(this.optimum != null);
+        if (this.refine) {
+            Globals.getINSTANCE().setALPHA_H(1e-6);
+            Globals.getINSTANCE().setALPHA_Z(1e-6);
+            Globals.getINSTANCE().setMULT_MU(1);
+            Globals.getINSTANCE().setMULT_RHO(1);
+            Globals.getINSTANCE().setINTERPOLATE_MU(1);
+            Globals.getINSTANCE().setINTERPOLATE_RHO(1);
+            Globals.getINSTANCE().setOPTIMUM("support/best.optimum");
+            Globals.getINSTANCE().setUSER_OPTIMUM(true);
+        }
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 
