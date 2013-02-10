@@ -46,7 +46,7 @@ public class Simulator {
                 map.put((byte) h.charAt(i), Boolean.TRUE);
             }
         }
-        int n = map.keySet().size();
+        int n = 5;
         int insertSize = 200;
         int readLength = 250;
         int fragmentSize = insertSize + 2 * readLength;
@@ -226,7 +226,8 @@ public class Simulator {
 
     }
 
-    public static void fromHaplotypesGlobal(String[] haplotypes, int N, int L, double epsilon, double[] hapProb, int n, String savePath) {
+    public static void fromHaplotypesGlobal(String[] haplotypes, int N, int l, double epsilon, double[] hapProb, int n, String savePath) {
+        int L = haplotypes[0].length();
         Map<Integer, Double> freqMap = new ConcurrentHashMap<>();
         for (int i = 0; i < hapProb.length; i++) {
             freqMap.put(i, hapProb[i]);
@@ -242,14 +243,14 @@ public class Simulator {
             int length = 0;
             for (;;) {
 //                length = (int)(Math.random()*300);
-                length = 400;
+                length = l;
                 if (Math.random() > .5) {
                     length -= (int) (Math.random() * 100);
                 } else {
                     length += (int) (Math.random() * 100);
                 }
-                start = (int) (Math.random() * (L + 300 + 300));
-                start -= 300;
+                start = (int) (Math.random() * (L + l + l));
+                start -= l;
                 if (start >= L) {
                     continue;
                 }

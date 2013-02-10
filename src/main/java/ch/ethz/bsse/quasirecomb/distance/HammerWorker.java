@@ -47,9 +47,11 @@ public class HammerWorker extends RecursiveTask<Map<String, Map<String, Integer>
 //                Map<String, Integer> mapInner = Globals.getINSTANCE().getFjPool().invoke(new HammerInnerWorker(fasta, i, 0, fasta.length));
                 Map<String, Integer> mapInner = new HashMap<>();
                 for (int j = 0; j < fasta.length; j++) {
-                    mapInner.put(fasta[j], DistanceUtils.calcHamming(fasta[i], fasta[j]));
+                    if (i != j) {
+                        mapInner.put(fasta[j], DistanceUtils.calcHamming(fasta[i], fasta[j]));
+                    }
                 }
-                Globals.getINSTANCE().printHamming(fasta.length);
+//                Globals.getINSTANCE().printHamming(fasta.length);
                 map.put(fasta[i], mapInner);
             }
             return map;

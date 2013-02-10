@@ -57,6 +57,8 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean NO_QUALITY;
+    private boolean WINDOW;
     private boolean ANNEALING;
     private boolean UNPAIRED;
     private boolean USER_OPTIMUM;
@@ -103,6 +105,8 @@ public class Globals {
     private double CURRENT_DELTA_LLH = 0;
     private double MAX_LLH = -1;
     private double MIN_BIC = Double.MIN_VALUE;
+    private int WINDOW_BEGIN;
+    private int WINDOW_END;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
     private int STEPS;
@@ -739,5 +743,37 @@ public class Globals {
 
     public void setCUTOFF(double CUTOFF) {
         this.CUTOFF = CUTOFF;
+    }
+
+    public boolean isWINDOW() {
+        return WINDOW;
+    }
+
+    public void setWINDOW(boolean WINDOW) {
+        this.WINDOW = WINDOW;
+    }
+
+    public int getWINDOW_BEGIN() {
+        return WINDOW_BEGIN;
+    }
+
+    public void setWINDOW_BEGIN(int WINDOW_BEGIN) {
+        this.WINDOW_BEGIN = WINDOW_BEGIN;
+    }
+
+    public int getWINDOW_END() {
+        return WINDOW_END;
+    }
+
+    public void setWINDOW_END(int WINDOW_END) {
+        this.WINDOW_END = WINDOW_END;
+    }
+
+    public boolean isNO_QUALITY() {
+        return NO_QUALITY;
+    }
+
+    public void setNO_QUALITY(boolean NO_QUALITY) {
+        this.NO_QUALITY = NO_QUALITY;
     }
 }

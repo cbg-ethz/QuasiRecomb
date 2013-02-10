@@ -26,6 +26,7 @@ import ch.ethz.bsse.quasirecomb.model.Preprocessing;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.simulation.Recombinator;
 import ch.ethz.bsse.quasirecomb.simulation.Simulator;
+import ch.ethz.bsse.quasirecomb.utils.CutNHam;
 import ch.ethz.bsse.quasirecomb.utils.Cutter;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
@@ -115,6 +116,8 @@ public class Startup {
     private int begin;
     @Option(name = "-end")
     private int end;
+    @Option(name = "-size")
+    private int size;
     @Option(name = "--hamming")
     private boolean hamming;
     @Option(name = "--distance")
@@ -193,6 +196,12 @@ public class Startup {
     private boolean annealing;
     @Option(name = "-refine")
     private boolean refine;
+    @Option(name = "-r")
+    private String region;
+    @Option(name = "-noquality")
+    private boolean noquality;
+    @Option(name = "--cutnham")
+    private boolean cutnham;
 
     private void setInputOutput() {
         if (output == null) {
@@ -243,7 +252,9 @@ public class Startup {
         if (this.output.endsWith(File.separator)) {
             this.output += "reads";
         }
-        if (paired) {
+        if (this.global) {
+            Simulator.fromHaplotypesGlobal(FastaParser.parseFarFile(input), N, L, this.e, fArray, 4, this.output);
+        } else if (paired) {
             Simulator.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.e, fArray, this.output);
         } else {
             if (this.amplicons != null) {
@@ -266,6 +277,10 @@ public class Startup {
         } else {
             System.out.println("Please provide -spots, i.e. -spots 50,140,321");
         }
+    }
+
+    private void cutnham() {
+        new CutNHam(input, begin, end, size);
     }
 
     private void hamming() {
@@ -422,13 +437,15 @@ public class Startup {
         for (int i = 0; i < head.length; i++) {
             System.out.print("\t" + head[i]);
         }
-        System.out.println("");
+        System.out.println("\tFP");
         for (int j = 0; j < 200; j++) {
             System.out.print(j);
+            double sum = 0d;
             for (int i = 0; i < precision.length; i++) {
                 System.out.print("\t" + precision[i][j]);
+                sum += precision[i][j];
             }
-            System.out.println("");
+            System.out.println("\t" + (1d - sum));
         }
     }
 
@@ -456,6 +473,13 @@ public class Startup {
             Kmin = Integer.parseInt(K);
             Kmax = Integer.parseInt(K);
         }
+
+        if (this.region != null && !this.region.isEmpty()) {
+            String[] r = this.region.split("-");
+            Globals.getINSTANCE().setWINDOW_BEGIN(Integer.parseInt(r[0]));
+            Globals.getINSTANCE().setWINDOW_END(Integer.parseInt(r[1]));
+            Globals.getINSTANCE().setWINDOW(true);
+        }
         if (this.global) {
             Globals.getINSTANCE().setALPHA_H(1e-6);
             Globals.getINSTANCE().setALPHA_Z(1e-6);
@@ -471,6 +495,7 @@ public class Startup {
             Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
             Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
         }
+        Globals.getINSTANCE().setNO_QUALITY(this.noquality);
         Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
         Globals.getINSTANCE().setANNEALING(this.annealing);
         Globals.getINSTANCE().setS_ALPHA(this.sAlpha);
@@ -548,6 +573,8 @@ public class Startup {
                 circos();
             } else if (cut) {
                 cut();
+            } else if (cutnham) {
+                cutnham();
             } else {
                 train();
             }

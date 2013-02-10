@@ -62,39 +62,70 @@ public class Preprocessing {
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         Globals.getINSTANCE().setALIGNMENT_END(L);
+        Globals.getINSTANCE().println("Modifying reads\t");
+        double shrinkCounter = 0;
         for (Read r : reads) {
             r.shrink();
+            Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
         }
+        Globals.getINSTANCE().print("Modifying reads\t100%");
 
-        Globals.getINSTANCE().print("Parsing\t25%");
+        Globals.getINSTANCE().println("Computing entropy\t");
+        double entropyCounter = 0;
         int[][] alignment = countPos(reads, L);
+        double[][] alignmentWeighted = countPosWeighted(reads, L);
+        double alignmentEntropy = 0;
+        for (int i = 0; i < L; i++) {
+            double sum = 0;
+            for (int j = 0; j < 5; j++) {
+                sum += alignmentWeighted[i][j];
+            }
+            double shannonEntropy_pos = 0d;
+            for (int j = 0; j < 5; j++) {
+                alignmentWeighted[i][j] /= sum;
+                if (alignmentWeighted[i][j] > 0) {
+                    shannonEntropy_pos -= alignmentWeighted[i][j] * Math.log(alignmentWeighted[i][j]) / Math.log(5);
+                }
+            }
+            alignmentEntropy += shannonEntropy_pos;
+            Globals.getINSTANCE().print("Computing entropy\t" + (Math.round((entropyCounter++ / L) * 100)) + "%");
+        }
+        Globals.getINSTANCE().print("Computing entropy\t100%");
+        alignmentEntropy /= L;
 
-
-        Globals.getINSTANCE().print("Parsing\t50%");
+        Globals.getINSTANCE().println("Allel frequencies\t");
+        double allelCounter = 0;
         StringBuilder sb = new StringBuilder();
+        StringBuilder sbw = new StringBuilder();
         sb.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
+        sbw.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
         for (int i = 0; i < L; i++) {
             int hits = 0;
             sb.append(i);
+            sbw.append(i);
             for (int v = 0; v < alignment[i].length; v++) {
                 sb.append("\t").append(alignment[i][v]);
+                sbw.append("\t").append(Summary.shorten(alignmentWeighted[i][v]));
                 if (alignment[i][v] != 0) {
                     hits++;
                 }
             }
             sb.append("\n");
+            sbw.append("\n");
             if (hits == 0) {
                 System.out.println("Position " + i + " is not covered.");
             }
+            Globals.getINSTANCE().print("Allel frequencies\t" + (Math.round((allelCounter++ / L) * 100)) + "%");
         }
         Globals.getINSTANCE().setMU_PRIOR(alignment);
-        Globals.getINSTANCE().print("Parsing\t75%");
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "weighted_hit_dist.txt", sbw.toString());
         sb = null;
         System.gc();
         System.gc();
         int n = countChars(reads);
-        Globals.getINSTANCE().print("Parsing\t100%");
+        Globals.getINSTANCE().print("Allel frequencies\t100%");
+        Globals.getINSTANCE().println("Alignment entropy\t" + alignmentEntropy);
         Globals.getINSTANCE().println("Unique reads\t" + reads.length);
         Globals.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
         if (Globals.getINSTANCE().getPAIRED_COUNT() > 0) {
@@ -105,7 +136,7 @@ public class Preprocessing {
                     inserts[x++] = r.getCrickBegin() - r.getWatsonEnd();
                 }
             }
-            Globals.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts))*10)/10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts)*10)/10 + ")");
+            Globals.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts)) * 10) / 10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts) * 10) / 10 + ")");
         }
         Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED() + "\n");
         if (Globals.getINSTANCE().isPLOT()) {
@@ -185,6 +216,36 @@ public class Preprocessing {
                 }
             }
         }
+        return alignment;
+    }
+
+    public static double[][] countPosWeighted(Read[] reads, int L) {
+        double[][] alignment = new double[L][5];
+        for (Read r : reads) {
+            int begin = r.getWatsonBegin();
+            for (int i = 0; i < r.getWatsonLength(); i++) {
+                try {
+                    if (r.getWatsonQuality() == null || r.getWatsonQuality().length > 0) {
+                        alignment[i + begin][BitMagic.getPosition(r.getSequence(), i)] += r.getCount();
+                    } else {
+                        alignment[i + begin][BitMagic.getPosition(r.getSequence(), i)] += r.getCount() * r.getWatsonQuality()[i];
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println(e);
+                }
+            }
+            if (r.isPaired()) {
+                begin = r.getCrickBegin();
+                for (int i = 0; i < r.getCrickLength(); i++) {
+                    if (r.getCrickQuality() == null || r.getCrickQuality().length > 0) {
+                        alignment[i + begin][BitMagic.getPosition(r.getCrickSequence(), i)] += r.getCount();
+                    } else {
+                        alignment[i + begin][BitMagic.getPosition(r.getCrickSequence(), i)] += r.getCount() * r.getCrickQuality()[i];
+                    }
+                }
+            }
+        }
+
         return alignment;
     }
 }

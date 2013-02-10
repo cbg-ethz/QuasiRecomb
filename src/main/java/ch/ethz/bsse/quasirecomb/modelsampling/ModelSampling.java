@@ -173,25 +173,25 @@ public final class ModelSampling extends Utils {
         int k = piF.roll();
         int oldk = k;
 
-        Map<Integer, Double> startMap = new HashMap<>();
-        for (int j = 0; j < L + 1; j++) {
-            startMap.put(j, tauOmega[0][j]);
-        }
-        Frequency<Integer> startF = new Frequency<>(startMap);
-        int start = startF.roll();
-        startStopSB.append(start).append("\t");
-
-        Map<Integer, Double> stopMap = new HashMap<>();
-        for (int j = start + 1; j < L + 1; j++) {
-            stopMap.put(j, tauOmega[1][j]);
-        }
-        Frequency<Integer> stopF = new Frequency<>(stopMap);
-        int stop = stopF.roll();
-        startStopSB.append(stop).append("\n");
-
-        for (int j = start; j < stop; j++) {
-            this.coverage[j]++;
-        }
+//        Map<Integer, Double> startMap = new HashMap<>();
+//        for (int j = 0; j < L + 1; j++) {
+//            startMap.put(j, tauOmega[0][j]);
+//        }
+//        Frequency<Integer> startF = new Frequency<>(startMap);
+//        int start = startF.roll();
+//        startStopSB.append(start).append("\t");
+//
+//        Map<Integer, Double> stopMap = new HashMap<>();
+//        for (int j = start + 1; j < L + 1; j++) {
+//            stopMap.put(j, tauOmega[1][j]);
+//        }
+//        Frequency<Integer> stopF = new Frequency<>(stopMap);
+//        int stop = stopF.roll();
+//        startStopSB.append(stop).append("\n");
+//
+//        for (int j = start; j < stop; j++) {
+//            this.coverage[j]++;
+//        }
 
         for (int j = 0; j < L; j++) {
             if (j > 0) {

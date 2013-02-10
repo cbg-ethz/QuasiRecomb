@@ -18,6 +18,7 @@
 package ch.ethz.bsse.quasirecomb.informationholder;
 
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Arrays;
 
 /**
@@ -193,6 +194,16 @@ public class Read {
         }
     }
 
+    public byte getBaseSilent(int j) {
+        if (j < this.getWatsonLength()) {
+            return BitMagic.getPosition(this.watsonSequence, j);
+        } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
+            return BitMagic.getPosition(this.crickSequence, j - this.getWatsonLength() - this.getInsertSize());
+        } else {
+            return -1;
+        }
+    }
+
     public byte[] getCrickSequence() {
         return crickSequence;
     }
@@ -304,5 +315,13 @@ public class Read {
         CRICK_HIT,
         CRICK_OUT,
         ERROR;
+    }
+
+    public double[] getWatsonQuality() {
+        return watsonQuality;
+    }
+
+    public double[] getCrickQuality() {
+        return crickQuality;
     }
 }
