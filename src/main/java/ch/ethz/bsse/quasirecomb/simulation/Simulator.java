@@ -68,7 +68,7 @@ public class Simulator {
             if (i > ((readLength * N) / L)) {
                 start = rand.nextInt(L - fragmentSize);
             }
-            if (i > N - ((250d * N) / L)) {
+            if (i > N - ((readLength * N) / L)) {
                 start = L - fragmentSize;
             }
             for (int j = 0; j < readLength; j++) {

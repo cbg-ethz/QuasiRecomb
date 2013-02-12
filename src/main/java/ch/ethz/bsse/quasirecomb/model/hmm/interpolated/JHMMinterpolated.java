@@ -25,10 +25,12 @@ import ch.ethz.bsse.quasirecomb.model.hmm.JHMMInterface;
 import ch.ethz.bsse.quasirecomb.model.hmm.Regularizations;
 import ch.ethz.bsse.quasirecomb.model.hmm.annealing.JHMMannealing;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMM;
+import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -140,8 +142,14 @@ public class JHMMinterpolated implements JHMMInterface {
         this.loglikelihood = 0d;
         List<Future<Double>> results = new ArrayList<>();
 
-        for (int i = 0; i < allReads.length; i++) {
-            results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMM(this, allReads[i])));
+        for (int i = 0; i < allReads.length; i+=Globals.getINSTANCE().getSTEPS()) {
+            int b = i + Globals.getINSTANCE().getSTEPS();
+            if (b >= allReads.length) {
+                b = allReads.length;
+            }
+//            results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMM(this, allReads[i])));
+            
+            results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b))));
             Globals.getINSTANCE().printPercentage(K, (double) i / allReads.length, Kmin);
         }
         Globals.getINSTANCE().getExecutor().shutdown();

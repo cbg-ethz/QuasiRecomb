@@ -306,6 +306,11 @@ public class Utils extends FastaParser {
                         } else {
                             readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
                         }
+                        Read r2 = readMap.get(name);
+                        if (r2.getCrickBegin() - r2.getWatsonEnd() > 250) {
+                            System.out.println(name + "\t" + (r2.getCrickBegin() - r2.getWatsonEnd()));
+                            readMap.put(name, null);
+                        }
                         if (Globals.getINSTANCE().isUNPAIRED()) {
                             Read r = readMap.get(name);
                             if (r.isPaired()) {
@@ -334,11 +339,13 @@ public class Utils extends FastaParser {
 
         Map<Integer, Read> hashed = new HashMap<>();
         for (Read r1 : readMap.values()) {
-            int hash = r1.hashCode();
-            if (hashed.containsKey(hash)) {
-                hashed.get(hash).incCount();
-            } else {
-                hashed.put(hash, r1);
+            if (r1 != null) {
+                int hash = r1.hashCode();
+                if (hashed.containsKey(hash)) {
+                    hashed.get(hash).incCount();
+                } else {
+                    hashed.put(hash, r1);
+                }
             }
         }
 //        return null;

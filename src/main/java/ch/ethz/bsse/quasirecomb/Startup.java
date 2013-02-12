@@ -183,7 +183,7 @@ public class Startup {
     @Option(name = "-unpaired")
     private boolean unpaired;
     @Option(name = "-steps")
-    private int steps = 100;
+    private int steps = 2;
     @Option(name = "-interpolateMu")
     private double interpolateMu = 1;
     @Option(name = "-interpolateRho")
