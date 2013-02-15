@@ -599,6 +599,7 @@ public class Startup {
 //            System.err.println("  -pdelta\t\t: Stop if there is no change of parameters, convergence criterium");
 //            System.err.println("  -e DOUBLE\t\t: Fix error rate of the sequencing machine");
 //            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
+            System.err.println("  -r INT-INT\t\t: Only reconstruct a specific region");
             System.err.println("  -noRecomb\t\t: Do not allow recombination");
             System.err.println("  -noQuality\t\t: Do not account phred quality scores (faster runtime)");
             System.err.println("  -plot\t\t\t: Plot coverage");
