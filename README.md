@@ -25,24 +25,23 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
  - JDK 7 (http://jdk7.java.net/)
 
 ## RUN:
-#### Local reconstruction
+### Local reconstruction
  `java -jar QuasiRecomb.jar -i alignedReads.fasta`
  Reads need to be aligned, therefore it is only useful for local reconstruction.
 
-#### Global reconstruction
+### Global reconstruction
  `java -jar QuasiRecomb.jar -i alignment.bam -global`
   In this case, all insertions will be omitted, but deletions are preserved.
 
 ### Use fixed number of generators
  `java -jar QuasiRecomb.jar -i alignedReads.fasta -K 2`
- 
- 
 
-### Use backward pruning to get better initialization (slower)
- `java -jar QuasiRecomb.jar -i alignedReads.fasta -prune`
+### Reconstruct specific region with respect to reference genome numbering
+ `java -jar QuasiRecomb.jar -i alignedReads.bam -global -r 790-2292`
 
 ### Output
- The reconstructed quasispecies.fasta will be saved in the working directory.
+ The reconstructed DNA haplotype distribution quasispecies.fasta will be saved in the working directory.
+ An amino acid translation of the quasispecies in all three reading frame is saved as quasispecies_p(0|1|2).fasta.
 
 ### Help:
  Further help can be showed by running without additional parameters:
