@@ -196,7 +196,7 @@ public class Startup {
     private boolean refine;
     @Option(name = "-r")
     private String region;
-    @Option(name = "-noquality")
+    @Option(name = "-noQuality")
     private boolean noquality;
     @Option(name = "--cutnham")
     private boolean cutnham;
@@ -595,15 +595,21 @@ public class Startup {
                     + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached, but will stop at K=5.");
             System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
-            System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
-            System.err.println("  -pdelta\t\t: Stop if there is no change of parameters, convergence criterium");
+//            System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
+//            System.err.println("  -pdelta\t\t: Stop if there is no change of parameters, convergence criterium");
 //            System.err.println("  -e DOUBLE\t\t: Fix error rate of the sequencing machine");
 //            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
             System.err.println("  -noRecomb\t\t: Do not allow recombination");
+            System.err.println("  -noQuality\t\t: Do not account phred quality scores (faster runtime)");
             System.err.println("  -plot\t\t\t: Plot coverage");
-            System.err.println("  -global\t\t\t: USe this if the region is longer than a read");
+            System.err.println("  -global\t\t: Use this if the region is longer than a read");
+            System.err.println("  -printAlignment\t: Save alignment.txt in a human readable format");
             System.err.println("");
-            System.err.println("  Example for training:\n   java -jar QuasiRecomb.jar -i input.fasta");
+            System.err.println("  Examples for training:\n");
+            System.err.println("   java -jar QuasiRecomb.jar -i input.fasta");
+            System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global");
+            System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global -K 2");
+            System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global -r 790-2292");
             System.err.println(" ------------------------");
 //            System.err.println("");
 //            System.err.println("");
