@@ -47,7 +47,7 @@ public class Simulator {
             }
         }
         int n = 5;
-        int insertSize = 200;
+        int insertSize = 500;
         int readLength = 250;
         int fragmentSize = insertSize + 2 * readLength;
         L = haplotypes[0].length();
@@ -76,7 +76,7 @@ public class Simulator {
             }
             int start2 = start;
             if (Globals.getINSTANCE().isOVERLAP()) {
-                start2 += readLength + rand.nextInt(2 * insertSize) - insertSize;
+                start2 += readLength + rand.nextInt(insertSize);
                 for (int j = 0; j < readLength; j++) {
                     coverage[start2 + j]++;
                 }

@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import static ch.ethz.bsse.quasirecomb.utils.Utils.reverse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -50,7 +51,7 @@ public final class ModelSampling extends Utils {
     private StringBuilder sb = new StringBuilder();
     private StringBuilder startStopSB = new StringBuilder();
     private int[] coverage;
-    private Map<String, Double> map = new HashMap<>();
+    private Map<String, Double> map = new LinkedHashMap<>();
 
     public ModelSampling(OptimalResult or, String savePath) {
         this.K = or.getK();
@@ -126,7 +127,6 @@ public final class ModelSampling extends Utils {
                 reads.put(read, 1);
             }
         }
-
         int i = 0;
         for (Object o : sortMapByValue(reads).keySet()) {
             byte[] read = (byte[]) o;
@@ -142,6 +142,36 @@ public final class ModelSampling extends Utils {
                 sb.append("\n");
             }
         }
+        saveProteinHaplotypes(0);
+        saveProteinHaplotypes(1);
+        saveProteinHaplotypes(2);
+    }
+
+    private void saveProteinHaplotypes(int frame) {
+        Map<String, Double> proteins = new LinkedHashMap<>();
+        for (Map.Entry<String, Double> e : this.map.entrySet()) {
+            String p = dna2protein(e.getKey(), frame);
+            if (proteins.containsKey(p)) {
+                proteins.put(p, proteins.get(p) + e.getValue());
+            } else {
+                proteins.put(p, e.getValue());
+            }
+        }
+        int i = 0;
+        StringBuilder sbp = new StringBuilder();
+        for (Object o : sortMapByValue(proteins).keySet()) {
+            String read = (String) o;
+            if (read.contains("?")) {
+                continue;
+            }
+            double f = ((double) proteins.get(read));
+            if (f > Globals.getINSTANCE().getCUTOFF()) {
+                sbp.append(">read").append(i++).append("_").append(f).append("\n");
+                sbp.append(read);
+                sbp.append("\n");
+            }
+        }
+        Utils.saveFile(savePath + "quasispecies_p" + frame + ".fasta", sbp.toString());
     }
 
     public Map<String, Double> getMap() {
@@ -260,6 +290,128 @@ public final class ModelSampling extends Utils {
             sortedList.put(entry.getKey(), entry.getValue());
         }
         return sortedList;
+    }
+
+    public static String dna2protein(String dna, int frame) {
+        StringBuilder protein = new StringBuilder();
+        for (int i = frame; i < dna.length(); i += 3) {
+            if (i + 3 >= dna.length()) {
+                break;
+            }
+            String codon = dna.substring(i, i + 3);
+            switch (codon) {
+                case "GCT":
+                case "GCC":
+                case "GCA":
+                case "GCG":
+                    protein.append("A");
+                    break;
+                case "TTA":
+                case "TTG":
+                case "CTT":
+                case "CTC":
+                case "CTA":
+                case "CTG":
+                    protein.append("L");
+                    break;
+                case "CGT":
+                case "CGC":
+                case "CGA":
+                case "CGG":
+                case "AGA":
+                case "AGG":
+                    protein.append("R");
+                    break;
+                case "AAA":
+                case "AAG":
+                    protein.append("K");
+                    break;
+                case "AAT":
+                case "AAC":
+                    protein.append("N");
+                    break;
+                case "ATG":
+                    protein.append("M");
+                    break;
+                case "GAT":
+                case "GAC":
+                    protein.append("D");
+                    break;
+                case "TTT":
+                case "TTC":
+                    protein.append("F");
+                    break;
+                case "TGT":
+                case "TGC":
+                    protein.append("C");
+                    break;
+                case "CCT":
+                case "CCC":
+                case "CCA":
+                case "CCG":
+                    protein.append("P");
+                    break;
+                case "CAA":
+                case "CAG":
+                    protein.append("Q");
+                    break;
+                case "TCT":
+                case "TCC":
+                case "TCA":
+                case "TCG":
+                case "AGT":
+                case "AGC":
+                    protein.append("S");
+                    break;
+                case "GAA":
+                case "GAG":
+                    protein.append("E");
+                    break;
+                case "ACT":
+                case "ACC":
+                case "ACA":
+                case "ACG":
+                    protein.append("T");
+                    break;
+                case "GGT":
+                case "GGC":
+                case "GGA":
+                case "GGG":
+                    protein.append("G");
+                    break;
+                case "TGG":
+                    protein.append("W");
+                    break;
+                case "CAT":
+                case "CAC":
+                    protein.append("H");
+                    break;
+                case "TAT":
+                case "TAC":
+                    protein.append("Y");
+                    break;
+                case "ATT":
+                case "ATC":
+                case "ATA":
+                    protein.append("I");
+                    break;
+                case "GTT":
+                case "GTC":
+                case "GTA":
+                case "GTG":
+                    protein.append("V");
+                    break;
+                case "TAA":
+                case "TGA":
+                case "TAG":
+                    protein.append("-");
+                    break;
+                default:
+                    protein.append("?");
+                    break;
+            }
+        }
+        return protein.toString();
     }
 }
 

@@ -25,8 +25,10 @@ import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Plot;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
@@ -55,19 +57,29 @@ public class Preprocessing {
         Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
         Globals.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
-
+        List<Read> readList = Lists.newArrayListWithExpectedSize(reads.length);
         for (Read r : reads) {
             Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
+            readList.add(r);
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         Globals.getINSTANCE().setALIGNMENT_END(L);
         Globals.getINSTANCE().println("Modifying reads\t");
         double shrinkCounter = 0;
+
         for (Read r : reads) {
             r.shrink();
+//            if (r.getWatsonBegin() < 300) {
+//                if (r.isPaired()) {
+//                    readList.add(r.unpair());
+//                }
+//            }
             Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
         }
+        reads = readList.toArray(new Read[readList.size()]);
+        readList.clear();
+        readList = null;
         Globals.getINSTANCE().print("Modifying reads\t100%");
 
         Globals.getINSTANCE().println("Computing entropy\t");

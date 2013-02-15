@@ -291,6 +291,7 @@ public class Utils extends FastaParser {
         }
         Globals.getINSTANCE().print("Parsing\t\t100%");
         sfr.close();
+        StringBuilder sb = new StringBuilder();
         for (Future<ReadTMP> future : readFutures) {
             try {
                 ReadTMP read = future.get();
@@ -307,9 +308,12 @@ public class Utils extends FastaParser {
                             readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
                         }
                         Read r2 = readMap.get(name);
-                        if (r2.getCrickBegin() - r2.getWatsonEnd() > 250) {
-                            System.out.println(name + "\t" + (r2.getCrickBegin() - r2.getWatsonEnd()));
-                            readMap.put(name, null);
+                        if (r2.isPaired()) {
+                            sb.append(r2.getCrickBegin() - r2.getWatsonEnd()).append("\n");
+                            if (r2.getCrickBegin() - r2.getWatsonEnd() < 0) {
+                                System.out.println(name + "\t" + r2.getWatsonBegin() + "\t" + r2.getWatsonEnd() + "\t" + r2.getCrickBegin() + "\t" + r2.getCrickEnd());
+//                            readMap.put(name, null);
+                            }
                         }
                         if (Globals.getINSTANCE().isUNPAIRED()) {
                             Read r = readMap.get(name);
@@ -348,6 +352,7 @@ public class Utils extends FastaParser {
                 }
             }
         }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "indel.txt", sb.toString());
 //        return null;
         return hashed.values().toArray(new Read[hashed.size()]);
     }

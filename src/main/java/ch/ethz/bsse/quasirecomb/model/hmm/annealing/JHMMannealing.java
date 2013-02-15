@@ -324,7 +324,7 @@ public class JHMMannealing implements JHMMInterface {
         }
 
         double eta = Math.pow(s + 2, -1);
-        pi = Regularizations.step(piTmp, pi, eta);
+        pi = Regularizations.step(piTmp, pi, eta, false);
     }
 
     private void mStep() {

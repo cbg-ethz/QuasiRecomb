@@ -22,6 +22,4 @@ public class ReadTMP {
         this.refStart = refStart;
         this.hasQuality = hasQuality;
     }
-
-    
 }

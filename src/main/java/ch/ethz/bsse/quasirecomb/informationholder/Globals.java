@@ -105,6 +105,7 @@ public class Globals {
     private double CURRENT_DELTA_LLH = 0;
     private double MAX_LLH = -1;
     private double MIN_BIC = Double.MIN_VALUE;
+    private int READ_MINLENGTH;
     private int WINDOW_BEGIN;
     private int WINDOW_END;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
@@ -775,5 +776,13 @@ public class Globals {
 
     public void setNO_QUALITY(boolean NO_QUALITY) {
         this.NO_QUALITY = NO_QUALITY;
+    }
+
+    public int getREAD_MINLENGTH() {
+        return READ_MINLENGTH;
+    }
+
+    public void setREAD_MINLENGTH(int READ_MINLENGTH) {
+        this.READ_MINLENGTH = READ_MINLENGTH;
     }
 }

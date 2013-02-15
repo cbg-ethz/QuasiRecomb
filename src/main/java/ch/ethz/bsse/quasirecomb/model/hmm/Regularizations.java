@@ -25,10 +25,18 @@ import ch.ethz.bsse.quasirecomb.utils.Utils;
  */
 public class Regularizations {
 
-    public static double[] step(double[] estCounts, double[] previous, double eta) {
+    public static double[] step(double[] estCounts, double[] previous, double eta, boolean mu) {
         int x = estCounts.length;
         double[] regCounts = new double[x];
-
+        if (eta > 0.01 && mu) {
+            double min = Double.MAX_VALUE;
+            for (int v = 0; v < x; v++) {
+                min = Math.min(estCounts[v], min);
+            }
+            for (int v = 0; v < x; v++) {
+                estCounts[v] -= min;
+            }
+        }
         double sum = 0d;
         double max = Double.MIN_VALUE;
         for (int v = 0; v < x; v++) {

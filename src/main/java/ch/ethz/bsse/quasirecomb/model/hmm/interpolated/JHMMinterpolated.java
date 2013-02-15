@@ -24,7 +24,6 @@ import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
 import ch.ethz.bsse.quasirecomb.model.hmm.JHMMInterface;
 import ch.ethz.bsse.quasirecomb.model.hmm.Regularizations;
 import ch.ethz.bsse.quasirecomb.model.hmm.annealing.JHMMannealing;
-import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMM;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
@@ -141,16 +140,17 @@ public class JHMMinterpolated implements JHMMInterface {
         clearGarage();
         this.loglikelihood = 0d;
         List<Future<Double>> results = new ArrayList<>();
+        final int readAmount = allReads.length;
 
-        for (int i = 0; i < allReads.length; i+=Globals.getINSTANCE().getSTEPS()) {
+        for (int i = 0; i < readAmount; i += Globals.getINSTANCE().getSTEPS()) {
             int b = i + Globals.getINSTANCE().getSTEPS();
-            if (b >= allReads.length) {
-                b = allReads.length;
+            if (b >= readAmount) {
+                b = readAmount;
             }
 //            results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMM(this, allReads[i])));
-            
+
             results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b))));
-            Globals.getINSTANCE().printPercentage(K, (double) i / allReads.length, Kmin);
+            Globals.getINSTANCE().printPercentage(K, (double) i / readAmount, Kmin);
         }
         Globals.getINSTANCE().getExecutor().shutdown();
         try {
@@ -192,11 +192,14 @@ public class JHMMinterpolated implements JHMMInterface {
     private void maximizeMu() {
         double[] muJKV;
         for (int j = 0; j < L; j++) {
+            if (j == 600) {
+                int a = 2;
+            }
             for (int k = 0; k < K; k++) {
                 double eta = 0;
                 if (Globals.getINSTANCE().getINTERPOLATE_MU() > 0) {
                     eta = Math.pow(Math.pow(s, 2) + 2, -Globals.getINSTANCE().getINTERPOLATE_MU());
-                    muJKV = Regularizations.step(this.nJKV[j][k], this.mu[j][k], eta);
+                    muJKV = Regularizations.step(this.nJKV[j][k], this.mu[j][k], eta, true);
                 } else {
                     muJKV = Regularizations.ml(this.nJKV[j][k]);
                 }
@@ -244,7 +247,7 @@ public class JHMMinterpolated implements JHMMInterface {
                 double eta = 0;
                 if (Globals.getINSTANCE().getINTERPOLATE_RHO() > 0) {
                     eta = Math.pow(Math.pow(s, 2) + 2, -Globals.getINSTANCE().getINTERPOLATE_RHO());
-                    rhoJKL = Regularizations.step(this.nJKL[j][k], this.rho[j - 1][k], eta);
+                    rhoJKL = Regularizations.step(this.nJKL[j][k], this.rho[j - 1][k], eta, false);
                 } else {
                     rhoJKL = Regularizations.ml(this.nJKL[j][k]);
                 }
@@ -322,7 +325,7 @@ public class JHMMinterpolated implements JHMMInterface {
         }
 
         double eta = Math.pow(s + 2, -1);
-        pi = Regularizations.step(piTmp, pi, eta);
+        pi = Regularizations.step(piTmp, pi, eta, false);
     }
 
     private void mStep() {
@@ -488,7 +491,7 @@ public class JHMMinterpolated implements JHMMInterface {
         }
     }
 
-    protected void prepare(Read[] reads, int N, int L, int K, int n, double[][][] rho, double[] pi, double[][][] mu) {
+    protected final void prepare(Read[] reads, int N, int L, int K, int n, double[][][] rho, double[] pi, double[][][] mu) {
         this.N = N;
         this.L = L;
         this.K = K;

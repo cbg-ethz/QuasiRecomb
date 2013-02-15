@@ -172,8 +172,6 @@ public class Startup {
     private boolean muPrior;
     @Option(name = "-stopQuick")
     private boolean stopQuick;
-    @Option(name = "-ML")
-    private boolean ML;
     @Option(name = "-spikeRho")
     private boolean spikeRho = true;
     @Option(name = "-global")
@@ -202,6 +200,10 @@ public class Startup {
     private boolean noquality;
     @Option(name = "--cutnham")
     private boolean cutnham;
+    @Option(name = "-l")
+    private int l;
+    @Option(name = "--annotate")
+    private boolean annotate;
 
     private void setInputOutput() {
         if (output == null) {
@@ -575,6 +577,8 @@ public class Startup {
                 cut();
             } else if (cutnham) {
                 cutnham();
+            } else if (annotate) {
+                annotate();
             } else {
                 train();
             }
@@ -631,4 +635,104 @@ public class Startup {
 //            System.err.println(" ------------------------");
         }
     }
+    
+    private void annotate() {
+        StringBuilder fasta = new StringBuilder();
+        Map<String, Double> parseQuasispeciesFile = FastaParser.parseQuasispeciesFile(this.input);
+
+        int i = 0;
+        for (Object o : ModelSampling.sortMapByValue(parseQuasispeciesFile).keySet()) {
+            StringBuilder sb = new StringBuilder();
+            String c = (String) o;
+            String s = ModelSampling.dna2protein(c, 1);
+            char[] cs = s.toCharArray();
+            int secondary = 0;
+            if (cs[21] == 'M') {
+                secondary++;
+            }
+            if (cs[44] == 'A') {
+                secondary++;
+            }
+            if (cs[98] == 'I') {
+                secondary++;
+            }
+            if ((cs[90] == 'R' || cs[90] == 'C') && cs[102] == 'H') {
+                sb.append(12 + secondary);
+            } else if (cs[90] == 'R' || cs[90] == 'C') {
+                sb.append(4 + secondary);
+            } else if (cs[102] == 'H') {
+                sb.append(8 + secondary);
+            } else {
+                sb.append(secondary);
+            }
+
+            fasta.append(">read").append(String.valueOf(i)).append("_").append(parseQuasispeciesFile.get(s)).append("_0_").append(sb).append("\n").append(s).append("\n");
+            i++;
+        }
+        Utils.saveFile(this.input + "_annotated", fasta.toString());
+    }
+
+//    private void annotate() {
+//        StringBuilder fasta = new StringBuilder();
+//        StringBuilder hesamFasta = new StringBuilder();
+//        Map<String, Double> parseQuasispeciesFile = FastaParser.parseQuasispeciesFile(this.input);
+//
+//        int i = 0;
+//        for (Object o : ModelSampling.sortMapByValue(parseQuasispeciesFile).keySet()) {
+//            StringBuilder hesam = new StringBuilder();
+//            StringBuilder sb = new StringBuilder();
+//            String s = (String) o;
+//            char[] cs = s.toCharArray();
+//            int secondary = 0;
+//            if (cs[21] == 'M') {
+//                secondary++;
+//                hesam.append("1 ");
+//            } else {
+//                hesam.append("0 ");
+//            }
+//            if (cs[44] == 'A') {
+//                secondary++;
+//                hesam.append("1 ");
+//            } else {
+//                hesam.append("0 ");
+//            }
+//            if (cs[98] == 'I') {
+//                secondary++;
+//                hesam.append("1 ");
+//            } else {
+//                hesam.append("0 ");
+//            }
+//            if ((cs[90] == 'R' || cs[90] == 'C') && cs[102] == 'H') {
+//                sb.append(12 + secondary);
+//            } else if (cs[90] == 'R' || cs[90] == 'C') {
+//                sb.append(4 + secondary);
+//            } else if (cs[102] == 'H') {
+//                sb.append(8 + secondary);
+//            } else {
+//                sb.append(secondary);
+//            }
+//
+//            if (cs[90] == 'R' || cs[90] == 'C') {
+//                hesam.append("1 ");
+//            } else {
+//                hesam.append("0 ");
+//            }
+//            if (cs[102] == 'H') {
+//                hesam.append("1");
+//            } else {
+//                hesam.append("0");
+//            }
+//
+////            sb.append(cs[21]);
+////            sb.append(cs[44]);
+////            sb.append(cs[90]);
+////            sb.append(cs[98]);
+////            sb.append(cs[102]);
+//            fasta.append(">read").append(String.valueOf(i)).append("_").append(parseQuasispeciesFile.get(s)).append("_0_").append(sb).append("\n").append(s).append("\n");
+//            hesamFasta.append("read").append(String.valueOf(i)).append("_").append(parseQuasispeciesFile.get(s)).append(" ").append(hesam).append("\n");
+//            i++;
+//        }
+//        Utils.saveFile(this.input + "_annotated", fasta.toString());
+//        Utils.saveFile(this.input + "_hesam", hesamFasta.toString());
+//    }
 }

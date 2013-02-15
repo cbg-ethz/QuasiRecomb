@@ -180,8 +180,9 @@ public class SFRComputing implements Callable<ReadTMP> {
                 }
             }
 
-            //---
-
+            if (readBases.length < Globals.getINSTANCE().getREAD_MINLENGTH()) {
+                return null;
+            }
             String name = samRecord.getReadName();
 
             return new ReadTMP(name, quality, readBases, refStart, hasQuality);
