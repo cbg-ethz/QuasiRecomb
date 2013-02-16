@@ -189,8 +189,6 @@ public class Globals {
                 }
                 long time = System.currentTimeMillis() - oldTime;
                 System.out.print("\r                                                                                                                                                   ");
-//            System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + (int)Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "% [ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]" + "[cK " + K + "]" + "[LLH " + ((int)MAX_LLH *1000)/100d + "]" + "[BIC " + ((int)MIN_BIC *1000)/100d + "]" + "[D-LLH " + Summary.shorten(CURRENT_DELTA_LLH) + "]");
-//                System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + (int) Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "% [ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]" + "[cK " + K + "]");
                 System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + (int) Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "% [ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]");
             }
         }

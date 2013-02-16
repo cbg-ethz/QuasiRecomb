@@ -17,7 +17,6 @@
  */
 package ch.ethz.bsse.quasirecomb.distance;
 
-import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.RecursiveTask;

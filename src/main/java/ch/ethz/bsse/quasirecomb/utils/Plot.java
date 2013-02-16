@@ -17,7 +17,6 @@
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
-import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;

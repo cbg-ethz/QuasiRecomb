@@ -32,13 +32,6 @@ public class KullbackLeibler {
         return d;
     }
 
-//    public static double array(double[][] p, double[][] q) {
-//        double d = 0d;
-//        for (int i = 0; i < p.length; i++) {
-//            d += single(p[i], q[i]);
-//        }
-//        return d;
-//    }
     public static double generators(double[][][] mu, int k, int l) {
         double d = 0d;
         for (int i = 0; i < mu.length; i++) {

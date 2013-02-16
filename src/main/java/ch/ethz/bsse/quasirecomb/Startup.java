@@ -651,7 +651,7 @@ public class Startup {
         for (Object o : ModelSampling.sortMapByValue(parseQuasispeciesFile).keySet()) {
             StringBuilder sb = new StringBuilder();
             String c = (String) o;
-            String s = ModelSampling.dna2protein(c, 1);
+            String s = ModelSampling.dna2protein(c, 0);
             char[] cs = s.toCharArray();
             int secondary = 0;
             if (cs[21] == 'M') {
@@ -673,7 +673,7 @@ public class Startup {
                 sb.append(secondary);
             }
 
-            fasta.append(">read").append(String.valueOf(i)).append("_").append(parseQuasispeciesFile.get(s)).append("_0_").append(sb).append("\n").append(s).append("\n");
+            fasta.append(">read").append(String.valueOf(i)).append("_").append(parseQuasispeciesFile.get(c)).append("_0_").append(sb).append("\n").append(c).append("\n");
             i++;
         }
         Utils.saveFile(this.input + "_annotated", fasta.toString());

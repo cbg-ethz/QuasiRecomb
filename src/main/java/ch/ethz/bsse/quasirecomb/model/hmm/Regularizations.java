@@ -18,7 +18,6 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import cc.mallet.types.Dirichlet;
-import ch.ethz.bsse.quasirecomb.utils.Utils;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
