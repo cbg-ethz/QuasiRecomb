@@ -19,6 +19,21 @@ steps to infer a viral quasispecies from Next Generation Sequencing (NGS) data.
 ### DOWNLOAD:
 Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
 
+### FEATURES:
+ - First algorithm that models the recombination process
+ - Allows position-wise mutation events
+ - Infers a parametric probability distribution from the underlying viral population
+ - Error correction by estimating position-wise sequencing error-rates
+ - Local, gene- and genome-wide reconstruction
+ - Reports SNV (single nucleotide variant) posteriors
+ - Incorporates paired-end information
+ - Input may contain paired-end and single reads
+ - Supports reads of all current sequencing technologies (454/Roche, Illumina and PacBio)
+ - Suitable for amplicon and shotgun sequencing projects
+ - Reports reconstructed haplotypes and their relative frequencies
+ - Reports translated proteins in all three reading frames with their relative frequencies
+ - Input data can be in BAM, SAM or FASTA format
+
 - - -
 
 #### PREREQUISITES TO RUN:
