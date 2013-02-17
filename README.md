@@ -52,6 +52,7 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
 
 ## INSTALL (only for dev):
     cd QuasiRecomb
+    mvn -DartifactId=samtools -DgroupId=net.sf -Dversion=1.8.4 -Dpackaging=jar -Dfile=src/main/resources/jars/sam-1.84.jar -DgeneratePom=false install:install-file
     mvn clean package
     java -jar QuasiRecomb/target/QuasiRecomb.jar
 
