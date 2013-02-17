@@ -12,7 +12,7 @@ in the quasispecies. The model is validated on simulated data, showing
 the advantage of explicitly taking the recombination process into
 account, and validated on experimental HIV samples.
 
-#### CONTENT:
+### CONTENT:
 This java command line application is a toolbox, combining all necessary
 steps to infer a viral quasispecies from Next Generation Sequencing (NGS) data.
 
