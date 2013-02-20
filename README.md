@@ -27,6 +27,7 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
  - Local, gene- and genome-wide reconstruction
  - Reports SNV (single nucleotide variant) posteriors
  - Incorporates paired-end information
+ - Uses PHRED scores to weight each base of each read
  - Input may contain paired-end and single reads
  - Supports reads of all current sequencing technologies (454/Roche, Illumina and PacBio)
  - Suitable for amplicon and shotgun sequencing projects
