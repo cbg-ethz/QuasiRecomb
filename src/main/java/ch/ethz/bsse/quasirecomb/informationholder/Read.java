@@ -119,18 +119,18 @@ public class Read {
     public Position getPosition(int j) {
         if (j == 0) {
             return Position.WATSON_IN;
-        } else if (j < this.watsonEnd - this.watsonBegin) {
+        } else if (j < this.watsonEnd - this.watsonBegin - 1) {
             return Position.WATSON_HIT;
+        } else if (j == this.getWatsonLength() - 1) {
+            return Position.WATSON_OUT;
         } else if (this.isPaired()) {
-            if (j == this.getWatsonLength()) {
-                return Position.WATSON_OUT;
-            } else if (j > this.getWatsonLength() && j < this.getWatsonLength() + this.getInsertSize()) {
+            if (j > this.getWatsonLength() - 1 && j < this.getWatsonLength() + this.getInsertSize()) {
                 return Position.INSERTION;
             } else if (j == this.crickBegin - this.watsonBegin) {
                 return Position.CRICK_IN;
-            } else if (j > this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin) {
+            } else if (j > this.crickBegin - this.watsonBegin && j < this.crickBegin + this.getCrickLength() - this.watsonBegin - 1) {
                 return Position.CRICK_HIT;
-            } else if (j == this.crickBegin + this.getCrickLength() - this.watsonBegin) {
+            } else if (j == this.crickBegin + this.getCrickLength() - this.watsonBegin - 1) {
                 return Position.CRICK_OUT;
             }
         }

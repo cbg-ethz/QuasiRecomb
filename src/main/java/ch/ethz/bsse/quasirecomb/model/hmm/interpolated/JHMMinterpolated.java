@@ -190,6 +190,7 @@ public class JHMMinterpolated implements JHMMInterface {
     }
 
     private void maximizeMu() {
+        System.out.print("");
         double[] muJKV;
         for (int j = 0; j < L; j++) {
             if (j == 600) {
@@ -525,36 +526,39 @@ public class JHMMinterpolated implements JHMMInterface {
     }
 
     protected void init() {
-        int[] tau1 = new int[L + 1];
-        int[] tau2 = new int[L + 1];
-        int[] omega1 = new int[L + 1];
-        int[] omega2 = new int[L + 1];
+        int[] tau1 = new int[L];
+        int[] tau2 = new int[L];
+        int[] omega1 = new int[L];
+        int[] omega2 = new int[L];
+        double Nreal = 0;
+
         for (Read r : allReads) {
             for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
                 this.coverage[i] += r.getCount();
             }
             tau1[r.getWatsonBegin()] += r.getCount();
-            omega1[r.getWatsonEnd()] += r.getCount();
+            omega1[r.getWatsonEnd() - 1] += r.getCount();
             if (r.isPaired()) {
                 for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
                     this.coverage[i] += r.getCount();
                 }
                 tau2[r.getCrickBegin()] += r.getCount();
-                omega2[r.getCrickEnd()] += r.getCount();
+                omega2[r.getCrickEnd() - 1] += r.getCount();
             }
+            Nreal += r.getCount();
         }
 
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < L + 1; i++) {
-            this.tauOmega[0][i] = tau1[i] / (double) N;
-            this.tauOmega[1][i] = omega1[i] / (double) N;
+        for (int i = 0; i < L; i++) {
+            this.tauOmega[0][i] = tau1[i] / Nreal;
+            this.tauOmega[1][i] = omega1[i] / Nreal;
             sb.append(this.tauOmega[0][i]);
             sb.append("\t");
             sb.append(this.tauOmega[1][i]);
             sb.append("\t");
             if (this.paired) {
-                this.tauOmega[2][i] = tau2[i] / (double) N;
-                this.tauOmega[3][i] = omega2[i] / (double) N;
+                this.tauOmega[2][i] = tau2[i] / Nreal;
+                this.tauOmega[3][i] = omega2[i] / Nreal;
                 sb.append(this.tauOmega[2][i]);
                 sb.append("\t");
                 sb.append(this.tauOmega[3][i]);

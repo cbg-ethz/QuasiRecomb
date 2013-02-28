@@ -74,6 +74,8 @@ public class Startup {
     private double multRho = 100;
     @Option(name = "-nosample")
     private boolean nosample;
+    @Option(name = "-logOptima")
+    private boolean logOptima;
     @Option(name = "-m")
     private int m = 5;
     @Option(name = "-t")
@@ -230,6 +232,7 @@ public class Startup {
         Globals.getINSTANCE().setPAIRED(this.paired);
         Globals.getINSTANCE().setPLOT(this.plot);
         Globals.getINSTANCE().setCUTOFF(this.cutoff);
+        Globals.getINSTANCE().setLOG_OPTIMA(this.logOptima);
     }
 
     private void sample() {

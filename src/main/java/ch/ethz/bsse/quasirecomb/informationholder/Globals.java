@@ -57,6 +57,7 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean LOG_OPTIMA;
     private boolean NO_QUALITY;
     private boolean WINDOW;
     private boolean ANNEALING;
@@ -782,5 +783,13 @@ public class Globals {
 
     public void setREAD_MINLENGTH(int READ_MINLENGTH) {
         this.READ_MINLENGTH = READ_MINLENGTH;
+    }
+
+    public boolean isLOG_OPTIMA() {
+        return LOG_OPTIMA;
+    }
+
+    public void setLOG_OPTIMA(boolean LOG_OPTIMA) {
+        this.LOG_OPTIMA = LOG_OPTIMA;
     }
 }

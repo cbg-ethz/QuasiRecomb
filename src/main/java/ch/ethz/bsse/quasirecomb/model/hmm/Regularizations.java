@@ -27,7 +27,7 @@ public class Regularizations {
     public static double[] step(double[] estCounts, double[] previous, double eta, boolean mu) {
         int x = estCounts.length;
         double[] regCounts = new double[x];
-        if (eta > 0.01 && mu) {
+        if (mu) {
             double min = Double.MAX_VALUE;
             for (int v = 0; v < x; v++) {
                 min = Math.min(estCounts[v], min);

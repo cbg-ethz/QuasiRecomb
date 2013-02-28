@@ -97,7 +97,7 @@ public class SingleEM implements SingleEMInterface {
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
                 calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega(), jhmm.getSnv());
-//        Utils.saveOptimum(save + ".optimum", localOr);
+        Utils.saveOptimum(save + ".optimum", localOr);
         Summary summary = new Summary();
         Utils.saveFile(save + ".txt", summary.print(localOr));
 //        Utils.saveFile(save + ".html", summary.html(localOr));
