@@ -312,7 +312,6 @@ public class Utils extends FastaParser {
                             sb.append(r2.getCrickBegin() - r2.getWatsonEnd()).append("\n");
                             if (r2.getCrickBegin() - r2.getWatsonEnd() < 0) {
                                 System.out.println(name + "\t" + r2.getWatsonBegin() + "\t" + r2.getWatsonEnd() + "\t" + r2.getCrickBegin() + "\t" + r2.getCrickEnd());
-//                            readMap.put(name, null);
                             }
                         }
                         if (Globals.getINSTANCE().isUNPAIRED()) {

@@ -34,6 +34,7 @@ public class Read {
     private double[] crickQuality;
     private int crickBegin;
     private int crickEnd = -1;
+    private int insertion;
 
     public Read(byte[] sequence, int begin, int end, double[] quality) {
         this.watsonSequence = sequence;
@@ -225,6 +226,7 @@ public class Read {
         this.crickEnd = end;
         this.crickQuality = quality;
         rearrange();
+        this.insertion = this.crickBegin - this.watsonEnd;
         merge();
     }
 
@@ -233,6 +235,7 @@ public class Read {
         this.crickBegin = begin;
         this.crickEnd = end;
         rearrange();
+        this.insertion = this.crickBegin - this.watsonEnd;
         merge();
     }
 
@@ -329,5 +332,13 @@ public class Read {
 
     public double[] getCrickQuality() {
         return crickQuality;
+    }
+
+    public int getInsertion() {
+        return insertion;
+    }
+
+    public void setInsertion(int insertion) {
+        this.insertion = insertion;
     }
 }

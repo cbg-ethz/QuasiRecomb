@@ -67,16 +67,25 @@ public class Preprocessing {
         Globals.getINSTANCE().setALIGNMENT_END(L);
         Globals.getINSTANCE().println("Modifying reads\t");
         double shrinkCounter = 0;
-
+        if (new File(Globals.getINSTANCE().getSAVEPATH()+"gap.txt").exists()) {
+            new File(Globals.getINSTANCE().getSAVEPATH()+"gap.txt").delete();
+        }
+        StringBuilder indelSB = new StringBuilder();
         for (Read r : reads) {
             r.shrink();
-//            if (r.getWatsonBegin() < 300) {
-//                if (r.isPaired()) {
-//                    readList.add(r.unpair());
-//                }
-//            }
+            indelSB.append(r.getInsertion()).append(" ");
             Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
         }
+        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH()+"gap.txt", indelSB.toString());
+//        for (Read r : reads) {
+//            r.shrink();
+////            if (r.getWatsonBegin() < 300) {
+////                if (r.isPaired()) {
+////                    readList.add(r.unpair());
+////                }
+////            }
+//            Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
+//        }
         reads = readList.toArray(new Read[readList.size()]);
         readList.clear();
         readList = null;
@@ -141,6 +150,7 @@ public class Preprocessing {
         Globals.getINSTANCE().println("Unique reads\t" + reads.length);
         Globals.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
         if (Globals.getINSTANCE().getPAIRED_COUNT() > 0) {
+
             double[] inserts = new double[Globals.getINSTANCE().getPAIRED_COUNT()];
             int x = 0;
             for (Read r : reads) {

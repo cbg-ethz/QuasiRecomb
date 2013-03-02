@@ -19,15 +19,23 @@ package ch.ethz.bsse.quasirecomb.modelsampling;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
+import ch.ethz.bsse.quasirecomb.informationholder.ReadTMP;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
+import ch.ethz.bsse.quasirecomb.utils.SFRComputing;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import static ch.ethz.bsse.quasirecomb.utils.Utils.reverse;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import net.sf.samtools.SAMRecord;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -49,11 +57,14 @@ public final class ModelSampling extends Utils {
     private int[] recombPerObservation;
     private Map<String, Double> hexMap = new HashMap<>();
     private StringBuilder sb = new StringBuilder();
+    private StringBuilder readBuilder = new StringBuilder();
     private StringBuilder startStopSB = new StringBuilder();
     private int[] coverage;
     private Map<String, Double> map = new LinkedHashMap<>();
+    private final OptimalResult or;
 
     public ModelSampling(OptimalResult or, String savePath) {
+//        this.amount = or.getN();
         this.K = or.getK();
         this.L = or.getL();
         this.n = or.getn();
@@ -66,12 +77,11 @@ public final class ModelSampling extends Utils {
         this.tauOmega = or.getTauOmega();
         this.coverage = new int[L];
         this.savePath = savePath;
+        this.or = or;
         this.start();
     }
 
     public ModelSampling(String string, String path) {
-        OptimalResult or = null;
-
         try {
             FileInputStream fis = new FileInputStream(string);
             try (ObjectInputStream in = new ObjectInputStream(fis)) {
@@ -85,6 +95,7 @@ public final class ModelSampling extends Utils {
         if (or == null) {
             throw new IllegalStateException("Optimal result could not be parsed");
         }
+//        this.amount = or.getN();
         this.savePath = path;
         this.K = or.getK();
         this.L = or.getL();
@@ -106,11 +117,61 @@ public final class ModelSampling extends Utils {
                 throw new RuntimeException("Cannot create directory: " + savePath);
             }
         }
-        startStopSB.append("start\tstop\n");
+        startStopSB.append("start\tstop\tstart2\tstop2\n");
         this.reads = new HashMap<>();
         byte[][] readArray = new byte[amount][L];
+//        boolean paired = tauOmega.length > 2;
+//        List<Future<SampledRead>> readFutures = Lists.newArrayListWithExpectedSize(amount);
+//        double counter = 0;
+//        for (int i = 0; i < amount; i++) {
+//            readFutures.add(Globals.getINSTANCE().getExecutor().submit(new SingleModelSampling(or, tauOmega, paired)));
+//            Globals.getINSTANCE().print("Sampling\t\t" + (Math.round((counter++ / amount) * 100)) + "%");
+//        }
+//        int x = 0;
+//        for (Future<SampledRead> f : readFutures) {
+//            try {
+//                SampledRead sr = f.get();
+//                startStopSB.append(sr.getWatsonStart()).append("\t");
+//                startStopSB.append(sr.getWatsonEnd());
+//
+//                readBuilder.append(">read").append(x).append("\n");
+//                for (byte r : sr.getWatsonReadBases()) {
+//                    readBuilder.append(reverse(r));
+//                }
+//                readBuilder.append("\n");
+//
+//                if (paired) {
+//                    startStopSB.append("\t").append(sr.getCrickStart()).append("\t");
+//                    startStopSB.append(sr.getCrickEnd()).append("\n");
+//
+//                    readBuilder.append(">read").append(x).append("\n");
+//                    for (byte r : sr.getCrickReadBases()) {
+//                        readBuilder.append(reverse(r));
+//                    }
+//                    readBuilder.append("\n");
+//                } else {
+//                    startStopSB.append("\n");
+//                }
+//
+//            } catch (InterruptedException | ExecutionException ex) {
+//                Logger.getLogger(ModelSampling.class.getName()).log(Level.SEVERE, null, ex);
+//            }
+//        }
+
+
+        List<Future<byte[]>> readFutures = Lists.newArrayListWithExpectedSize(amount);
+        double counter = 0;
         for (int i = 0; i < amount; i++) {
-            readArray[i] = single(i);
+            readFutures.add(Globals.getINSTANCE().getExecutor().submit(new HaplotypeSampling(or)));
+            Globals.getINSTANCE().print("Sampling\t\t" + (Math.round((counter++ / amount) * 100)) + "%");
+        }
+        int x = 0;
+        for (Future<byte[]> f : readFutures) {
+            try {
+                readArray[x++] = f.get();
+            } catch (InterruptedException | ExecutionException ex) {
+                Logger.getLogger(ModelSampling.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
 
         for (int i = 0; i < amount; i++) {
@@ -183,6 +244,7 @@ public final class ModelSampling extends Utils {
     }
 
     public void save() {
+//        Utils.saveFile(savePath + "sampledReads.fasta", readBuilder.toString());
         Utils.saveFile(savePath + "quasispecies.fasta", sb.toString());
         Utils.saveFile(savePath + "support" + File.separator + "startStop.txt", startStopSB.toString());
         StringBuilder coverageSB = new StringBuilder();
@@ -202,26 +264,6 @@ public final class ModelSampling extends Utils {
         Frequency<Integer> piF = new Frequency<>(piMap);
         int k = piF.roll();
         int oldk = k;
-
-        Map<Integer, Double> startMap = new HashMap<>();
-        for (int j = 0; j < L + 1; j++) {
-            startMap.put(j, tauOmega[0][j]);
-        }
-        Frequency<Integer> startF = new Frequency<>(startMap);
-        int start = startF.roll();
-        startStopSB.append(start).append("\t");
-
-        Map<Integer, Double> stopMap = new HashMap<>();
-        for (int j = start + 1; j < L + 1; j++) {
-            stopMap.put(j, tauOmega[1][j]);
-        }
-        Frequency<Integer> stopF = new Frequency<>(stopMap);
-        int stop = stopF.roll();
-        startStopSB.append(stop).append("\n");
-
-        for (int j = start; j < stop; j++) {
-            this.coverage[j]++;
-        }
 
         for (int j = 0; j < L; j++) {
             if (j > 0) {

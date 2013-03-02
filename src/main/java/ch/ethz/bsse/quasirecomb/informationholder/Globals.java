@@ -46,7 +46,7 @@ public class Globals {
     private static ExecutorService executor = refreshExecutor();
 
     private static ExecutorService refreshExecutor() {
-//        return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+//        return Executors.newSingleThreadExecutor();
         return new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
     }
 
