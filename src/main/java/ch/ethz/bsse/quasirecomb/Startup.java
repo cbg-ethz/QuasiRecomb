@@ -232,7 +232,6 @@ public class Startup {
         Globals.getINSTANCE().setPAIRED(this.paired);
         Globals.getINSTANCE().setPLOT(this.plot);
         Globals.getINSTANCE().setCUTOFF(this.cutoff);
-        Globals.getINSTANCE().setLOG_OPTIMA(this.logOptima);
     }
 
     private void sample() {
@@ -504,9 +503,6 @@ public class Startup {
         }
         Globals.getINSTANCE().setNO_QUALITY(this.noquality);
         Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
-        Globals.getINSTANCE().setANNEALING(this.annealing);
-        Globals.getINSTANCE().setS_ALPHA(this.sAlpha);
-        Globals.getINSTANCE().setS_BETA(this.sBeta);
         Globals.getINSTANCE().setUNPAIRED(this.unpaired);
         Globals.getINSTANCE().setSTEPS(this.steps);
         Globals.getINSTANCE().setSTOP_QUICK(this.stopQuick);
@@ -515,7 +511,6 @@ public class Startup {
         Globals.getINSTANCE().setNOSAMPLE(this.nosample);
         Globals.getINSTANCE().setPDELTA(this.pdelta);
         Globals.getINSTANCE().setPRUNE(this.prune);
-        Globals.getINSTANCE().setPERTURB(this.perturb);
         Globals.getINSTANCE().setPCHANGE(this.p);
         Globals.getINSTANCE().setBETA_Z(this.betaz);
         Globals.getINSTANCE().setLOG_BIC(this.logBIC);

@@ -57,10 +57,8 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
-    private boolean LOG_OPTIMA;
     private boolean NO_QUALITY;
     private boolean WINDOW;
-    private boolean ANNEALING;
     private boolean UNPAIRED;
     private boolean USER_OPTIMUM;
     private boolean BIAS_MU;
@@ -89,15 +87,12 @@ public class Globals {
     private boolean SPIKERHO;
     private double CUTOFF;
     private double PCHANGE;
-    private double S_BETA;
-    private double S_ALPHA;
     private double MULT_RHO;
     private double MULT_MU;
     private double BETA_Z;
     private double ALPHA_Z;
     private double ALPHA_H;
     private double ESTIMATION_EPSILON;
-    private double SAMPLING_EPSILON;
     private double DELTA_LLH;
     private double DELTA_REFINE_LLH;
     private boolean PRUNE;
@@ -115,17 +110,14 @@ public class Globals {
     private int REPEATS;
     private int DESIRED_REPEATS;
     private int SAMPLING_NUMBER;
-    private int PERTURB;
     private final int cpus = Runtime.getRuntime().availableProcessors();
     private List<Integer> runtime = new LinkedList<>();
     private long start = System.currentTimeMillis();
     private String GENOME;
     private String OPTIMUM;
-    private String[] HAPLOTYPE_ARRAY_EMPIRICAL;
     private String SAVEPATH;
     private StringBuilder LOG = new StringBuilder();
     private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
-//    private final ExecutorService executor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
     private final ForkJoinPool fjPool = new ForkJoinPool();
     private final AtomicInteger MERGED_COUNT = new AtomicInteger(0);
     private final AtomicInteger PAIRED_COUNT = new AtomicInteger(0);
@@ -376,20 +368,12 @@ public class Globals {
         return ALPHA_H;
     }
 
-    public String[] getHAPLOTYPE_ARRAY_EMPIRICAL() {
-        return HAPLOTYPE_ARRAY_EMPIRICAL;
-    }
-
     public String getSAVEPATH() {
         return SAVEPATH;
     }
 
     public double getESTIMATION_EPSILON() {
         return ESTIMATION_EPSILON;
-    }
-
-    public double getSAMPLING_EPSILON() {
-        return SAMPLING_EPSILON;
     }
 
     public double getDELTA_LLH() {
@@ -484,20 +468,12 @@ public class Globals {
         this.ALPHA_H = ALPHA_H;
     }
 
-    public void setHAPLOTYPE_ARRAY_EMPIRICAL(String[] HAPLOTYPE_ARRAY_EMPIRICAL) {
-        this.HAPLOTYPE_ARRAY_EMPIRICAL = HAPLOTYPE_ARRAY_EMPIRICAL;
-    }
-
     public void setSAVEPATH(String SAVEPATH) {
         this.SAVEPATH = SAVEPATH;
     }
 
     public void setESTIMATION_EPSILON(double ESTIMATION_EPSILON) {
         this.ESTIMATION_EPSILON = ESTIMATION_EPSILON;
-    }
-
-    public void setSAMPLING_EPSILON(double SAMPLING_EPSILON) {
-        this.SAMPLING_EPSILON = SAMPLING_EPSILON;
     }
 
     public void setDELTA_LLH(double DELTA_LLH) {
@@ -552,10 +528,6 @@ public class Globals {
         this.MODELSELECTION = MODELSELECTION;
     }
 
-    public void setSAMPLING_NUMBER(int SAMPLING_NUMBER) {
-        this.SAMPLING_NUMBER = SAMPLING_NUMBER;
-    }
-
     public void setLOG(StringBuilder LOG) {
         this.LOG = LOG;
     }
@@ -590,14 +562,6 @@ public class Globals {
 
     public void setOPTIMUM(String OPTIMUM) {
         this.OPTIMUM = OPTIMUM;
-    }
-
-    public int getPERTURB() {
-        return PERTURB;
-    }
-
-    public void setPERTURB(int PERTURB) {
-        this.PERTURB = PERTURB;
     }
 
     public boolean isNOSAMPLE() {
@@ -704,30 +668,6 @@ public class Globals {
         return UNPAIRED;
     }
 
-    public double getS_BETA() {
-        return S_BETA;
-    }
-
-    public void setS_BETA(double S_BETA) {
-        this.S_BETA = S_BETA;
-    }
-
-    public double getS_ALPHA() {
-        return S_ALPHA;
-    }
-
-    public void setS_ALPHA(double S_ALPHA) {
-        this.S_ALPHA = S_ALPHA;
-    }
-
-    public boolean isANNEALING() {
-        return ANNEALING;
-    }
-
-    public void setANNEALING(boolean ANNEALING) {
-        this.ANNEALING = ANNEALING;
-    }
-
     public double getCUTOFF() {
         return CUTOFF;
     }
@@ -774,13 +714,5 @@ public class Globals {
 
     public void setREAD_MINLENGTH(int READ_MINLENGTH) {
         this.READ_MINLENGTH = READ_MINLENGTH;
-    }
-
-    public boolean isLOG_OPTIMA() {
-        return LOG_OPTIMA;
-    }
-
-    public void setLOG_OPTIMA(boolean LOG_OPTIMA) {
-        this.LOG_OPTIMA = LOG_OPTIMA;
     }
 }

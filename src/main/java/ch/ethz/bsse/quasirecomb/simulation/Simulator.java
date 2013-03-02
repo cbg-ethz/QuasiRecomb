@@ -332,11 +332,9 @@ public class Simulator {
             read = String.valueOf(readArray);
             reads[i] = read;
         }
-        Globals.getINSTANCE().setHAPLOTYPE_ARRAY_EMPIRICAL(new String[N / 10]);
         Map<String, Integer> map = new ConcurrentHashMap<>();
         for (int i = 0; i < N; i++) {
             if (i < N / 10) {
-                Globals.getINSTANCE().getHAPLOTYPE_ARRAY_EMPIRICAL()[i] = reads[i];
             } else {
                 if (!map.containsKey(reads[i])) {
                     map.put(reads[i], 0);
