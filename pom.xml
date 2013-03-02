@@ -8,7 +8,7 @@
     <packaging>jar</packaging>
     <url>http://www.cbg.ethz.ch/software/quasirecomb</url>
     <name>QuasiRecomb</name>
-    
+
     <developers>
         <developer>
             <id>toepfera</id>
@@ -16,13 +16,13 @@
             <email>armin.toepfer@gmail.com</email>
         </developer>
     </developers>
-    
+
     <scm>
         <connection>scm:git@github.com:armintoepfer/QuasiRecomb.git</connection>
         <developerConnection>scm:git@github.com:armintoepfer/QuasiRecomb.git</developerConnection>
         <url>https://github.com/armintoepfer/QuasiRecomb</url>
     </scm>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -51,7 +51,7 @@
                         </manifest>
                         <manifestEntries>
                             <mode>development</mode>
-                            
+
                             <url>${project.url}</url>
                             <author>value</author>
                         </manifestEntries>
@@ -86,7 +86,7 @@
     </properties>
 
     <dependencies>
-     
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -99,16 +99,10 @@
             <artifactId>args4j</artifactId>
             <version>2.0.16</version>
         </dependency>
-        <!--        <dependency>
-            <groupId>cc.mallet</groupId>
-            <artifactId>mallet</artifactId>
-            <version>2.0.7</version>
-        </dependency>-->
         <dependency>
             <groupId>org.javatuples</groupId>
             <artifactId>javatuples</artifactId>
             <version>1.2</version>
-            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -125,11 +119,6 @@
             <artifactId>jfreechart</artifactId>
             <version>1.0.13</version>
         </dependency>
-        <!--        <dependency>
-            <groupId>com.boundary</groupId>
-            <artifactId>high-scale-lib</artifactId>
-            <version>1.0.3</version>
-        </dependency>-->
         <dependency>
             <groupId>commons-math</groupId>
             <artifactId>commons-math</artifactId>
@@ -150,7 +139,7 @@
     <repositories>
         <repository>
             <id>ibiblio</id>
-            <url>http://www.ibiblio.org/maven/</url>			
+            <url>http://www.ibiblio.org/maven/</url>
         </repository>
         <repository>
             <id>snapshots</id>
@@ -163,7 +152,7 @@
         <!--        <repository>
             <id>biojava-maven-repo</id>
             <name>BioJava repository</name>
-            <url>http://www.biojava.org/download/maven/</url>			
+            <url>http://www.biojava.org/download/maven/</url>
         </repository>-->
     </repositories>
 </project>

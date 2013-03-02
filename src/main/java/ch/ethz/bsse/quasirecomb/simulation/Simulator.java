@@ -191,7 +191,7 @@ public class Simulator {
                 coverage[start + j]++;
             }
             int hap = frequency.roll();
-            FutureTask<Read> futureTask_1 = new FutureTask<>(new CallableSimulatorSingle(l, epsilon, n, haplotypes, hap, start));
+            FutureTask<Read> futureTask_1 = new FutureTask<>(new CallableSimulatorFulllength(l, epsilon, n, haplotypes, hap, start));
             taskList.add(futureTask_1);
             Globals.getINSTANCE().getExecutor().execute(futureTask_1);
             Globals.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");

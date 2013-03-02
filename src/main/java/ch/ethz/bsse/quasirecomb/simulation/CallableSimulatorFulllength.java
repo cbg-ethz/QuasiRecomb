@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class CallableSimulatorSingle implements Callable<Read> {
+public class CallableSimulatorFulllength implements Callable<Read> {
 
     private int length;
     private double epsilon;
@@ -37,7 +37,7 @@ public class CallableSimulatorSingle implements Callable<Read> {
     private int hap;
     private int start;
 
-    public CallableSimulatorSingle(int length, double epsilon, int n, String[] haplotypes, int hap, int start) {
+    public CallableSimulatorFulllength(int length, double epsilon, int n, String[] haplotypes, int hap, int start) {
         this.epsilon = epsilon;
         this.n = n;
         this.haplotypes = haplotypes;

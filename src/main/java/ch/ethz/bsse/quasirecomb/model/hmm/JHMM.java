@@ -21,7 +21,6 @@ import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
-import ch.ethz.bsse.quasirecomb.model.hmm.Regularizations;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
@@ -47,14 +46,39 @@ import org.javatuples.Triplet;
  *
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class JHMM {
+public class JHMM extends Garage {
 
+    protected int Kmin;
+    protected int N;
+    protected int L;
+    protected int K;
+    protected int n;
+    protected double[][] snv;
+    protected double[][] tauOmega;
+    //rho[j][k][l] := transition prob. at position j, for l given k
+    protected double[][][] rho;
+    protected double[] pi;
+    protected double[][][] mu;
+    protected double[] eps;
+    protected double[] antieps;
+    protected double loglikelihood;
+    protected double[][][] nJKL;
+    protected double[][][] nJKV;
+    protected double[] nneqPos;
+    protected double[] muPrior;
+    protected Read[] allReads;
+    protected int restart = 0;
+    protected int coverage[];
+    protected int muChanged = 0;
+    protected int rhoChanged = 0;
+    protected boolean paired;
+    protected double[][][] rho_old;
+    protected double[][][] mu_old;
     private int oldFlatMu = -1;
     private boolean biasMu = false;
     private int biasCounter = 0;
     private int unBiasCounter = 0;
-    int currentIndex = 0;
-    int s = 0;
+    private int s = 0;
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon, int Kmin) {
         this(reads, N, L, K, n, epsilon,
@@ -96,27 +120,47 @@ public class JHMM {
         s++;
     }
 
-    private void clearGarage() {
-        if (Globals.getINSTANCE().isSTORAGE()) {
-            available.clear();
-            garage.clear();
-            for (int i = 0; i < Globals.getINSTANCE().getCpus(); i++) {
-                available.add(i);
-                garage.put(i, new TempJHMMStorage(L, K, n, i));
+    private void eStep() {
+        clearGarage(L, K, n);
+        this.loglikelihood = 0d;
+        List<Future<Double>> results = new ArrayList<>();
+        final int readAmount = allReads.length;
+
+        for (int i = 0; i < readAmount; i += Globals.getINSTANCE().getSTEPS()) {
+            int b = i + Globals.getINSTANCE().getSTEPS();
+            if (b >= readAmount) {
+                b = readAmount;
+            }
+            results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b))));
+            Globals.getINSTANCE().printPercentage(K, (double) i / readAmount, Kmin);
+        }
+        Globals.getINSTANCE().getExecutor().shutdown();
+        try {
+            while (!Globals.getINSTANCE().getExecutor().awaitTermination(1, TimeUnit.SECONDS)) {
+                TimeUnit.MILLISECONDS.sleep(10);
+            }
+        } catch (InterruptedException e) {
+            System.err.println(e);
+            Utils.error();
+            System.exit(0);
+        }
+
+        for (int i = 0; i < results.size(); i++) {
+            try {
+                Double llh = results.get(i).get();
+                loglikelihood += llh;
+            } catch (InterruptedException | ExecutionException ex) {
+                Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
+        updateExpectedCounts();
+        Globals.renewExecutor();
     }
 
-    private void mergeGarage() {
+    private void updateExpectedCounts() {
         if (Globals.getINSTANCE().isSTORAGE()) {
-            if (available.size() != Globals.getINSTANCE().getCpus()) {
-                throw new IllegalStateException("Not all storages have been returned");
-            }
-            Iterator<TempJHMMStorage> iterator = this.garage.values().iterator();
-            TempJHMMStorage store = iterator.next();
-            while (iterator.hasNext()) {
-                store.merge(iterator.next());
-            }
+            TempJHMMStorage store = mergeGarage();
             this.nJKL = new double[L][K][K];
             this.nJKV = new double[L][K][n];
             this.nneqPos = new double[L];
@@ -134,48 +178,6 @@ public class JHMM {
         }
     }
 
-    private void eStep() {
-        clearGarage();
-        this.loglikelihood = 0d;
-        List<Future<Double>> results = new ArrayList<>();
-        final int readAmount = allReads.length;
-
-        for (int i = 0; i < readAmount; i += Globals.getINSTANCE().getSTEPS()) {
-            int b = i + Globals.getINSTANCE().getSTEPS();
-            if (b >= readAmount) {
-                b = readAmount;
-            }
-//            results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMM(this, allReads[i])));
-
-            results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b))));
-            Globals.getINSTANCE().printPercentage(K, (double) i / readAmount, Kmin);
-        }
-        Globals.getINSTANCE().getExecutor().shutdown();
-        try {
-            while (!Globals.getINSTANCE().getExecutor().awaitTermination(1, TimeUnit.SECONDS)) {
-                TimeUnit.MILLISECONDS.sleep(10);
-                System.out.println("sleeping");
-            }
-        } catch (InterruptedException e) {
-            System.err.println("e");
-            Utils.error();
-            System.exit(0);
-        }
-
-        for (int i = 0; i < results.size(); i++) {
-            try {
-                Double llh = results.get(i).get();
-                loglikelihood += llh;
-            } catch (InterruptedException | ExecutionException ex) {
-                Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-        mergeGarage();
-        Globals.renewExecutor();
-    }
-
-    
     public void computeSNVPosterior() {
         for (int j = 0; j < L; j++) {
             for (int v = 0; v < n; v++) {
@@ -188,12 +190,8 @@ public class JHMM {
     }
 
     private void maximizeMu() {
-        System.out.print("");
         double[] muJKV;
         for (int j = 0; j < L; j++) {
-            if (j == 600) {
-                int a = 2;
-            }
             for (int k = 0; k < K; k++) {
                 double eta = 0;
                 if (Globals.getINSTANCE().getINTERPOLATE_MU() > 0) {
@@ -448,35 +446,6 @@ public class JHMM {
         }
         return Triplet.with(argMin.getValue0(), argMin.getValue1(), min);
     }
-    protected int Kmin;
-    protected int N;
-    protected int L;
-    protected int K;
-    protected int n;
-    //rho[j][k][l] := transition prob. at position j, for l given k
-    protected double[][] snv;
-    protected double[][] tauOmega;
-    protected double[][][] rho;
-    protected double[] pi;
-    protected double[][][] mu;
-    protected double[] eps;
-    protected double[] antieps;
-    protected double loglikelihood;
-    protected double[][][] nJKL;
-    protected double[][][] nJKV;
-    protected double[] nneqPos;
-    protected double[] muPrior;
-//    protected Read[] currentReads;
-    protected Read[] allReads;
-    protected int restart = 0;
-    protected int coverage[];
-    protected int muChanged = 0;
-    protected int rhoChanged = 0;
-    protected boolean paired;
-    protected Map<Integer, TempJHMMStorage> garage = new ConcurrentHashMap<>();
-    protected final List<Integer> available = new ArrayList<>();
-    protected double[][][] rho_old;
-    protected double[][][] mu_old;
 
     protected void changedMu(double a, double b) {
         if (Math.abs(a - b) > Globals.getINSTANCE().getPCHANGE()) {
@@ -568,33 +537,6 @@ public class JHMM {
         }
     }
 
-    
-    public TempJHMMStorage getStorage() {
-        synchronized (this.available) {
-            while (!available.iterator().hasNext()) {
-                try {
-                    notify();
-                    TimeUnit.MILLISECONDS.sleep(10);
-                    System.err.println("sleep");
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-//            System.out.println("GET " + s++);
-            Integer i = available.iterator().next();
-            available.remove(i);
-            return garage.get(i);
-        }
-    }
-
-    
-    public void free(int id) {
-        synchronized (this.available) {
-            this.available.add(id);
-        }
-    }
-
-    
     public int getMuFlats() {
         int flats = 0;
         for (int j = 0; j < L; j++) {
@@ -615,7 +557,6 @@ public class JHMM {
         return flats;
     }
 
-    
     public int getNjkvFlats() {
         int flats = 0;
         for (int j = 0; j < L; j++) {
@@ -634,7 +575,6 @@ public class JHMM {
         return flats;
     }
 
-    
     public int getRhoFlats() {
         int flats = 0;
         for (int j = 0; j < L - 1; j++) {
@@ -653,7 +593,6 @@ public class JHMM {
         return flats;
     }
 
-    
     public int getNjklFlats() {
         int flats = 0;
         for (int j = 0; j < L - 1; j++) {
@@ -672,87 +611,62 @@ public class JHMM {
         return flats;
     }
 
-    
     public double[][] getTauOmega() {
         return tauOmega;
     }
 
-    
     public int getK() {
         return K;
     }
 
-    
     public int getL() {
         return L;
     }
 
-    
     public int getN() {
         return N;
     }
 
-    
     public int getn() {
         return n;
     }
 
-    
     public double[] getEps() {
         return eps;
     }
 
-    
     public double[] getAntieps() {
         return antieps;
     }
 
-    
     public double getLoglikelihood() {
         return loglikelihood;
     }
 
-    
     public double[][][] getMu() {
         return mu;
     }
 
-    
     public double[] getPi() {
         return pi;
     }
 
-    
     public double[][][] getRho() {
         return rho;
     }
 
-    
     public int getRestart() {
         return restart;
     }
 
-    
     public int getMuChanged() {
         return muChanged;
     }
 
-    
     public int getRhoChanged() {
         return rhoChanged;
     }
 
-    
-    public void incBeta() {
-        throw new UnsupportedOperationException("Inc beta is not supported in interpolated version");
-    }
-
-    
-    public double getBeta() {
-        throw new UnsupportedOperationException("Get beta is not supported in interpolated version");
-    }
-
-    
     public double[][] getSnv() {
         return this.snv;
     }

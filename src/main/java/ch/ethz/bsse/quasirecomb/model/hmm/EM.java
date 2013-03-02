@@ -80,8 +80,6 @@ public class EM extends Utils {
             }
             Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
         } else {
-            long time = System.currentTimeMillis();
-
             try {
                 FileInputStream fis = new FileInputStream(pathOptimum);
                 try (ObjectInputStream in = new ObjectInputStream(fis)) {
