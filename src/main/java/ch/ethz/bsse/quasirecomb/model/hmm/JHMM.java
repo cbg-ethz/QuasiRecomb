@@ -15,15 +15,13 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.model.hmm.interpolated;
+package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
-import ch.ethz.bsse.quasirecomb.model.hmm.JHMMInterface;
 import ch.ethz.bsse.quasirecomb.model.hmm.Regularizations;
-import ch.ethz.bsse.quasirecomb.model.hmm.annealing.JHMMannealing;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
@@ -49,7 +47,7 @@ import org.javatuples.Triplet;
  *
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class JHMMinterpolated implements JHMMInterface {
+public class JHMM {
 
     private int oldFlatMu = -1;
     private boolean biasMu = false;
@@ -58,14 +56,14 @@ public class JHMMinterpolated implements JHMMInterface {
     int currentIndex = 0;
     int s = 0;
 
-    public JHMMinterpolated(Read[] reads, int N, int L, int K, int n, double epsilon, int Kmin) {
+    public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon, int Kmin) {
         this(reads, N, L, K, n, epsilon,
                 Random.generateInitRho(L - 1, K),
                 Random.generateInitPi(L, K),
                 Random.generateMuInit(L, K, n), Kmin);
     }
 
-    public JHMMinterpolated(Read[] reads, int N, int L, int K, int n, double eps, double[][][] rho, double[] pi, double[][][] mu, int Kmin) {
+    public JHMM(Read[] reads, int N, int L, int K, int n, double eps, double[][][] rho, double[] pi, double[][][] mu, int Kmin) {
         this.eps = new double[L];
         this.antieps = new double[L];
         for (int j = 0; j < L; j++) {
@@ -77,7 +75,7 @@ public class JHMMinterpolated implements JHMMInterface {
         this.compute();
     }
 
-    public JHMMinterpolated(Read[] reads, int N, int L, int K, int n, double[] eps, double[][][] rho, double[] pi, double[][][] mu, int Kmin) {
+    public JHMM(Read[] reads, int N, int L, int K, int n, double[] eps, double[][][] rho, double[] pi, double[][][] mu, int Kmin) {
         this.eps = eps;
         this.antieps = new double[L];
         for (int j = 0; j < L; j++) {
@@ -169,7 +167,7 @@ public class JHMMinterpolated implements JHMMInterface {
                 Double llh = results.get(i).get();
                 loglikelihood += llh;
             } catch (InterruptedException | ExecutionException ex) {
-                Logger.getLogger(JHMMannealing.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
@@ -177,7 +175,7 @@ public class JHMMinterpolated implements JHMMInterface {
         Globals.renewExecutor();
     }
 
-    @Override
+    
     public void computeSNVPosterior() {
         for (int j = 0; j < L; j++) {
             for (int v = 0; v < n; v++) {
@@ -570,7 +568,7 @@ public class JHMMinterpolated implements JHMMInterface {
         }
     }
 
-    @Override
+    
     public TempJHMMStorage getStorage() {
         synchronized (this.available) {
             while (!available.iterator().hasNext()) {
@@ -579,7 +577,7 @@ public class JHMMinterpolated implements JHMMInterface {
                     TimeUnit.MILLISECONDS.sleep(10);
                     System.err.println("sleep");
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(JHMMInterface.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
 //            System.out.println("GET " + s++);
@@ -589,14 +587,14 @@ public class JHMMinterpolated implements JHMMInterface {
         }
     }
 
-    @Override
+    
     public void free(int id) {
         synchronized (this.available) {
             this.available.add(id);
         }
     }
 
-    @Override
+    
     public int getMuFlats() {
         int flats = 0;
         for (int j = 0; j < L; j++) {
@@ -617,7 +615,7 @@ public class JHMMinterpolated implements JHMMInterface {
         return flats;
     }
 
-    @Override
+    
     public int getNjkvFlats() {
         int flats = 0;
         for (int j = 0; j < L; j++) {
@@ -636,7 +634,7 @@ public class JHMMinterpolated implements JHMMInterface {
         return flats;
     }
 
-    @Override
+    
     public int getRhoFlats() {
         int flats = 0;
         for (int j = 0; j < L - 1; j++) {
@@ -655,7 +653,7 @@ public class JHMMinterpolated implements JHMMInterface {
         return flats;
     }
 
-    @Override
+    
     public int getNjklFlats() {
         int flats = 0;
         for (int j = 0; j < L - 1; j++) {
@@ -674,87 +672,87 @@ public class JHMMinterpolated implements JHMMInterface {
         return flats;
     }
 
-    @Override
+    
     public double[][] getTauOmega() {
         return tauOmega;
     }
 
-    @Override
+    
     public int getK() {
         return K;
     }
 
-    @Override
+    
     public int getL() {
         return L;
     }
 
-    @Override
+    
     public int getN() {
         return N;
     }
 
-    @Override
+    
     public int getn() {
         return n;
     }
 
-    @Override
+    
     public double[] getEps() {
         return eps;
     }
 
-    @Override
+    
     public double[] getAntieps() {
         return antieps;
     }
 
-    @Override
+    
     public double getLoglikelihood() {
         return loglikelihood;
     }
 
-    @Override
+    
     public double[][][] getMu() {
         return mu;
     }
 
-    @Override
+    
     public double[] getPi() {
         return pi;
     }
 
-    @Override
+    
     public double[][][] getRho() {
         return rho;
     }
 
-    @Override
+    
     public int getRestart() {
         return restart;
     }
 
-    @Override
+    
     public int getMuChanged() {
         return muChanged;
     }
 
-    @Override
+    
     public int getRhoChanged() {
         return rhoChanged;
     }
 
-    @Override
+    
     public void incBeta() {
         throw new UnsupportedOperationException("Inc beta is not supported in interpolated version");
     }
 
-    @Override
+    
     public double getBeta() {
         throw new UnsupportedOperationException("Get beta is not supported in interpolated version");
     }
 
-    @Override
+    
     public double[][] getSnv() {
         return this.snv;
     }

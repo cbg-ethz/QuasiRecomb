@@ -20,8 +20,6 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.hmm.annealing.SingleEM;
-import ch.ethz.bsse.quasirecomb.model.hmm.interpolated.SingleEMinterpolated;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -59,12 +57,7 @@ public class EM extends Utils {
             double maxLLH = Double.NEGATIVE_INFINITY;
             double bics[] = new double[Globals.getINSTANCE().getREPEATS()];
             for (int i = 0; i < Globals.getINSTANCE().getREPEATS(); i++) {
-                SingleEMInterface sem = null;
-                if (Globals.getINSTANCE().isANNEALING()) {
-                    sem = new SingleEM(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), i);
-                } else {
-                    sem = new SingleEMinterpolated(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), i);
-                }
+                SingleEM sem = new SingleEM(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), i);
                 bics[i] = sem.getOptimalResult().getBIC();
                 if (sem.getLoglikelihood() > maxLLH) {
                     maxLLH = sem.getLoglikelihood();
@@ -72,7 +65,7 @@ public class EM extends Utils {
                 }
             }
             medianBIC = new Median().evaluate(bics);
-            lowerBoundBIC = medianBIC - new StandardDeviation().evaluate(bics)*Math.sqrt(1+1d/bics.length);
+            lowerBoundBIC = medianBIC - new StandardDeviation().evaluate(bics) * Math.sqrt(1 + 1d / bics.length);
         } else {
             pathOptimum = Globals.getINSTANCE().getOPTIMUM();
         }
@@ -100,12 +93,7 @@ public class EM extends Utils {
 
             Globals.getINSTANCE().printBIC(K, (int) or.getBIC());
             System.out.print("\n");
-            SingleEMInterface bestEM = null;
-            if (Globals.getINSTANCE().isANNEALING()) {
-                bestEM = new SingleEM(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
-            } else {
-                bestEM = new SingleEMinterpolated(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
-            }
+            SingleEM bestEM = new SingleEM(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
             this.or = bestEM.getOptimalResult();
             if (Globals.getINSTANCE().isLOGGING()) {
                 Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "log_K" + K, Globals.getINSTANCE().getLOG().toString());

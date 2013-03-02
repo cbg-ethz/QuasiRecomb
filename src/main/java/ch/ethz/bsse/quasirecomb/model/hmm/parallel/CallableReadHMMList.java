@@ -18,8 +18,8 @@
 package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.model.hmm.JHMMInterface;
 import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMMStatic;
+import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
 import java.util.concurrent.Callable;
 
 /**
@@ -27,10 +27,10 @@ import java.util.concurrent.Callable;
  */
 public class CallableReadHMMList implements Callable<Double> {
 
-    private JHMMInterface jhmm;
+    private JHMM jhmm;
     private Read[] reads;
 
-    public CallableReadHMMList(JHMMInterface jhmm, Read[] reads) {
+    public CallableReadHMMList(JHMM jhmm, Read[] reads) {
         this.jhmm = jhmm;
         this.reads = reads;
     }

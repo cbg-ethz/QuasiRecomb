@@ -55,13 +55,13 @@ public class Preprocessing {
      */
     public static void workflow(String input, int Kmin, int Kmax) {
         Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
+        //parse file
         Globals.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
-        List<Read> readList = Lists.newArrayListWithExpectedSize(reads.length);
+        //fix alignment to position 0
         for (Read r : reads) {
             Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
-            readList.add(r);
         }
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         Globals.getINSTANCE().setALIGNMENT_END(L);
@@ -77,18 +77,7 @@ public class Preprocessing {
             Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
         }
         Utils.appendFile(Globals.getINSTANCE().getSAVEPATH()+"gap.txt", indelSB.toString());
-//        for (Read r : reads) {
-//            r.shrink();
-////            if (r.getWatsonBegin() < 300) {
-////                if (r.isPaired()) {
-////                    readList.add(r.unpair());
-////                }
-////            }
-//            Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
-//        }
-        reads = readList.toArray(new Read[readList.size()]);
-        readList.clear();
-        readList = null;
+
         Globals.getINSTANCE().print("Modifying reads\t100%");
 
         Globals.getINSTANCE().println("Computing entropy\t");
@@ -138,9 +127,9 @@ public class Preprocessing {
             }
             Globals.getINSTANCE().print("Allel frequencies\t" + (Math.round((allelCounter++ / L) * 100)) + "%");
         }
-        Globals.getINSTANCE().setMU_PRIOR(alignment);
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "weighted_hit_dist.txt", sbw.toString());
+        sb.setLength(0);
         sb = null;
         System.gc();
         System.gc();
@@ -203,22 +192,22 @@ public class Preprocessing {
         return map.keySet().size();
     }
 
-    private static void saveUnique(Read[] reads) {
-        if (Globals.getINSTANCE().isDEBUG()) {
-            StringBuilder sb = new StringBuilder();
-            for (Read r : reads) {
-                sb.append(r.getCount()).append("\t");
-                if (r.getCount() < 1000) {
-                    sb.append("\t");
-                }
-                for (int i = 0; i < r.getBegin(); i++) {
-                    sb.append(" ");
-                }
-                sb.append(Utils.reverse(r.getSequence())).append("\n");
-            }
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "in.fasta", sb.toString());
-        }
-    }
+//    private static void saveUnique(Read[] reads) {
+//        if (Globals.getINSTANCE().isDEBUG()) {
+//            StringBuilder sb = new StringBuilder();
+//            for (Read r : reads) {
+//                sb.append(r.getCount()).append("\t");
+//                if (r.getCount() < 1000) {
+//                    sb.append("\t");
+//                }
+//                for (int i = 0; i < r.getBegin(); i++) {
+//                    sb.append(" ");
+//                }
+//                sb.append(Utils.reverse(r.getSequence())).append("\n");
+//            }
+//            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "in.fasta", sb.toString());
+//        }
+//    }
 
     public static int[][] countPos(Read[] reads, int L) {
         int[][] alignment = new int[L][5];

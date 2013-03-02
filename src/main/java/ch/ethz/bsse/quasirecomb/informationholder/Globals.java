@@ -122,7 +122,6 @@ public class Globals {
     private String GENOME;
     private String OPTIMUM;
     private String[] HAPLOTYPE_ARRAY_EMPIRICAL;
-    private int[][] MU_PRIOR;
     private String SAVEPATH;
     private StringBuilder LOG = new StringBuilder();
     private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
@@ -222,14 +221,6 @@ public class Globals {
 
     public void setPRIORMU(boolean PRIORMU) {
         this.PRIORMU = PRIORMU;
-    }
-
-    public int[][] getMU_PRIOR() {
-        return MU_PRIOR;
-    }
-
-    public void setMU_PRIOR(int[][] MU_PRIOR) {
-        this.MU_PRIOR = MU_PRIOR;
     }
 
     public double getCURRENT_DELTA_LLH() {

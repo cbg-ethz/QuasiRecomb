@@ -15,9 +15,8 @@
  * You should have received a copy of the GNU General Public License along with
  * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
-package ch.ethz.bsse.quasirecomb.model.hmm.annealing;
+package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.model.hmm.SingleEMInterface;
 import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
@@ -36,11 +35,11 @@ import org.javatuples.Triplet;
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class SingleEM implements SingleEMInterface {
+public class SingleEM {
 
     private long time = -1;
     private StringBuilder sb = new StringBuilder();
-    private JHMMannealing jhmm;
+    private JHMM jhmm;
     private int iterations = 0;
     private int N;
     private int K;
@@ -66,9 +65,9 @@ public class SingleEM implements SingleEMInterface {
         this.repeat = repeat;
         time(false);
         if (Globals.getINSTANCE().isPRUNE()) {
-            jhmm = new JHMMannealing(reads, N, L, K * 2, n, Globals.getINSTANCE().getESTIMATION_EPSILON(), K);
+            jhmm = new JHMM(reads, N, L, K * 2, n, Globals.getINSTANCE().getESTIMATION_EPSILON(), K);
         } else {
-            jhmm = new JHMMannealing(reads, N, L, K, n, Globals.getINSTANCE().getESTIMATION_EPSILON(), K);
+            jhmm = new JHMM(reads, N, L, K, n, Globals.getINSTANCE().getESTIMATION_EPSILON(), K);
         }
         this.K = jhmm.getK();
         start();
@@ -84,7 +83,7 @@ public class SingleEM implements SingleEMInterface {
         this.reads = reads;
         this.repeat = -99;
         time(false);
-        jhmm = new JHMMannealing(reads, N, L, K, n, or.getEps(), or.getRho(), or.getPi(), or.getMu(), K);
+        jhmm = new JHMM(reads, N, L, K, n, or.getEps(), or.getRho(), or.getPi(), or.getMu(), K);
         this.K = jhmm.getK();
         start();
     }
@@ -96,8 +95,8 @@ public class SingleEM implements SingleEMInterface {
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
-                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega(), jhmm.getSnv());
-        Utils.saveOptimum(save + ".optimum", localOr);
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega(),jhmm.getSnv());
+//        Utils.saveOptimum(save + ".optimum", localOr);
         Summary summary = new Summary();
         Utils.saveFile(save + ".txt", summary.print(localOr));
 //        Utils.saveFile(save + ".html", summary.html(localOr));
@@ -113,8 +112,6 @@ public class SingleEM implements SingleEMInterface {
         }
 
         this.iterate();
-
-        jhmm.computeSNVPosterior();
 
         Globals.getINSTANCE().log("###c(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\n");
 
@@ -135,62 +132,57 @@ public class SingleEM implements SingleEMInterface {
         if (Globals.getINSTANCE().isDEBUG()) {
             Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", "" + jhmm.getLoglikelihood());
         }
-        while (jhmm.getBeta() <= 1) {
-            do {
-                Globals.getINSTANCE().minMIN_BIC(maxBIC);
-                iterations++;
-                history.add(loglikelihood);
-                oldllh = loglikelihood;
-                loglikelihood = jhmm.getLoglikelihood();
-                if (Globals.getINSTANCE().isSTOP_QUICK() && Math.abs((oldllh - loglikelihood) / loglikelihood) < 1e-2 && loglikelihood != Globals.getINSTANCE().getMAX_LLH()
-                        && ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) > 0.1) {
-                    if (Globals.getINSTANCE().isDEBUG()) {
-                        System.out.println("too small");
-                    }
+        do {
+            Globals.getINSTANCE().minMIN_BIC(maxBIC);
+            iterations++;
+            history.add(loglikelihood);
+            oldllh = loglikelihood;
+            loglikelihood = jhmm.getLoglikelihood();
+            if (Globals.getINSTANCE().isSTOP_QUICK() && Math.abs((oldllh - loglikelihood) / loglikelihood) < 1e-2 && loglikelihood != Globals.getINSTANCE().getMAX_LLH()
+                    && ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) > 0.1) {
+                if (Globals.getINSTANCE().isDEBUG()) {
+                    System.out.println("too small");
+                }
+                break;
+            }
+            if (iterations > 500) {
+                if (history.get(iterations - 500) - loglikelihood > -1) {
+                    Globals.getINSTANCE().log("break 500;\t");
                     break;
                 }
-//                if (iterations > 500) {
-//                    if (history.get(iterations - 500) - loglikelihood > -1) {
-//                        Globals.getINSTANCE().log("break 500;\t");
-//                        break;
-//                    }
-//                }
-                log(loglikelihood);
-                Globals.getINSTANCE().setCURRENT_DELTA_LLH((oldllh - loglikelihood) / loglikelihood);
-                if (Globals.getINSTANCE().isDEBUG()) {
-                    if (loglikelihood < 0 && oldllh < 0) {
-                        Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
-                    } else if (loglikelihood > 0 && oldllh > 0) {
-                        Globals.getINSTANCE().log((loglikelihood - oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
-                    } else if (loglikelihood > 0 && oldllh < 0) {
-                        Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
-                    }
-                    Globals.getINSTANCE().log(loglikelihood + "\n");
-                }
-
-                if (Globals.getINSTANCE().isPRUNE() && K > Kmin) {
-                    this.jhmm = prune();
-                } else {
-                    jhmm.restart();
-                }
-                if (Globals.getINSTANCE().isDEBUG()) {
-                    Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", " " + jhmm.getLoglikelihood());
-                }
-
-                if (Globals.getINSTANCE().isSNAPSHOTS()) {
-                    this.snapshot();
-                }
-            } while ((Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta && !Globals.getINSTANCE().isPDELTA()) || (Globals.getINSTANCE().isPDELTA() && (jhmm.getRhoChanged() + jhmm.getMuChanged()) != 0));
-            jhmm.incBeta();
-            System.out.println("");
-            System.out.println("BETA: " + jhmm.getBeta());
-            if (Globals.getINSTANCE().isDEBUG()) {
-                Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", "\n");
             }
+            log(loglikelihood);
+            Globals.getINSTANCE().setCURRENT_DELTA_LLH((oldllh - loglikelihood) / loglikelihood);
+            if (Globals.getINSTANCE().isDEBUG()) {
+                if (loglikelihood < 0 && oldllh < 0) {
+                    Globals.getINSTANCE().log((oldllh - loglikelihood) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
+                } else if (loglikelihood > 0 && oldllh > 0) {
+                    Globals.getINSTANCE().log((loglikelihood - oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
+                } else if (loglikelihood > 0 && oldllh < 0) {
+                    Globals.getINSTANCE().log((loglikelihood + oldllh) / loglikelihood + "\tm(" + jhmm.getMuFlats() + "|" + jhmm.getNjkvFlats() + ")\tr(" + jhmm.getRhoFlats() + "|" + jhmm.getNjklFlats() + ")\tc(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\t" + ((loglikelihood - Globals.getINSTANCE().getMAX_LLH()) / loglikelihood) + "\t");
+                }
+                Globals.getINSTANCE().log(loglikelihood + "\n");
+            }
+
+            if (Globals.getINSTANCE().isPRUNE() && K > Kmin) {
+                this.jhmm = prune();
+            } else {
+                jhmm.restart();
+            }
+            if (Globals.getINSTANCE().isDEBUG()) {
+                Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", " " + jhmm.getLoglikelihood());
+            }
+
+            if (Globals.getINSTANCE().isSNAPSHOTS()) {
+                this.snapshot();
+            }
+        } while ((Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta && !Globals.getINSTANCE().isPDELTA()) || (Globals.getINSTANCE().isPDELTA() && (jhmm.getRhoChanged() + jhmm.getMuChanged()) != 0));
+        if (Globals.getINSTANCE().isDEBUG()) {
+            Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", "\n");
         }
     }
 
-    private JHMMannealing prune() {
+    private JHMM prune() {
 //        double currentBIC = calcBIC(jhmm);
         double currentBIC = Double.MAX_VALUE;
         Triplet<Integer, Integer, Double> minKL = jhmm.minKL();
@@ -338,13 +330,13 @@ public class SingleEM implements SingleEMInterface {
         }
 
 
-        JHMMannealing merge = new JHMMannealing(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoMerging, piMerging, muMerging, Kmin);
+        JHMM merge = new JHMM(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoMerging, piMerging, muMerging, Kmin);
         double mergeBIC = calcBIC(merge);
-        JHMMannealing del = new JHMMannealing(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoDeletion, piDeletion, muDeletion, Kmin);
+        JHMM del = new JHMM(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoDeletion, piDeletion, muDeletion, Kmin);
         double delBIC = calcBIC(del);
 
         maxBIC = currentBIC;
-        JHMMannealing argMax = jhmm;
+        JHMM argMax = jhmm;
         String s = "C";
         if (delBIC < maxBIC) {
             argMax = del;
@@ -364,14 +356,14 @@ public class SingleEM implements SingleEMInterface {
         return argMax;
     }
 
-    private double calcBIC(JHMMannealing jhmm) {
+    private double calcBIC(JHMM jhmm) {
         // count free parameters
         double BIC_current = jhmm.getLoglikelihood();
         BIC_current -= (freeParameters(jhmm) / 2d) * Math.log(N);
         return BIC_current;
     }
 
-    private int freeParameters(JHMMannealing jhmm) {
+    private int freeParameters(JHMM jhmm) {
         int freeParameters = 0;
         double ERROR = 1e-15;
 
@@ -443,7 +435,6 @@ public class SingleEM implements SingleEMInterface {
         sb.append(llh).append("\t\t").append("\n");
     }
 
-    @Override
     public String getOptimumPath() {
         if (!Globals.getINSTANCE().isSNAPSHOTS()) {
             this.snapshot();
@@ -455,13 +446,12 @@ public class SingleEM implements SingleEMInterface {
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
-                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega(), jhmm.getSnv());
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega(),jhmm.getSnv());
         Utils.saveOptimum(save + ".optimum", localOr);
 
         return Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations + ".optimum";
     }
 
-    @Override
     public void calcBic() {
         //overview
         double BIC_current = this.jhmm.getLoglikelihood();
@@ -492,7 +482,6 @@ public class SingleEM implements SingleEMInterface {
                 BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart(), tauOmegaCopy,snvCopy);
     }
 
-    @Override
     public void printMeanTime() {
         long sum = 0;
         for (long l : times) {
@@ -501,12 +490,10 @@ public class SingleEM implements SingleEMInterface {
         System.out.println("Mean:" + ((double) sum) / times.size());
     }
 
-    @Override
     public OptimalResult getOptimalResult() {
         return or;
     }
 
-    @Override
     public double getLoglikelihood() {
         return loglikelihood;
     }

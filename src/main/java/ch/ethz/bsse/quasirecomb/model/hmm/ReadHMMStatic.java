@@ -25,11 +25,11 @@ import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
  */
 public class ReadHMMStatic {
 
-    private static void free(JHMMInterface jhmm, TempJHMMStorage storage) {
+    private static void free(JHMM jhmm, TempJHMMStorage storage) {
         jhmm.free(storage.getId());
     }
 
-    public static double computeFB(JHMMInterface jhmm, Read read) {
+    public static double computeFB(JHMM jhmm, Read read) {
         try {
             TempJHMMStorage storage = jhmm.getStorage();
             int begin = read.getBegin();
