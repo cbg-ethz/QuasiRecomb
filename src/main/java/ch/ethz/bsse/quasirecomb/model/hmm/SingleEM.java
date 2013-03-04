@@ -95,7 +95,7 @@ public class SingleEM {
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
-                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega(),jhmm.getSnv());
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), jhmm.getSnv());
 //        Utils.saveOptimum(save + ".optimum", localOr);
         Summary summary = new Summary();
         Utils.saveFile(save + ".txt", summary.print(localOr));
@@ -446,7 +446,7 @@ public class SingleEM {
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
-                calcBIC(), jhmm.getEps(), jhmm.getRestart(), jhmm.getTauOmega(),jhmm.getSnv());
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), jhmm.getSnv());
         Utils.saveOptimum(save + ".optimum", localOr);
 
         return Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations + ".optimum";
@@ -466,20 +466,16 @@ public class SingleEM {
                 System.arraycopy(jhmm.getMu()[j][k], 0, muCopy[j][k], 0, n);
             }
         }
-        double[][] tauOmegaCopy = new double[jhmm.getTauOmega().length][L + 1];
         double[][] snvCopy = new double[jhmm.getSnv().length][jhmm.getSnv()[0].length];
         for (int j = 0; j < jhmm.getSnv().length; j++) {
             System.arraycopy(jhmm.getSnv()[j], 0, snvCopy[j], 0, jhmm.getSnv()[0].length);
-        }
-        for (int j = 0; j < jhmm.getTauOmega().length; j++) {
-            System.arraycopy(jhmm.getTauOmega()[j], 0, tauOmegaCopy[j], 0, L + 1);
         }
         this.or = new OptimalResult(N, K, L, n,
                 Arrays.copyOf(jhmm.getRho(), jhmm.getRho().length),
                 Arrays.copyOf(jhmm.getPi(), jhmm.getPi().length),
                 muCopy,
                 this.jhmm.getLoglikelihood(),
-                BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart(), tauOmegaCopy,snvCopy);
+                BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), snvCopy);
     }
 
     public void printMeanTime() {

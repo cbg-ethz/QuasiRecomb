@@ -57,6 +57,9 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean REFINEMENT;
+    private boolean SAMPLE_PROTEINS;
+    private boolean SAMPLE_READS;
     private boolean NO_QUALITY;
     private boolean WINDOW;
     private boolean UNPAIRED;
@@ -110,6 +113,7 @@ public class Globals {
     private int REPEATS;
     private int DESIRED_REPEATS;
     private int SAMPLING_NUMBER;
+    private int NREAL;
     private final int cpus = Runtime.getRuntime().availableProcessors();
     private List<Integer> runtime = new LinkedList<>();
     private long start = System.currentTimeMillis();
@@ -126,10 +130,12 @@ public class Globals {
     private String oldOut = "";
     private double hammingCount = 0;
     private int hammingMax = 0;
-    
+    private TauOmega TAU_OMEGA;
+
     private Globals() {
         df.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+
     public Globals getInstance() {
         return INSTANCE;
     }
@@ -154,6 +160,14 @@ public class Globals {
             System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
         } else {
             System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
+        }
+    }
+    public void printBIC(int K, int percentage, int bic) {
+        System.out.print("\r                                                                                                                                                   ");
+        if (MODELSELECTION) {
+            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + percentage + "%\t[BIC: " + (int) bic + "]                 ");
+        } else {
+            System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + percentage + "%\t[BIC: " + (int) bic + "]                 ");
         }
     }
 
@@ -181,7 +195,7 @@ public class Globals {
                 }
                 long time = System.currentTimeMillis() - oldTime;
                 System.out.print("\r                                                                                                                                                   ");
-                System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training") + " [K " + (int) Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "% [ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]");
+                System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training ") + " [K " + (int) Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]");
             }
         }
     }
@@ -197,6 +211,14 @@ public class Globals {
 
     public String time() {
         return df.format(new Date(System.currentTimeMillis() - start));
+    }
+
+    public TauOmega getTAU_OMEGA() {
+        return TAU_OMEGA;
+    }
+
+    public void setTAU_OMEGA(Read[] reads, int L) {
+        this.TAU_OMEGA = new TauOmega(reads, L);
     }
 
     public void setSPIKERHO(boolean SPIKERHO) {
@@ -242,6 +264,7 @@ public class Globals {
     public void incPAIRED() {
         PAIRED_COUNT.getAndIncrement();
     }
+
     public int getMERGED() {
         return MERGED_COUNT.get();
     }
@@ -714,5 +737,37 @@ public class Globals {
 
     public void setREAD_MINLENGTH(int READ_MINLENGTH) {
         this.READ_MINLENGTH = READ_MINLENGTH;
+    }
+
+    public int getNREAL() {
+        return NREAL;
+    }
+
+    public void setNREAL(int NREAL) {
+        this.NREAL = NREAL;
+    }
+
+    public boolean isSAMPLE_READS() {
+        return SAMPLE_READS;
+    }
+
+    public void setSAMPLE_READS(boolean SAMPLE_READS) {
+        this.SAMPLE_READS = SAMPLE_READS;
+    }
+
+    public boolean isSAMPLE_PROTEINS() {
+        return SAMPLE_PROTEINS;
+    }
+
+    public void setSAMPLE_PROTEINS(boolean SAMPLE_PROTEINS) {
+        this.SAMPLE_PROTEINS = SAMPLE_PROTEINS;
+    }
+
+    public boolean isREFINEMENT() {
+        return REFINEMENT;
+    }
+
+    public void setREFINEMENT(boolean REFINEMENT) {
+        this.REFINEMENT = REFINEMENT;
     }
 }

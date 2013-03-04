@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
 
@@ -62,7 +63,7 @@ public class ReadHMMStatic {
                             }
 //                            switch (read.getPosition(j)) {
 //                                case WATSON_HIT:
-//                                    sumL *= 1 - jhmm.getTauOmega()[1][jGlobal];
+//                                    sumL *= 1 - Globals.getINSTANCE().getTAU_OMEGA().getTauWatsonProbability(j, )[1][jGlobal];
 //                                    break;
 //                                case WATSON_OUT:
 //                                    sumL *= jhmm.getTauOmega()[1][jGlobal];

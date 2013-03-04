@@ -38,7 +38,6 @@ public class ModelSelection {
             Globals.getINSTANCE().setNO_RECOMB(false);
         }
     }
-
     private int kMin;
     private int kMax;
     private int N;
@@ -102,11 +101,12 @@ public class ModelSelection {
         if (em.getOr().getLlh() > optBIC || optBIC == 0) {
             or = em.getOr();
         }
+        
 
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + File.separator + "K" + or.getK() + "-snvs.txt", new Summary().snvs(or));
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-snvs.txt", new Summary().snvs(or));
         //save optimumJava
         Utils.saveOptimum(save + File.separator + "best.optimum", or);
     }

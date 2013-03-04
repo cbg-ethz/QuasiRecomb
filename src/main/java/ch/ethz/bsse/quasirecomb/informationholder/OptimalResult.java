@@ -30,7 +30,7 @@ public class OptimalResult implements Serializable {
     private int L;
     private int n;
     private double[][] snv;
-    private double[][] tauOmega;
+    private TauOmega tauOmega;
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
@@ -39,7 +39,7 @@ public class OptimalResult implements Serializable {
     private double BIC;
     private int restarts;
 
-    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts, double[][] tauOmega, double[][] snv) {
+    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts, TauOmega tauOmega, double[][] snv) {
         this.N = N;
         this.K = K;
         this.L = L;
@@ -99,12 +99,11 @@ public class OptimalResult implements Serializable {
         return restarts;
     }
 
-    public double[][] getTauOmega() {
+    public TauOmega getTauOmega() {
         return tauOmega;
     }
 
     public double[][] getSnv() {
         return snv;
     }
-    
 }

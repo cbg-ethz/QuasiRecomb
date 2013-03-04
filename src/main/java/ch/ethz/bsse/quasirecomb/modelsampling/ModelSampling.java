@@ -19,9 +19,8 @@ package ch.ethz.bsse.quasirecomb.modelsampling;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
-import ch.ethz.bsse.quasirecomb.informationholder.ReadTMP;
+import ch.ethz.bsse.quasirecomb.informationholder.TauOmega;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
-import ch.ethz.bsse.quasirecomb.utils.SFRComputing;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import static ch.ethz.bsse.quasirecomb.utils.Utils.reverse;
 import com.google.common.collect.Lists;
@@ -35,7 +34,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.sf.samtools.SAMRecord;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -49,7 +47,7 @@ public final class ModelSampling extends Utils {
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
-    private double[][] tauOmega;
+    private TauOmega tauOmega;
     private Frequency<Integer>[][] rhoArray;
     private Frequency<Byte>[][] muArray;
     private Map<byte[], Integer> reads;
@@ -57,11 +55,9 @@ public final class ModelSampling extends Utils {
     private int[] recombPerObservation;
     private Map<String, Double> hexMap = new HashMap<>();
     private StringBuilder sb = new StringBuilder();
-    private StringBuilder readBuilder = new StringBuilder();
-    private StringBuilder startStopSB = new StringBuilder();
-    private int[] coverage;
     private Map<String, Double> map = new LinkedHashMap<>();
     private final OptimalResult or;
+    private int[] coverage;
 
     public ModelSampling(OptimalResult or, String savePath) {
 //        this.amount = or.getN();
@@ -117,58 +113,100 @@ public final class ModelSampling extends Utils {
                 throw new RuntimeException("Cannot create directory: " + savePath);
             }
         }
+        StringBuilder readBuilder = new StringBuilder();
+        StringBuilder startStopSB = new StringBuilder();
         startStopSB.append("start\tstop\tstart2\tstop2\n");
         this.reads = new HashMap<>();
         byte[][] readArray = new byte[amount][L];
-//        boolean paired = tauOmega.length > 2;
-//        List<Future<SampledRead>> readFutures = Lists.newArrayListWithExpectedSize(amount);
-//        double counter = 0;
-//        for (int i = 0; i < amount; i++) {
-//            readFutures.add(Globals.getINSTANCE().getExecutor().submit(new SingleModelSampling(or, tauOmega, paired)));
-//            Globals.getINSTANCE().print("Sampling\t\t" + (Math.round((counter++ / amount) * 100)) + "%");
-//        }
-//        int x = 0;
-//        for (Future<SampledRead> f : readFutures) {
-//            try {
-//                SampledRead sr = f.get();
-//                startStopSB.append(sr.getWatsonStart()).append("\t");
-//                startStopSB.append(sr.getWatsonEnd());
-//
-//                readBuilder.append(">read").append(x).append("\n");
-//                for (byte r : sr.getWatsonReadBases()) {
-//                    readBuilder.append(reverse(r));
-//                }
-//                readBuilder.append("\n");
-//
-//                if (paired) {
-//                    startStopSB.append("\t").append(sr.getCrickStart()).append("\t");
-//                    startStopSB.append(sr.getCrickEnd()).append("\n");
-//
-//                    readBuilder.append(">read").append(x).append("\n");
-//                    for (byte r : sr.getCrickReadBases()) {
-//                        readBuilder.append(reverse(r));
-//                    }
-//                    readBuilder.append("\n");
-//                } else {
-//                    startStopSB.append("\n");
-//                }
-//
-//            } catch (InterruptedException | ExecutionException ex) {
-//                Logger.getLogger(ModelSampling.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        }
 
+        boolean paired = tauOmega.isPaired();
+        List<Future<List<SampledRead>>> readFutures = Lists.newArrayListWithExpectedSize(amount);
 
-        List<Future<byte[]>> readFutures = Lists.newArrayListWithExpectedSize(amount);
-        double counter = 0;
-        for (int i = 0; i < amount; i++) {
-            readFutures.add(Globals.getINSTANCE().getExecutor().submit(new HaplotypeSampling(or)));
-            Globals.getINSTANCE().print("Sampling\t\t" + (Math.round((counter++ / amount) * 100)) + "%");
+        Map<Integer, Double> startMap = new HashMap<>();
+        for (int j = 0; j < L; j++) {
+            if (this.tauOmega.getTauWatsonMap().get(j) == null || this.tauOmega.getTauWatsonMap().get(j).isEmpty()) {
+                continue;
+            }
+            double sum = 0d;
+            for (Map.Entry<Integer, Double> e : this.tauOmega.getTauWatsonMap().get(j).entrySet()) {
+                sum += e.getValue();
+            }
+            startMap.put(j, sum);
         }
-        int x = 0;
-        for (Future<byte[]> f : readFutures) {
+        Frequency<Integer> startF = new Frequency<>(startMap);
+
+        if (Globals.getINSTANCE().isSAMPLE_READS()) {
+            System.out.println("");
+            double counter = 0;
+            for (int i = 0; i < amount; i += Globals.getINSTANCE().getSTEPS()) {
+                int b = i + Globals.getINSTANCE().getSTEPS();
+                if (b >= amount) {
+                    b = amount;
+                }
+                readFutures.add(Globals.getINSTANCE().getExecutor().submit(new SingleModelSampling(or, tauOmega, paired, i, b, startF)));
+                counter += Globals.getINSTANCE().getSTEPS();
+                Globals.getINSTANCE().print("Sampling Reads\t\t" + (Math.round((counter / amount) * 100)) + "%");
+            }
+            int x = 0;
+            for (Future<List<SampledRead>> f : readFutures) {
+                try {
+                    List<SampledRead> srList = f.get();
+                    for (SampledRead sr : srList) {
+                        startStopSB.append(sr.getWatsonStart()).append("\t");
+                        startStopSB.append(sr.getWatsonEnd());
+
+                        readBuilder.append(">read").append(x).append("\n");
+                        for (byte r : sr.getWatsonReadBases()) {
+                            readBuilder.append(reverse(r));
+                        }
+                        readBuilder.append("\n");
+
+                        for (int j = sr.getWatsonStart(); j < sr.getWatsonEnd(); j++) {
+                            coverage[j]++;
+                        }
+
+                        if (paired && sr.getCrickStart() > 0) {
+                            startStopSB.append("\t").append(sr.getCrickStart()).append("\t");
+                            startStopSB.append(sr.getCrickEnd()).append("\n");
+
+                            readBuilder.append(">read").append(x).append("\n");
+                            for (byte r : sr.getCrickReadBases()) {
+                                readBuilder.append(reverse(r));
+                            }
+                            readBuilder.append("\n");
+
+                            for (int j = sr.getCrickStart(); j < sr.getCrickEnd(); j++) {
+                                coverage[j]++;
+                            }
+                        } else {
+                            startStopSB.append("\n");
+                        }
+                    }
+                } catch (InterruptedException | ExecutionException ex) {
+                    Logger.getLogger(ModelSampling.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            Utils.saveFile(savePath + "sampledReads.fasta", readBuilder.toString());
+            Utils.saveFile(savePath + "support" + File.separator + "startStop.txt", startStopSB.toString());
+            StringBuilder coverageSB = new StringBuilder();
+            coverageSB.append("x\ty\n");
+            for (int i = 0; i < L; i++) {
+                coverageSB.append(i).append("\t").append(coverage[i]).append("\n");
+            }
+            Utils.saveFile(savePath + "support" + File.separator + "simCov.txt", coverageSB.toString());
+        }
+        System.out.println("");
+
+        List<Future<byte[]>> readFuturesFullLength = Lists.newArrayListWithExpectedSize(amount);
+        double counterFullLength = 0;
+        for (int i = 0; i < amount; i++) {
+            readFuturesFullLength.add(Globals.getINSTANCE().getExecutor().submit(new HaplotypeSampling(or)));
+            Globals.getINSTANCE().print("Sampling Haplotypes\t" + (Math.round((counterFullLength++ / amount) * 100)) + "%");
+        }
+        int y = 0;
+        for (Future<byte[]> f : readFuturesFullLength) {
             try {
-                readArray[x++] = f.get();
+                readArray[y++] = f.get();
             } catch (InterruptedException | ExecutionException ex) {
                 Logger.getLogger(ModelSampling.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -203,9 +241,11 @@ public final class ModelSampling extends Utils {
                 sb.append("\n");
             }
         }
-        saveProteinHaplotypes(0);
-        saveProteinHaplotypes(1);
-        saveProteinHaplotypes(2);
+        if (Globals.getINSTANCE().isSAMPLE_PROTEINS()) {
+            saveProteinHaplotypes(0);
+            saveProteinHaplotypes(1);
+            saveProteinHaplotypes(2);
+        }
     }
 
     private void saveProteinHaplotypes(int frame) {
@@ -232,7 +272,7 @@ public final class ModelSampling extends Utils {
                 sbp.append("\n");
             }
         }
-        Utils.saveFile(savePath + "quasispecies_p" + frame + ".fasta", sbp.toString());
+        Utils.saveFile(savePath + "quasispecies_protein_" + frame + ".fasta", sbp.toString());
     }
 
     public Map<String, Double> getMap() {
@@ -244,15 +284,7 @@ public final class ModelSampling extends Utils {
     }
 
     public void save() {
-//        Utils.saveFile(savePath + "sampledReads.fasta", readBuilder.toString());
         Utils.saveFile(savePath + "quasispecies.fasta", sb.toString());
-        Utils.saveFile(savePath + "support" + File.separator + "startStop.txt", startStopSB.toString());
-        StringBuilder coverageSB = new StringBuilder();
-        coverageSB.append("x\ty\n");
-        for (int i = 0; i < L; i++) {
-            coverageSB.append(i).append("\t").append(coverage[i]).append("\n");
-        }
-        Utils.saveFile(savePath + "support" + File.separator + "simCov.txt", coverageSB.toString());
     }
 
     public byte[] single(int currentI) {

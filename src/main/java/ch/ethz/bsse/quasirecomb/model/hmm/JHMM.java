@@ -24,15 +24,11 @@ import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +50,6 @@ public class JHMM extends Garage {
     protected int K;
     protected int n;
     protected double[][] snv;
-    protected double[][] tauOmega;
     //rho[j][k][l] := transition prob. at position j, for l given k
     protected double[][][] rho;
     protected double[] pi;
@@ -476,65 +471,8 @@ public class JHMM extends Garage {
             this.muPrior[i] = Globals.getINSTANCE().getALPHA_H();
         }
 
-        this.coverage = new int[L];
-        for (Read r : reads) {
-            if (r.isPaired()) {
-                this.paired = true;
-                break;
-            }
-        }
-        if (this.paired) {
-            this.tauOmega = new double[4][L + 1];
-        } else {
-            this.tauOmega = new double[2][L + 1];
-
-        }
-        this.init();
-    }
-
-    protected void init() {
-        int[] tau1 = new int[L];
-        int[] tau2 = new int[L];
-        int[] omega1 = new int[L];
-        int[] omega2 = new int[L];
-        double Nreal = 0;
-
-        for (Read r : allReads) {
-            for (int i = r.getWatsonBegin(); i < r.getWatsonEnd(); i++) {
-                this.coverage[i] += r.getCount();
-            }
-            tau1[r.getWatsonBegin()] += r.getCount();
-            omega1[r.getWatsonEnd() - 1] += r.getCount();
-            if (r.isPaired()) {
-                for (int i = r.getCrickBegin(); i < r.getCrickEnd(); i++) {
-                    this.coverage[i] += r.getCount();
-                }
-                tau2[r.getCrickBegin()] += r.getCount();
-                omega2[r.getCrickEnd() - 1] += r.getCount();
-            }
-            Nreal += r.getCount();
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < L; i++) {
-            this.tauOmega[0][i] = tau1[i] / Nreal;
-            this.tauOmega[1][i] = omega1[i] / Nreal;
-            sb.append(this.tauOmega[0][i]);
-            sb.append("\t");
-            sb.append(this.tauOmega[1][i]);
-            sb.append("\t");
-            if (this.paired) {
-                this.tauOmega[2][i] = tau2[i] / Nreal;
-                this.tauOmega[3][i] = omega2[i] / Nreal;
-                sb.append(this.tauOmega[2][i]);
-                sb.append("\t");
-                sb.append(this.tauOmega[3][i]);
-            }
-            sb.append("\n");
-        }
-        if (Globals.getINSTANCE().isDEBUG()) {
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "twtw", sb.toString());
-        }
+        this.coverage = Globals.getINSTANCE().getTAU_OMEGA().getCoverage();
+        this.paired = Globals.getINSTANCE().isPAIRED();
     }
 
     public int getMuFlats() {
@@ -609,10 +547,6 @@ public class JHMM extends Garage {
             }
         }
         return flats;
-    }
-
-    public double[][] getTauOmega() {
-        return tauOmega;
     }
 
     public int getK() {

@@ -74,8 +74,6 @@ public class Startup {
     private double multRho = 100;
     @Option(name = "-nosample")
     private boolean nosample;
-    @Option(name = "-logOptima")
-    private boolean logOptima;
     @Option(name = "-m")
     private int m = 5;
     @Option(name = "-t")
@@ -188,12 +186,6 @@ public class Startup {
     private double interpolateMu = 1;
     @Option(name = "-interpolateRho")
     private double interpolateRho = 1;
-    @Option(name = "-sBeta")
-    private double sBeta = 0.01;
-    @Option(name = "-sAlpha")
-    private double sAlpha = 1.5;
-    @Option(name = "-annealing")
-    private boolean annealing;
     @Option(name = "-refine")
     private boolean refine;
     @Option(name = "-r")
@@ -206,6 +198,10 @@ public class Startup {
     private int l;
     @Option(name = "--annotate")
     private boolean annotate;
+    @Option(name = "-sampleReads")
+    private boolean sampleReads;
+    @Option(name = "-sampleProteins")
+    private boolean sampleProteins;
 
     private void setInputOutput() {
         if (output == null) {
@@ -232,6 +228,9 @@ public class Startup {
         Globals.getINSTANCE().setPAIRED(this.paired);
         Globals.getINSTANCE().setPLOT(this.plot);
         Globals.getINSTANCE().setCUTOFF(this.cutoff);
+        Globals.getINSTANCE().setSTEPS(this.steps);
+        Globals.getINSTANCE().setSAMPLE_READS(this.sampleReads);
+        Globals.getINSTANCE().setSAMPLE_PROTEINS(this.sampleProteins);
     }
 
     private void sample() {
@@ -504,7 +503,6 @@ public class Startup {
         Globals.getINSTANCE().setNO_QUALITY(this.noquality);
         Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
         Globals.getINSTANCE().setUNPAIRED(this.unpaired);
-        Globals.getINSTANCE().setSTEPS(this.steps);
         Globals.getINSTANCE().setSTOP_QUICK(this.stopQuick);
         Globals.getINSTANCE().setPRINT_ALIGNMENT(this.printAlignment);
         Globals.getINSTANCE().setPRIORMU(this.muPrior);
@@ -605,6 +603,8 @@ public class Startup {
             System.err.println("  -global\t\t: Use this if the region is longer than a read");
             System.err.println("  -plot\t\t\t: Plot coverage");
             System.err.println("  -printAlignment\t: Save alignment.txt in a human readable format");
+//            System.err.println("  -sampleReads\t\t: Sample reads in addition to haplotypes");
+            System.err.println("  -sampleProteins\t: Sample full-length protein sequences in three reading frames");
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === EXAMPLES ===");

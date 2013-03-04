@@ -17,6 +17,7 @@
  */
 package ch.ethz.bsse.quasirecomb.model;
 
+import cc.mallet.util.FileUtils;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
@@ -69,12 +70,30 @@ public class Preprocessing {
             new File(Globals.getINSTANCE().getSAVEPATH() + "support/log/").mkdirs();
         }
         int n = countChars(reads);
+        Globals.getINSTANCE().setTAU_OMEGA(reads, L);
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
         if (!Globals.getINSTANCE().isNOSAMPLE()) {
             ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
             modelSampling.save();
             System.out.println("\nQuasispecies saved: " + Globals.getINSTANCE().getSAVEPATH() + "quasispecies.fasta");
         }
+        if (!Globals.getINSTANCE().isDEBUG()) {
+            deleteDirectory(new File(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "snapshots"));
+        }
+    }
+
+    static public boolean deleteDirectory(File path) {
+        if (path.exists()) {
+            File[] files = path.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                if (files[i].isDirectory()) {
+                    deleteDirectory(files[i]);
+                } else {
+                    files[i].delete();
+                }
+            }
+        }
+        return (path.delete());
     }
 
     private static int countChars(Read[] rs) {
@@ -164,16 +183,24 @@ public class Preprocessing {
 
     private static int fixAlignment(Read[] reads) {
         //fix alignment to position 0
+        int N = 0;
         for (Read r : reads) {
+            if (r.isPaired()) {
+                Globals.getINSTANCE().setPAIRED(true);
+            }
             Globals.getINSTANCE().setALIGNMENT_BEGIN(Math.min(r.getBegin(), Globals.getINSTANCE().getALIGNMENT_BEGIN()));
             Globals.getINSTANCE().setALIGNMENT_END(Math.max(r.getEnd(), Globals.getINSTANCE().getALIGNMENT_END()));
+            N += r.getCount();
         }
+        Globals.getINSTANCE().setNREAL(N);
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         Globals.getINSTANCE().setALIGNMENT_END(L);
         Globals.getINSTANCE().println("Modifying reads\t");
         double shrinkCounter = 0;
-        if (new File(Globals.getINSTANCE().getSAVEPATH() + "gap.txt").exists()) {
-            new File(Globals.getINSTANCE().getSAVEPATH() + "gap.txt").delete();
+        if (Globals.getINSTANCE().isDEBUG()) {
+            if (new File(Globals.getINSTANCE().getSAVEPATH() + "gap.txt").exists()) {
+                new File(Globals.getINSTANCE().getSAVEPATH() + "gap.txt").delete();
+            }
         }
         StringBuilder indelSB = new StringBuilder();
         for (Read r : reads) {
@@ -181,7 +208,9 @@ public class Preprocessing {
             indelSB.append(r.getInsertion()).append(" ");
             Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
         }
-        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "gap.txt", indelSB.toString());
+        if (Globals.getINSTANCE().isDEBUG()) {
+            Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "gap.txt", indelSB.toString());
+        }
         Globals.getINSTANCE().print("Modifying reads\t100%");
         return L;
     }
@@ -191,8 +220,17 @@ public class Preprocessing {
         double allelCounter = 0;
         StringBuilder sb = new StringBuilder();
         StringBuilder sbw = new StringBuilder();
-        sb.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
-        sbw.append("Start: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
+        char[] alphabet = new char[]{'A', 'C', 'G', 'T', '-'};
+        sb.append("#Offset: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
+        sbw.append("#Offset: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
+        sb.append("Pos");
+        sbw.append("Pos");
+        for (int i = 0; i < alignment[0].length; i++) {
+            sb.append("\t").append(alphabet[i]);
+            sbw.append("\t").append(alphabet[i]);
+        }
+        sb.append("\n");
+        sbw.append("\n");
         for (int i = 0; i < L; i++) {
             int hits = 0;
             sb.append(i);
@@ -211,8 +249,8 @@ public class Preprocessing {
             }
             Globals.getINSTANCE().print("Allel frequencies\t" + (Math.round((allelCounter++ / L) * 100)) + "%");
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "hit_dist.txt", sb.toString());
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "weighted_hit_dist.txt", sbw.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "allel_distribution.txt", sb.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "allel_distribution_phred_weighted.txt", sbw.toString());
         sb.setLength(0);
         sb = null;
     }
