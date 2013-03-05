@@ -27,6 +27,23 @@ public class Random {
 
     private static Dirichlet[] rhoDir;
     public static Dirichlet muDir;
+    private static Dirichlet[] sigmaDir;
+
+    public static double[][][][] generateInitSigma(int Ldec, int K) {
+        if (sigmaDir == null) {
+            sigmaDir[0] = new Dirichlet(new double[]{1, 0.01});
+            sigmaDir[1] = new Dirichlet(new double[]{0.01, 1});
+        }
+        double sigma[][][][] = new double[Ldec][K][2][2];
+        for (int j = 0; j < Ldec; j++) {
+            for (int k = 0; k < K; k++) {
+                for (int a = 0; a < 2; a++) {
+                    sigma[j][k][a] = sigmaDir[a].nextDistribution();
+                }
+            }
+        }
+        return sigma;
+    }
 
     public static double[][][] generateInitRho(int Ldec, int K) {
         if (rhoDir == null || rhoDir.length != K) {
