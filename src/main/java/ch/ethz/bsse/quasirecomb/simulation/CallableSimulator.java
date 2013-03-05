@@ -75,7 +75,11 @@ public class CallableSimulator implements Callable<Pair<Read, Read>> {
             sb.append(readArray[j]);
         }
         String read = sb.toString().replace("-", "");
-        Read r1 = new Read(BitMagic.splitReadIntoBytes(sb.toString()), start, start + read.length());
+        boolean[] cigar = new boolean[sb.length()];
+        for (int i = 0; i < sb.length(); i++) {
+            cigar[i] = true;
+        }
+        Read r1 = new Read(BitMagic.splitReadIntoBytes(sb.toString()), start, start + read.length(), cigar);
 
         readArray = new char[length];
         for (int j = 0; j < length; j++) {
@@ -102,7 +106,11 @@ public class CallableSimulator implements Callable<Pair<Read, Read>> {
             sb2.append(readArray[j]);
         }
         read = sb2.toString().replace("-", "");
-        Read r2 = new Read(BitMagic.splitReadIntoBytes(read), start2, start2 + read.length());
+        cigar = new boolean[sb2.length()];
+        for (int i = 0; i < sb2.length(); i++) {
+            cigar[i] = true;
+        }
+        Read r2 = new Read(BitMagic.splitReadIntoBytes(read), start2, start2 + read.length(),cigar);
         return Pair.with(r1, r2);
     }
 }

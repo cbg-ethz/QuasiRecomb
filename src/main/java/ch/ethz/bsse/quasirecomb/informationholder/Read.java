@@ -27,33 +27,38 @@ public class Read {
 
     private byte[] watsonSequence;
     private double[] watsonQuality;
+    private boolean[] watsonCigar;
     private int watsonBegin;
     private int watsonEnd;
     private int count = 1;
     private byte[] crickSequence;
     private double[] crickQuality;
+    private boolean[] crickCigar;
     private int crickBegin;
     private int crickEnd = -1;
     private int insertion;
 
-    public Read(byte[] sequence, int begin, int end, double[] quality) {
+    public Read(byte[] sequence, int begin, int end, double[] quality, boolean[] cigar) {
         this.watsonSequence = sequence;
         this.watsonBegin = begin;
         this.watsonEnd = end;
         this.watsonQuality = quality;
+        this.watsonCigar = cigar;
     }
 
-    public Read(byte[] sequence, int begin, int end) {
+    public Read(byte[] sequence, int begin, int end, boolean[] cigar) {
         this.watsonSequence = sequence;
         this.watsonBegin = begin;
         this.watsonEnd = end;
+        this.watsonCigar = cigar;
     }
 
-    public Read(byte[] sequence, int begin, int end, byte[] Csequence, int Cbegin, int Cend) {
+    public Read(byte[] sequence, int begin, int end, boolean[] watsonCigar, byte[] Csequence, int Cbegin, int Cend, boolean[] Ccigar) {
         this.watsonSequence = sequence;
         this.watsonBegin = begin;
         this.watsonEnd = end;
-        setPairedEnd(Csequence, Cbegin, Cend);
+        this.watsonCigar = watsonCigar;
+        setPairedEnd(Csequence, Cbegin, Cend, Ccigar);
         if (end - begin != BitMagic.getLength(sequence)) {
             throw new IllegalAccessError("length problen: watson. Suggested length: " + (end - begin) + ". Actual length: " + BitMagic.getLength(sequence));
         }
@@ -62,12 +67,13 @@ public class Read {
         }
     }
 
-    public Read(byte[] sequence, int begin, int end, double[] quality, byte[] Csequence, int Cbegin, int Cend, double[] Cquality) {
+    public Read(byte[] sequence, int begin, int end, double[] quality, boolean[] watsonCigar, byte[] Csequence, int Cbegin, int Cend, double[] Cquality, boolean[] Ccigar) {
         this.watsonSequence = sequence;
         this.watsonBegin = begin;
         this.watsonEnd = end;
         this.watsonQuality = quality;
-        setPairedEnd(Csequence, Cbegin, Cend, Cquality);
+        this.watsonCigar = watsonCigar;
+        setPairedEnd(Csequence, Cbegin, Cend, Cquality, Ccigar);
         if (end - begin != BitMagic.getLength(sequence)) {
             throw new IllegalAccessError("length problen: watson. Suggested length: " + (end - begin) + ". Actual length: " + BitMagic.getLength(sequence));
         }
@@ -80,20 +86,25 @@ public class Read {
         if (this.watsonEnd < this.crickBegin) {
             return;
         }
-        byte[] seqConsensus = new byte[this.crickEnd - this.watsonBegin];
-        double[] qualConsensus = new double[this.crickEnd - this.watsonBegin];
+        final int length = this.crickEnd - this.watsonBegin;
+        byte[] seqConsensus = new byte[length];
+        double[] qualConsensus = new double[length];
+        boolean[] cigarConsensus = new boolean[length];
 
         for (int i = 0; i < this.getLength(); i++) {
             seqConsensus[i] = this.getBase(i);
             qualConsensus[i] = this.getQuality(i);
+            cigarConsensus[i] = this.getCigar(i);
         }
         this.watsonEnd = this.crickEnd;
         this.watsonSequence = BitMagic.pack(seqConsensus);
         this.watsonQuality = qualConsensus;
+        this.watsonCigar = cigarConsensus;
         this.crickEnd = -1;
         this.crickBegin = 0;
         this.crickSequence = null;
         this.crickQuality = null;
+        this.crickCigar = null;
         Globals.getINSTANCE().incMERGED();
     }
 
@@ -194,6 +205,16 @@ public class Read {
         }
     }
 
+    public boolean getCigar(int j) {
+        if (j < this.getWatsonLength()) {
+            return this.watsonCigar[j];
+        } else if (this.isPaired() && j >= this.crickBegin - this.watsonBegin && j <= this.crickBegin + this.getCrickLength() - this.watsonBegin) {
+            return this.crickCigar[j - this.getWatsonLength() - this.getInsertSize()];
+        } else {
+            throw new IllegalAccessError("No such sequence space. j=" + j);
+        }
+    }
+
     public byte getBaseSilent(int j) {
         if (j < this.getWatsonLength()) {
             return BitMagic.getPosition(this.watsonSequence, j);
@@ -220,20 +241,22 @@ public class Read {
         return this.crickSequence != null;
     }
 
-    public final void setPairedEnd(byte[] sequence, int begin, int end, double[] quality) {
+    public final void setPairedEnd(byte[] sequence, int begin, int end, double[] quality, boolean[] cigar) {
         this.crickSequence = sequence;
         this.crickBegin = begin;
         this.crickEnd = end;
         this.crickQuality = quality;
+        this.crickCigar = cigar;
         rearrange();
         this.insertion = this.crickBegin - this.watsonEnd;
         merge();
     }
 
-    public final void setPairedEnd(byte[] sequence, int begin, int end) {
+    public final void setPairedEnd(byte[] sequence, int begin, int end, boolean[] cigar) {
         this.crickSequence = sequence;
         this.crickBegin = begin;
         this.crickEnd = end;
+        this.crickCigar = cigar;
         rearrange();
         this.insertion = this.crickBegin - this.watsonEnd;
         merge();
@@ -266,6 +289,8 @@ public class Read {
         hash = 29 * hash + this.crickEnd;
         hash = 29 * hash + Arrays.hashCode(this.crickQuality);
         hash = 29 * hash + Arrays.hashCode(this.watsonQuality);
+        hash = 29 * hash + Arrays.hashCode(this.crickCigar);
+        hash = 29 * hash + Arrays.hashCode(this.watsonCigar);
         return hash;
     }
 
@@ -289,6 +314,10 @@ public class Read {
             double[] qualTmp = this.watsonQuality;
             this.watsonQuality = this.crickQuality;
             this.crickQuality = qualTmp;
+
+            boolean[] cigarTmp = this.watsonCigar;
+            this.watsonCigar = this.crickCigar;
+            this.crickCigar = cigarTmp;
         }
     }
 
@@ -304,9 +333,9 @@ public class Read {
     public Read unpair() {
         Read r = null;
         if (this.crickQuality != null) {
-            r = new Read(crickSequence, crickBegin, crickEnd, crickQuality);
+            r = new Read(crickSequence, crickBegin, crickEnd, crickQuality, crickCigar);
         } else {
-            r = new Read(crickSequence, crickBegin, crickEnd);
+            r = new Read(crickSequence, crickBegin, crickEnd, crickCigar);
         }
         this.crickBegin = -1;
         this.crickEnd = -1;
@@ -340,5 +369,13 @@ public class Read {
 
     public void setInsertion(int insertion) {
         this.insertion = insertion;
+    }
+
+    public boolean[] getWatsonCigar() {
+        return watsonCigar;
+    }
+
+    public boolean[] getCrickCigar() {
+        return crickCigar;
     }
 }

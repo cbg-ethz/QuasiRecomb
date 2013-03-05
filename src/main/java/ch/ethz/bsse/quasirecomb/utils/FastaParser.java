@@ -161,13 +161,21 @@ public class FastaParser {
                 if (pairedReads1.containsKey(tag)) {
                     pairedReads1.get(tag).incCount();
                 } else {
-                    pairedReads1.put(tag, new Read(seq, begin, end));
+                    boolean[] cigar = new boolean[seq.length];
+                    for (int i = 0; i < seq.length; i++) {
+                        cigar[i] = true;
+                    }
+                    pairedReads1.put(tag, new Read(seq, begin, end, cigar));
                 }
             } else {
                 if (pairedReads2.containsKey(tag)) {
                     pairedReads2.get(tag).incCount();
                 } else {
-                    pairedReads2.put(tag, new Read(seq, begin, end));
+                    boolean[] cigar = new boolean[seq.length];
+                    for (int i = 0; i < seq.length; i++) {
+                        cigar[i] = true;
+                    }
+                    pairedReads2.put(tag, new Read(seq, begin, end, cigar));
                 }
             }
         }
@@ -177,7 +185,7 @@ public class FastaParser {
                 String tag = r.getKey();
                 if (pairedReads2.containsKey(tag)) {
                     Read r2 = pairedReads2.get(tag);
-                    r.getValue().setPairedEnd(r2.getSequence().clone(), r2.getBegin(), r2.getEnd());
+                    r.getValue().setPairedEnd(r2.getSequence().clone(), r2.getBegin(), r2.getEnd(),r2.getWatsonCigar().clone());
                     r.getValue().rearrange();
                     r.getValue().merge();
                 } else {

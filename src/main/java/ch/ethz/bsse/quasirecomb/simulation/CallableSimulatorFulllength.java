@@ -71,7 +71,11 @@ public class CallableSimulatorFulllength implements Callable<Read> {
         for (int j = 0; j < length; j++) {
             sb.append(readArray[j]);
         }
-        Read r1 = new Read(BitMagic.splitReadIntoBytes(sb.toString()), start, start + length);
+        boolean[] cigar = new boolean[sb.length()];
+        for (int i = 0; i < sb.length(); i++) {
+            cigar[i] = true;
+        }
+        Read r1 = new Read(BitMagic.splitReadIntoBytes(sb.toString()), start, start + length, cigar);
 
         return r1;
     }

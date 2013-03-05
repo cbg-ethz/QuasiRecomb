@@ -301,11 +301,12 @@ public class Utils extends FastaParser {
                     byte[] readBases = read.readBases;
                     double[] quality = read.quality;
                     boolean hasQuality = read.hasQuality;
+                    boolean[] cigar = read.cigar;
                     if (readMap.containsKey(name)) {
                         if (hasQuality) {
-                            readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality);
+                            readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar);
                         } else {
-                            readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length);
+                            readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length, cigar);
                         }
                         Read r2 = readMap.get(name);
                         if (r2.isPaired()) {
@@ -319,18 +320,18 @@ public class Utils extends FastaParser {
                             if (r.isPaired()) {
                                 r.unpair();
                                 if (hasQuality) {
-                                    readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality));
+                                    readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar));
                                 } else {
-                                    readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length));
+                                    readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, cigar));
                                 }
                             }
                         }
                         Globals.getINSTANCE().incPAIRED();
                     } else {
                         if (hasQuality) {
-                            readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality));
+                            readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar));
                         } else {
-                            readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length));
+                            readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, cigar));
                         }
                     }
                 }
@@ -376,7 +377,11 @@ public class Utils extends FastaParser {
                     }
                 }
                 if (missing) {
-                    hashing.add(new Read(seq, begin, end));
+                    boolean[] cigar = new boolean[seq.length];
+                    for (int i = 0; i < seq.length; i++) {
+                        cigar[i] = true;
+                    }
+                    hashing.add(new Read(seq, begin, end, cigar));
                 }
             }
         } else {
@@ -384,11 +389,15 @@ public class Utils extends FastaParser {
             String[] parseFarFile = parseFarFile(path);
             for (String s : parseFarFile) {
                 byte[] packed = BitMagic.splitReadIntoBytes(s);
-                Read r = new Read(packed, 0, s.length());
+                boolean[] cigar = new boolean[s.length()];
+                for (int i = 0; i < s.length(); i++) {
+                    cigar[i] = true;
+                }
+                Read r = new Read(packed, 0, s.length(), cigar);
                 if (hashMap.containsKey(r.hashCode())) {
                     hashMap.get(r.hashCode()).incCount();
                 } else {
-                    hashMap.put(r.hashCode(), new Read(packed, 0, s.length()));
+                    hashMap.put(r.hashCode(), new Read(packed, 0, s.length(), cigar));
                 }
             }
             hashing.addAll(hashMap.values());

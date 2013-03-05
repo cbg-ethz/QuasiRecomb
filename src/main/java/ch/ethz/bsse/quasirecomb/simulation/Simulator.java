@@ -288,7 +288,11 @@ public class Simulator {
                 sb.append(readArray[j]);
             }
             read = sb.toString();
-            reads.add(new Read(BitMagic.splitReadIntoBytes(read), start, start + length));
+            boolean[] cigar = new boolean[sb.length()];
+            for (int x = 0; x < sb.length(); x++) {
+                cigar[x] = true;
+            }
+            reads.add(new Read(BitMagic.splitReadIntoBytes(read), start, start + length, cigar));
         }
         int z = 0;
         StringBuilder sb = new StringBuilder();

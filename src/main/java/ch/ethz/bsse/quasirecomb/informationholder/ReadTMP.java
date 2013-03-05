@@ -26,12 +26,14 @@ public class ReadTMP {
     public byte[] readBases;
     public int refStart;
     public boolean hasQuality;
+    public boolean[] cigar;
 
-    public ReadTMP(String name, double[] quality, byte[] readBases, int refStart, boolean hasQuality) {
+    public ReadTMP(String name, double[] quality, byte[] readBases, int refStart, boolean hasQuality, boolean[] cigar) {
         this.name = name;
         this.quality = quality;
         this.readBases = readBases;
         this.refStart = refStart;
         this.hasQuality = hasQuality;
+        this.cigar = cigar;
     }
 }
