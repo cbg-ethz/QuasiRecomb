@@ -601,7 +601,7 @@ public class Startup {
             System.err.println("  -noRecomb\t\t: Do not allow recombination");
             System.err.println("  -noQuality\t\t: Do not account phred quality scores (faster runtime)");
             System.err.println("  -global\t\t: Use this if the region is longer than a read");
-            System.err.println("  -plot\t\t\t: Plot coverage");
+//            System.err.println("  -plot\t\t\t: Plot coverage");
             System.err.println("  -printAlignment\t: Save alignment.txt in a human readable format");
 //            System.err.println("  -sampleReads\t\t: Sample reads in addition to haplotypes");
             System.err.println("  -sampleProteins\t: Sample full-length protein sequences in three reading frames");
