@@ -57,7 +57,11 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
 
 ### Output
  The reconstructed DNA haplotype distribution quasispecies.fasta will be saved in the working directory.
- An amino acid translation of the quasispecies in all three reading frame is saved as quasispecies_p(0|1|2).fasta.
+ An amino acid translation of the quasispecies in all three reading frame is saved as support/quasispecies_protein_(0|1|2).fasta, if -protein is used.
+ 
+### Plots
+ Summary statistics can be produced with R:
+ `R CMD BATCH support/plots.R`
 
 ### Help:
  Further help can be showed by running without additional parameters:

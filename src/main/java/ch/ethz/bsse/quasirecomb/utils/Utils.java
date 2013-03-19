@@ -480,6 +480,24 @@ public class Utils extends FastaParser {
         saveFile(path, sb.toString());
     }
 
+    public static void saveR() {
+        String r = "dir.create(\"plots\",F)\n"
+                + "getwd()\n"
+                + "coverage <- read.delim(\"support/coverage.txt\", header=F)\n"
+                + "pdf(\"plots/coverage.pdf\",20,12)\n"
+                + "par(mar=c(5.1,4.1,4.1,0.1))\n"
+                + "plot(coverage$V1,coverage$V2,lwd=2,xlab=\"Position\", main=\"Coverage\",ylab=\"Coverage\",type=\"n\",xaxs=\"i\",cex.main=2,cex.lab=1.4,cex.axis=1.5)\n"
+                + "polygon(c(coverage$V1[1],coverage$V1,coverage$V1[nrow(coverage)]),c(0,coverage$V2,0),col=\"lightblue\",density=-10)\n"
+                + "dev.off()\n"
+                + "\n"
+                + "bics <- read.delim(\"support/bics.txt\")\n"
+                + "pdf(\"plots/modelselection.pdf\",20,12)\n"
+                + "par(mar=c(5.1,4.1,4.1,0.1))\n"
+                + "boxplot(bics,names=sapply(colnames(bics),function(x) substr(x,start=2,stop=nchar(x))),xlab=\"K\",ylab=\"BIC\",main=\"Model selection\",cex.main=2,cex.lab=1.4,cex.axis=1.5)\n"
+                + "dev.off()";
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "plots.R", r);
+    }
+
     public static void error() {
         System.out.println("    .o oOOOOOOOo                                            OOOo");
         System.out.println("    Ob.OOOOOOOo  OOOo.      oOOo.                      .adOOOOOOO");

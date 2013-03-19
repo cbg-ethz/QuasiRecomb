@@ -18,11 +18,15 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.MSTemp;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * Selects the best model among the specified range of generators.
@@ -45,6 +49,8 @@ public class ModelSelection {
     private int n;
     private int bestK;
     private OptimalResult or;
+    private MSTemp msTemp = new MSTemp();
+    private SortedMap<Integer, Double[]> bics = new TreeMap<>();
 
     public ModelSelection(Read[] reads, int Kmin, int Kmax, int N, int L, int n) {
         this.kMax = Kmax;
@@ -63,29 +69,9 @@ public class ModelSelection {
         if (kMin != kMax) {
             Globals.getINSTANCE().setMODELSELECTION(true);
             Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "modelselection");
-            for (int k = kMin; k <= kMax; k++) {
-                if (!Globals.getINSTANCE().isFORCE_NO_RECOMB()) {
-                    checkRho0(k);
-                }
-                EM em = new EM(this.N, this.L, k, this.n, reads);
-                System.out.println("");
-                if (Globals.getINSTANCE().isLOG_BIC()) {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(new Summary().print(em.getOr()));
-                    Utils.saveFile(save + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
-                }
-                if (em.getOr().getBIC() > optBIC || optBIC == 0) {
-                    if (em.getLowerBoundBIC() < optBIC && optBIC != 0) {
-                        break;
-                    }
-                    or = em.getOr();
-                    optBIC = em.getMedianBIC();
-                    this.bestK = k;
-                } else {
-                    break;
-                }
-                Globals.getINSTANCE().setPERCENTAGE(0);
-            }
+            select(reads, save);
+            saveBics();
+            Utils.saveR();
         } else {
             bestK = kMin;
         }
@@ -101,7 +87,7 @@ public class ModelSelection {
         if (em.getOr().getLlh() > optBIC || optBIC == 0) {
             or = em.getOr();
         }
-        
+
 
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
@@ -117,5 +103,48 @@ public class ModelSelection {
 
     public OptimalResult getOptimalResult() {
         return or;
+    }
+
+    private void select(Read[] reads, String save) {
+        for (int k = kMin; k <= kMax; k++) {
+            if (!Globals.getINSTANCE().isFORCE_NO_RECOMB()) {
+                checkRho0(k);
+            }
+            EM em = new EM(this.N, this.L, k, this.n, reads);
+            System.out.println("");
+            if (Globals.getINSTANCE().isLOG_BIC()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(new Summary().print(em.getOr()));
+                Utils.saveFile(save + File.separator + "K" + em.getOr().getK() + "-result.txt", sb.toString());
+            }
+            bics.put(k, em.getBics());
+            msTemp.add(em, k);
+            Globals.getINSTANCE().setPERCENTAGE(0);
+            or = msTemp.getBestOR();
+            if (or.getK() < k && or.getK() + 1 == k) {
+                break;
+            }
+        }
+        bestK = or.getK();
+    }
+
+    public void saveBics() {
+        StringBuilder sb = new StringBuilder();
+        int x = bics.values().iterator().next().length;
+        Set<Integer> keySet = bics.keySet();
+        for (int i : keySet) {
+            sb.append(i).append("\t");
+        }
+        sb.setLength(sb.length() - 1);
+        sb.append("\n");
+
+        for (int l = 0; l < x; l++) {
+            for (int i : keySet) {
+                sb.append(bics.get(i)[l]).append("\t");
+            }
+            sb.setLength(sb.length() - 1);
+            sb.append("\n");
+        }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "bics.txt", sb.toString());
     }
 }

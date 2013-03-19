@@ -94,9 +94,7 @@ public class SFRComputing implements Callable<ReadTMP> {
                         }
                         break;
                     case I:
-//                            for (int i = 0; i < c.getLength(); i++) {
                         readStart += c.getLength();
-//                            }
                         break;
                     case D:
                         for (int i = 0; i < c.getLength(); i++) {
@@ -113,9 +111,7 @@ public class SFRComputing implements Callable<ReadTMP> {
                         }
                         break;
                     case S:
-//                            for (int i = 0; i < c.getLength(); i++) {
                         readStart += c.getLength();
-//                            }
                         break;
                     case H:
                         break;

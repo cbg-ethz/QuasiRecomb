@@ -17,13 +17,11 @@
  */
 package ch.ethz.bsse.quasirecomb.model;
 
-import cc.mallet.util.FileUtils;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
-import ch.ethz.bsse.quasirecomb.utils.Plot;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -63,7 +61,6 @@ public class Preprocessing {
         Globals.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
         computeInsertDist(reads);
         Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED() + "\n");
-        plot(alignment);
         printAlignment(reads);
         circos(L, alignment);
         if (Globals.getINSTANCE().isDEBUG()) {
@@ -71,6 +68,7 @@ public class Preprocessing {
         }
         int n = countChars(reads);
         Globals.getINSTANCE().setTAU_OMEGA(reads, L);
+        plot();
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
         if (!Globals.getINSTANCE().isNOSAMPLE()) {
             ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
@@ -297,11 +295,15 @@ public class Preprocessing {
         }
     }
 
-    private static void plot(int[][] alignment) {
-        if (Globals.getINSTANCE().isPLOT()) {
-            Globals.getINSTANCE().println("Plotting\t");
-            Plot.plotCoverage(alignment);
+    private static void plot() {
+        Globals.getINSTANCE().println("Plotting\t");
+        StringBuilder sb = new StringBuilder();
+        int start = Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        int[] coverage = Globals.getINSTANCE().getTAU_OMEGA().getCoverage();
+        for (int i = 0; i < coverage.length; i++) {
+            sb.append(String.valueOf(start++)).append("\t").append(coverage[i]).append("\n");
         }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "coverage.txt", sb.toString());
     }
 
     private static void printAlignment(Read[] reads) {

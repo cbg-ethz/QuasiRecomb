@@ -115,11 +115,6 @@
             <version>1.8.4</version>
         </dependency>
         <dependency>
-            <groupId>jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.0.13</version>
-        </dependency>
-        <dependency>
             <groupId>commons-math</groupId>
             <artifactId>commons-math</artifactId>
             <version>1.2</version>

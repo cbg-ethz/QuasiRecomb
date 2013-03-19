@@ -38,6 +38,8 @@ public class EM extends Utils {
     private OptimalResult or;
     private double medianBIC;
     private double lowerBoundBIC;
+    private Double bics[];
+    private double maxBIC = Double.NEGATIVE_INFINITY;
 
     protected EM(int N, int L, int K, int n, Read[] reads) {
         this.blackbox(reads, N, L, K, n);
@@ -55,17 +57,20 @@ public class EM extends Utils {
         }
         if (Globals.getINSTANCE().getOPTIMUM() == null) {
             double maxLLH = Double.NEGATIVE_INFINITY;
-            double bics[] = new double[Globals.getINSTANCE().getREPEATS()];
+            bics = new Double[Globals.getINSTANCE().getREPEATS()];
+            double[] bics_local = new double[Globals.getINSTANCE().getREPEATS()];
             for (int i = 0; i < Globals.getINSTANCE().getREPEATS(); i++) {
                 SingleEM sem = new SingleEM(N, K, L, n, reads, Globals.getINSTANCE().getDELTA_LLH(), i);
+                bics_local[i] = sem.getOptimalResult().getBIC();
                 bics[i] = sem.getOptimalResult().getBIC();
+                this.maxBIC = Math.max(this.maxBIC, sem.getOptimalResult().getBIC());
                 if (sem.getLoglikelihood() > maxLLH) {
                     maxLLH = sem.getLoglikelihood();
                     pathOptimum = sem.getOptimumPath();
                 }
             }
-            medianBIC = new Median().evaluate(bics);
-            lowerBoundBIC = medianBIC - new StandardDeviation().evaluate(bics) * Math.sqrt(1 + 1d / bics.length);
+            medianBIC = new Median().evaluate(bics_local);
+            lowerBoundBIC = medianBIC - new StandardDeviation().evaluate(bics_local) * Math.sqrt(1 + 1d / bics_local.length);
         } else {
             pathOptimum = Globals.getINSTANCE().getOPTIMUM();
         }
@@ -138,5 +143,13 @@ public class EM extends Utils {
 
     public double getLowerBoundBIC() {
         return lowerBoundBIC;
+    }
+
+    public Double[] getBics() {
+        return bics;
+    }
+
+    public double getMaxBIC() {
+        return maxBIC;
     }
 }

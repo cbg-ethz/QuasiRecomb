@@ -89,7 +89,7 @@ public class SingleEM {
     }
 
     private void snapshot() {
-        String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
+        String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "K" + K  + "_R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
         OptimalResult localOr = new OptimalResult(N, K, L, n,
                 jhmm.getRho(),
                 jhmm.getPi(),
