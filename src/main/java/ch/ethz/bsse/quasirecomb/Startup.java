@@ -38,6 +38,7 @@ import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import net.sf.samtools.SAMFormatException;
 import org.javatuples.Pair;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -581,6 +582,9 @@ public class Startup {
                 train();
             }
 
+        } catch (SAMFormatException e) {
+            System.err.println("");
+            System.err.println("Input file is not in SAM or BAM format.");
         } catch (CmdLineException cmderror) {
             System.err.println(cmderror.getMessage());
             System.err.println("");

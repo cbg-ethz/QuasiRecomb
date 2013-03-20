@@ -66,14 +66,16 @@ public class ModelSelection {
         String save = Globals.getINSTANCE().getSAVEPATH() + "support";
         Utils.mkdir(Globals.getINSTANCE().getSnapshotDir());
 
-        if (kMin != kMax) {
-            Globals.getINSTANCE().setMODELSELECTION(true);
-            Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "modelselection");
-            select(reads, save);
-            saveBics();
-            Utils.saveR();
-        } else {
-            bestK = kMin;
+        if (!Globals.getINSTANCE().isUSER_OPTIMUM()) {
+            if (kMin != kMax) {
+                Globals.getINSTANCE().setMODELSELECTION(true);
+                Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "modelselection");
+                select(reads, save);
+                saveBics();
+                Utils.saveR();
+            } else {
+                bestK = kMin;
+            }
         }
         Globals.getINSTANCE().setMODELSELECTION(false);
         Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "training");

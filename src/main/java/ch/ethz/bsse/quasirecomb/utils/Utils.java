@@ -264,13 +264,13 @@ public class Utils extends FastaParser {
     }
 
     public static Read[] parseInput(String path) {
-        if (isFastaGlobalMatePairFormat(path)) {
-            return FastaParser.parseFastaPairedEnd(path);
-        } else if (isFastaFormat(path)) {
-            return parseFastaInput(path);
-        } else {
+//        if (isFastaGlobalMatePairFormat(path)) {
+//            return FastaParser.parseFastaPairedEnd(path);
+//        } else if (isFastaFormat(path)) {
+//            return parseFastaInput(path);
+//        } else {
             return parseBAMSAM(path);
-        }
+//        }
     }
 
     public static Read[] parseBAMSAM(String location) {

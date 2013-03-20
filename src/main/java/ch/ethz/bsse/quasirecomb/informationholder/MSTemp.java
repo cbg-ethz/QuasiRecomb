@@ -68,8 +68,8 @@ public class MSTemp {
 
 class SelectionResult {
 
-    double mean;
-    double lowerBound;
+    private double mean;
+    private double lowerBound;
     OptimalResult or;
     double max;
 
