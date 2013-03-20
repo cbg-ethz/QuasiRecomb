@@ -71,12 +71,14 @@ public class SFRComputing implements Callable<ReadTMP> {
                     case M:
                         if ((readStart + c.getLength()) > samRecord.getReadBases().length) {
                             System.out.println("");
-                            System.out.println("C:" + c.getOperator());
-                            System.out.println("L:" + c.getLength());
-                            System.out.println("N:" + samRecord.getReadBases().length);
-                            System.out.println("R:" + readStart);
-                            System.out.println("S:" + (alignmentBlocks.get(0).getReadStart() - 1));
-                            System.out.println("T:" + samRecord.getCigar().toString());
+                            System.err.println("Input alignment is corrupt.");
+                            System.err.println("CIGAR is longer than actual read-length.");
+//                            System.out.println("C:" + c.getOperator());
+//                            System.out.println("L:" + c.getLength());
+//                            System.out.println("N:" + samRecord.getReadBases().length);
+//                            System.out.println("R:" + readStart);
+//                            System.out.println("S:" + (alignmentBlocks.get(0).getReadStart() - 1));
+//                            System.out.println("T:" + samRecord.getCigar().toString());
                             System.exit(9);
                         }
                         for (int i = 0; i < c.getLength(); i++) {
