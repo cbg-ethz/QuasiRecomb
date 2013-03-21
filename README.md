@@ -36,7 +36,7 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
  - Suitable for amplicon and shotgun sequencing projects
  - Reports reconstructed haplotypes and their relative frequencies
  - Reports translated proteins in all three reading frames with their relative frequencies
- - Input data can be in BAM, SAM or FASTA format
+ - Input data can be in BAM or SAM format
 
 - - -
 
@@ -45,7 +45,7 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
 
 ## RUN:
 ### Local reconstruction
- `java -jar QuasiRecomb.jar -i alignedReads.fasta`
+ `java -jar QuasiRecomb.jar -i alignment.bam`
  Reads need to be aligned, therefore it is only useful for local reconstruction.
 
 ### Global reconstruction
@@ -53,10 +53,10 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
   In this case, all insertions will be omitted, but deletions are preserved.
 
 ### Use fixed number of generators
- `java -jar QuasiRecomb.jar -i alignedReads.fasta -K 2`
+ `java -jar QuasiRecomb.jar -i alignment.bam -K 2`
 
 ### Reconstruct specific region with respect to reference genome numbering
- `java -jar QuasiRecomb.jar -i alignedReads.bam -global -r 790-2292`
+ `java -jar QuasiRecomb.jar -i alignment.bam -global -r 790-2292`
 
 ### Output
  The reconstructed DNA haplotype distribution quasispecies.fasta will be saved in the working directory.
