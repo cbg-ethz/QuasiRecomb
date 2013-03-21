@@ -36,7 +36,7 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
  - Suitable for amplicon and shotgun sequencing projects
  - Reports reconstructed haplotypes and their relative frequencies
  - Reports translated proteins in all three reading frames with their relative frequencies
- - Input data can be in BAM, SAM or FASTA format
+ - Input data can be in BAM or SAM format
 
 - - -
 
