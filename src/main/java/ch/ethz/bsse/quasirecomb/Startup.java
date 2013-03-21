@@ -203,6 +203,8 @@ public class Startup {
     private boolean sampleReads;
     @Option(name = "-sampleProteins")
     private boolean sampleProteins;
+    @Option(name = "-bootstrap")
+    private boolean bootstrap;
 
     private void setInputOutput() {
         if (output == null) {
@@ -538,6 +540,7 @@ public class Startup {
             Globals.getINSTANCE().setOPTIMUM("support/best.optimum");
             Globals.getINSTANCE().setUSER_OPTIMUM(true);
         }
+        Globals.getINSTANCE().setBOOTSTRAP(this.bootstrap);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 
@@ -594,7 +597,7 @@ public class Startup {
             System.err.println("USAGE: java -jar QuasiRecomb.jar options...\n");
             System.err.println(" ------------------------");
             System.err.println(" === GENERAL options ===");
-            System.err.println("  -i INPUT\t\t: Multiple fasta file");
+            System.err.println("  -i INPUT\t\t: Alignment file in BAM or SAM format");
             System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory)");
             System.err.println("");
             System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
@@ -612,7 +615,7 @@ public class Startup {
             System.err.println("");
             System.err.println(" ------------------------");
             System.err.println(" === EXAMPLES ===");
-            System.err.println("   java -jar QuasiRecomb.jar -i input.fasta");
+            System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam");
             System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global");
             System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global -K 2");
             System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global -r 790-2292");

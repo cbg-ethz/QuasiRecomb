@@ -18,12 +18,17 @@
 package ch.ethz.bsse.quasirecomb.model;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import ch.ethz.bsse.quasirecomb.informationholder.MSBTemp;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
+import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +74,45 @@ public class Preprocessing {
         int n = countChars(reads);
         Globals.getINSTANCE().setTAU_OMEGA(reads, L);
         plot();
+
+        double N = 0;
+        for (Read r : reads) {
+            N += r.getCount();
+        }
+
+        if (Globals.getINSTANCE().isBOOTSTRAP()) {
+            Multimap<Integer,Double> bics = ArrayListMultimap.create();
+            Map<Read, Double> piMap = new HashMap<>();
+            for (Read r : reads) {
+                piMap.put(r, r.getCount() / N);
+            }
+            Frequency<Read> readDist = new Frequency<>(piMap);
+
+            for (int i = 0; i < 10; i++) {
+                Map<Integer, Read> hashed = new HashMap<>();
+
+                for (int x = 0; x < N; x++) {
+                    Read r = readDist.roll();
+                    int hash = r.hashCode();
+                    if (hashed.containsKey(hash)) {
+                        hashed.get(hash).incCount();
+                    } else {
+                        hashed.put(hash, r);
+                    }
+                }
+                
+                Read[] rs = hashed.values().toArray(new Read[hashed.values().size()]);
+                ModelSelection ms = new ModelSelection(rs, Kmin, Kmax, rs.length, L, n);
+                bics.putAll(ms.getMsTemp().getMaxBICs());
+            }
+            MSBTemp msbt = new MSBTemp(bics);
+            Kmin = msbt.getBestK();
+            Kmax = Kmin;
+            Globals.getINSTANCE().setBOOTSTRAP(false);
+        }
+
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
+
         if (!Globals.getINSTANCE().isNOSAMPLE()) {
             ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
             modelSampling.save();

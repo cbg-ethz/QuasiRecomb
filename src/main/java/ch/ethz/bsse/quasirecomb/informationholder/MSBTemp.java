@@ -17,33 +17,40 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
-import ch.ethz.bsse.quasirecomb.model.hmm.EM;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math.stat.descriptive.rank.Median;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class MSTemp {
+public class MSBTemp {
 
-    private Map<Integer, SelectionResult> srMap = new HashMap<>();
+    private Map<Integer, SelectionResultBootstrap> srMap = new HashMap<>();
     private int bestK;
 
-    public void add(EM em, int K) {
-        srMap.put(K, new SelectionResult(em.getMedianBIC(), em.getLowerBoundBIC(), em.getOr(), em.getMaxBIC()));
+    public MSBTemp(Multimap<Integer, Double> map) {
+        for (Map.Entry<Integer, Collection<Double>> e : map.asMap().entrySet()) {
+            this.add(e.getValue(), e.getKey());
+        }
+    }
+
+    public void add(Collection<Double> bics, int K) {
+        srMap.put(K, new SelectionResultBootstrap(bics));
     }
 
     private void select() {
         double maxValue = Double.NEGATIVE_INFINITY;
         int maxK = 0;
-        for (Map.Entry<Integer, SelectionResult> entry : srMap.entrySet()) {
-            SelectionResult srTmp = entry.getValue();
-            if (maxValue < srTmp.max) {
-                maxValue = srTmp.max;
+        for (Map.Entry<Integer, SelectionResultBootstrap> entry : srMap.entrySet()) {
+            SelectionResultBootstrap srTmp = entry.getValue();
+            if (maxValue < srTmp.median) {
+                maxValue = srTmp.median;
                 maxK = entry.getKey();
             }
         }
@@ -52,8 +59,8 @@ public class MSTemp {
         } else {
             while (maxK - 1 > 0) {
                 if (srMap.containsKey(maxK - 1)) {
-                    SelectionResult previous = srMap.get(maxK - 1);
-                    if (srMap.get(maxK).max < previous.max) {
+                    SelectionResultBootstrap previous = srMap.get(maxK - 1);
+                    if (srMap.get(maxK).median < previous.lowerBound) {
                         maxK--;
                     } else {
                         this.bestK = maxK;
@@ -64,32 +71,24 @@ public class MSTemp {
         }
     }
 
-    public OptimalResult getBestOR() {
+    public int getBestK() {
         this.select();
-        return this.srMap.get(bestK).or;
-    }
-
-    public Multimap<Integer, Double> getMaxBICs() {
-        Multimap<Integer,Double> bics = ArrayListMultimap.create();
-        for (Map.Entry<Integer, SelectionResult> entry : srMap.entrySet()) {
-            SelectionResult srTmp = entry.getValue();
-            bics.put(entry.getKey(), srTmp.max);
-        }
-        return bics;
+        return this.bestK;
     }
 }
 
-class SelectionResult {
+class SelectionResultBootstrap {
 
-    private double mean;
-    private double lowerBound;
-    OptimalResult or;
-    double max;
+    double median;
+    double lowerBound;
 
-    public SelectionResult(double mean, double lowerBound, OptimalResult or, double max) {
-        this.mean = mean;
-        this.lowerBound = lowerBound;
-        this.or = or;
-        this.max = max;
+    public SelectionResultBootstrap(Collection<Double> bics) {
+        List<Double> list = new ArrayList<>(bics);
+        double[] bicsTmp = new double[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            bicsTmp[i] = list.get(i);
+        }
+        this.median = new Median().evaluate(bicsTmp);
+        this.lowerBound = median - new StandardDeviation().evaluate(bicsTmp) * Math.sqrt(1 + 1d / bicsTmp.length);
     }
 }

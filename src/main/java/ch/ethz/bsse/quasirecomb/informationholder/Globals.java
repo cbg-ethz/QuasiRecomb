@@ -57,6 +57,7 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean BOOTSTRAP;
     private boolean REFINEMENT;
     private boolean SAMPLE_PROTEINS;
     private boolean SAMPLE_READS;
@@ -769,5 +770,13 @@ public class Globals {
 
     public void setREFINEMENT(boolean REFINEMENT) {
         this.REFINEMENT = REFINEMENT;
+    }
+
+    public boolean isBOOTSTRAP() {
+        return BOOTSTRAP;
+    }
+
+    public void setBOOTSTRAP(boolean BOOTSTRAP) {
+        this.BOOTSTRAP = BOOTSTRAP;
     }
 }
