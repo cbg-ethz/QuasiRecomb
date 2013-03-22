@@ -28,7 +28,6 @@ import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +80,7 @@ public class Preprocessing {
         }
 
         if (Globals.getINSTANCE().isBOOTSTRAP()) {
-            Multimap<Integer,Double> bics = ArrayListMultimap.create();
+            Multimap<Integer, Double> bics = ArrayListMultimap.create();
             Map<Read, Double> piMap = new HashMap<>();
             for (Read r : reads) {
                 piMap.put(r, r.getCount() / N);
@@ -100,7 +99,7 @@ public class Preprocessing {
                         hashed.put(hash, r);
                     }
                 }
-                
+
                 Read[] rs = hashed.values().toArray(new Read[hashed.values().size()]);
                 ModelSelection ms = new ModelSelection(rs, Kmin, Kmax, rs.length, L, n);
                 bics.putAll(ms.getMsTemp().getMaxBICs());
@@ -339,14 +338,54 @@ public class Preprocessing {
     }
 
     private static void plot() {
-        Globals.getINSTANCE().println("Plotting\t");
+        Globals.getINSTANCE().println("Compute coverage\t");
         StringBuilder sb = new StringBuilder();
-        int start = Globals.getINSTANCE().getALIGNMENT_BEGIN();
         int[] coverage = Globals.getINSTANCE().getTAU_OMEGA().getCoverage();
+        {
+            int start = Globals.getINSTANCE().getALIGNMENT_BEGIN();
+            for (int i = 0; i < coverage.length; i++) {
+                sb.append(String.valueOf(start++)).append("\t").append(coverage[i]).append("\n");
+            }
+        }
+
+        int start = Globals.getINSTANCE().getALIGNMENT_BEGIN();
+        int begin_H = -1;
+        int end_H = -1;
+        int begin_T = -1;
+        int end_T = -1;
         for (int i = 0; i < coverage.length; i++) {
-            sb.append(String.valueOf(start++)).append("\t").append(coverage[i]).append("\n");
+            if (begin_H == -1 && coverage[i] >= 100) {
+                begin_H = start + i;
+            }
+            if (begin_T == -1 && coverage[i] >= 1000) {
+                begin_T = start + i;
+            }
+        }
+        for (int i = coverage.length - 1; i >= begin_H - start; i--) {
+            if (end_H == -1 && coverage[i] >= 100) {
+                end_H = start + i;
+            }
+            if (end_T == -1 && coverage[i] >= 1000) {
+                end_T = start + i;
+            }
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "coverage.txt", sb.toString());
+        if (Globals.getINSTANCE().isCOVERAGE()) {
+            Globals.getINSTANCE().println("To create a coverage plot, please execute: R CMD BATCH support/coverage.R");
+            if (begin_H == -1 || end_H == -1) {
+                Globals.getINSTANCE().println("There is no region with a sufficient coverage of >100x");
+            } else {
+                Globals.getINSTANCE().println("A coverage >100x is in region " + begin_H + "-" + end_H + "");
+                if (begin_T == -1 || end_T == -1) {
+                    Globals.getINSTANCE().println("There is no region with a sufficient coverage of >1000x");
+                } else {
+                    Globals.getINSTANCE().println("A coverage >1000x is in region " + begin_T + "-" + end_T + "");
+                }
+            }
+            System.out.println("");
+            System.out.println("Exiting.");
+            System.exit(9);
+        }
     }
 
     private static void printAlignment(Read[] reads) {

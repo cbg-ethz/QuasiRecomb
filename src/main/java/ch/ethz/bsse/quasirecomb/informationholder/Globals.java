@@ -57,6 +57,7 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean COVERAGE;
     private boolean BOOTSTRAP;
     private boolean REFINEMENT;
     private boolean SAMPLE_PROTEINS;
@@ -778,5 +779,13 @@ public class Globals {
 
     public void setBOOTSTRAP(boolean BOOTSTRAP) {
         this.BOOTSTRAP = BOOTSTRAP;
+    }
+
+    public boolean isCOVERAGE() {
+        return COVERAGE;
+    }
+
+    public void setCOVERAGE(boolean COVERAGE) {
+        this.COVERAGE = COVERAGE;
     }
 }

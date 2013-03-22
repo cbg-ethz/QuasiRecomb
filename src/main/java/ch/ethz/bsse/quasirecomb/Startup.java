@@ -205,6 +205,8 @@ public class Startup {
     private boolean sampleProteins;
     @Option(name = "-bootstrap")
     private boolean bootstrap;
+    @Option(name = "-coverage")
+    private boolean coverage;
 
     private void setInputOutput() {
         if (output == null) {
@@ -234,6 +236,7 @@ public class Startup {
         Globals.getINSTANCE().setSTEPS(this.steps);
         Globals.getINSTANCE().setSAMPLE_READS(this.sampleReads);
         Globals.getINSTANCE().setSAMPLE_PROTEINS(this.sampleProteins);
+        Globals.getINSTANCE().setCOVERAGE(this.coverage);
     }
 
     private void sample() {
