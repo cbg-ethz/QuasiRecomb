@@ -82,10 +82,10 @@ public class ModelSelection {
             Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "training");
             Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
             Globals.getINSTANCE().setPERCENTAGE(0);
-            if (Globals.getINSTANCE().isUSER_OPTIMUM()) {
-                Globals.getINSTANCE().setINTERPOLATE_MU(0);
-                Globals.getINSTANCE().setINTERPOLATE_RHO(0);
-            }
+//            if (Globals.getINSTANCE().isUSER_OPTIMUM()) {
+//                Globals.getINSTANCE().setINTERPOLATE_MU(0);
+//                Globals.getINSTANCE().setINTERPOLATE_RHO(0);
+//            }
             EM em = new EM(this.N, this.L, bestK, this.n, reads);
             if (em.getOr().getLlh() > optBIC || optBIC == 0) {
                 or = em.getOr();
