@@ -64,15 +64,17 @@ ALWAYS look at the alignment with your own eyes, to check the quality, for examp
 The coverage is critical for inference and a MINIMAL coverage of 100x is needed to distinguish between sequencing errors and SNPs.  
 For model-selection the minimal coverage is 1000x and to find reliable low-frequency variants, a coverage of >10,000 is needed.
 
-QuasiRecomb is capable of providing regions with a minimum coverage of 100x and 1000x.
+QuasiRecomb is capable of providing regions with a minimum coverage of 100x, 500x, 1000x and 10000x.
 ```
 java -jar QuasiRecomb.jar -i reads.sam -coverage
 
 [...]
-00:00:01:120 Compute coverage
-00:00:01:123 To create a coverage plot, please execute: R CMD BATCH support/coverage.R
-00:00:01:123 A coverage >100x is in region 6928-7200
-00:00:01:123 A coverage >1000x is in region 6929-7047
+00:00:00:563 Compute coverage
+00:00:00:566 To create a coverage plot, please execute: R CMD BATCH support/coverage.R
+00:00:00:566 A coverage >100x is in region 6928-7200
+00:00:00:567 A coverage >500x is in region 6928-7172
+00:00:00:567 A coverage >1000x is in region 6929-7047
+00:00:00:567 There is no region with a sufficient coverage of >10000x
 ```
 
 One of these regions should be used:
