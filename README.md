@@ -44,7 +44,7 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
  - JDK 7 (http://jdk7.java.net/)
 
 ## HOW-TO:
-If you are new to QuasiRecomb, please read the **[Beginners' guide to viral population inference}(https://github.com/armintoepfer/QuasiRecomb/blob/master/HOWTO.md)**
+If you are new to QuasiRecomb, please read the **[Beginners' guide to viral population inference](https://github.com/armintoepfer/QuasiRecomb/blob/master/HOWTO.md)**
 
 ## RUN:
 ### Local reconstruction
