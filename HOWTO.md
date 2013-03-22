@@ -54,6 +54,8 @@ java -jar InDelFixer.jar -i input_R1_001.fastq -ir input_R2_001.fastq -g referen
 ```
 Depending on the sequencing platform, please use different options `-illumina`, `-454` or `-pacbio`.
 
+For further information on InDelFixer see https://github.com/armintoepfer/InDelFixer
+
 ###Quality control
 ALWAYS look at the alignment with your own eyes, to check the quality, for example with [Tablet](http://bioinf.scri.ac.uk/tablet/)
 
