@@ -43,6 +43,9 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
 #### PREREQUISITES TO RUN:
  - JDK 7 (http://jdk7.java.net/)
 
+## HOW-TO:
+If you are new to QuasiRecomb, please read the **[HOW-TO](Beginners' guide to viral population inference)**
+
 ## RUN:
 ### Local reconstruction
  `java -jar QuasiRecomb.jar -i alignment.bam`
@@ -64,7 +67,10 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
  
 ### Plots
  Summary statistics can be produced with R:
- `R CMD BATCH support/plots.R`
+```
+R CMD BATCH support/coverage.R
+R CMD BATCH support/modelselection.R
+```
 
 ### Help:
  Further help can be showed by running without additional parameters:
