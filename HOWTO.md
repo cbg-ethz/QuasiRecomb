@@ -54,8 +54,38 @@ java -jar InDelFixer.jar -i input_R1_001.fastq -ir input_R2_001.fastq -g referen
 ```
 Depending on the sequencing platform, please use different options `-illumina`, `-454` or `-pacbio`.
 
+###Quality control
+ALWAYS look at the alignment with your own eyes, to check the quality, for example with [Tablet](http://bioinf.scri.ac.uk/tablet/)
+
 ##Viral population inference
 ##### Coverage
 The coverage is critical for inference and a MINIMAL coverage of 100x is needed to distinguish between sequencing errors and SNPs.  
 For model-selection the minimal coverage is 1000x and to find reliable low-frequency variants, a coverage of >10,000 is needed.
 
+QuasiRecomb is capable of providing regions with a minimum coverage of 100x and 1000x.
+```
+java -jar QuasiRecomb.jar -i reads.sam -coverage
+
+[...]
+00:00:01:120 Compute coverage
+00:00:01:123 To create a coverage plot, please execute: R CMD BATCH support/coverage.R
+00:00:01:123 A coverage >100x is in region 6928-7200
+00:00:01:123 A coverage >1000x is in region 6929-7047
+```
+
+One of these regions should be used:
+```
+java -jar QuasiRecomb.jar -i reads.sam -r 6929-7047
+```
+
+##### Model-selection
+Usually model-selection is done automatically in the range of 1-5 generators, but in benchmark situations or if the underlying population is too diverse, model-selection for a larger range of generators can be activated with:
+```
+java -jar QuasiRecomb.jar -i reads.sam -r 6929-7047 -K 1:10
+```
+
+##### Global reconstruction
+When the region of interest is larger than the average read-length, or the focus is only on the dominant haplotypes, please use `-global`.
+
+##### Reduce number of false-positive haplotypes
+If the distribution of haplotypes in the `quasispecies.fasta` file is too flat, the number of false-positives can be reduced with executing the same command-line call as before, but this time with an additional `-refine`. Of course, reducing the number of false-positives is a tradeoff with introducing false-negatives.
