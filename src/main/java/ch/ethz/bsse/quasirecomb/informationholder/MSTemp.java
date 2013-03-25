@@ -21,9 +21,7 @@ import ch.ethz.bsse.quasirecomb.model.hmm.EM;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import org.apache.commons.math.stat.descriptive.rank.Median;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)

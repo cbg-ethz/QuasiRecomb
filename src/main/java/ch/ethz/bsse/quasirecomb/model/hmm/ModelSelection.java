@@ -125,7 +125,7 @@ public class ModelSelection {
             msTemp.add(em, k);
             Globals.getINSTANCE().setPERCENTAGE(0);
             or = msTemp.getBestOR();
-            if (or.getK() < k && or.getK() + 1 == k) {
+            if (!Globals.getINSTANCE().isBOOTSTRAP() && or.getK() < k && or.getK() + 1 == k) {
                 break;
             }
         }

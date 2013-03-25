@@ -29,8 +29,10 @@ import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 
@@ -88,6 +90,7 @@ public class Preprocessing {
             Frequency<Read> readDist = new Frequency<>(piMap);
 
             for (int i = 0; i < 10; i++) {
+                Globals.getINSTANCE().println("Bootstrap " + i + "\n");
                 Map<Integer, Read> hashed = new HashMap<>();
 
                 for (int x = 0; x < N; x++) {
@@ -96,7 +99,7 @@ public class Preprocessing {
                     if (hashed.containsKey(hash)) {
                         hashed.get(hash).incCount();
                     } else {
-                        hashed.put(hash, r);
+                        hashed.put(hash, new Read(r));
                     }
                 }
 
@@ -104,6 +107,31 @@ public class Preprocessing {
                 ModelSelection ms = new ModelSelection(rs, Kmin, Kmax, rs.length, L, n);
                 bics.putAll(ms.getMsTemp().getMaxBICs());
             }
+            StringBuilder sb = new StringBuilder();
+
+            int x = bics.asMap().values().iterator().next().size();
+            Set<Integer> keySet = bics.keySet();
+            for (int i : keySet) {
+                sb.append(i).append("\t");
+            }
+            sb.setLength(sb.length() - 1);
+            sb.append("\n");
+
+
+
+            for (int l = 0; l < x; l++) {
+                for (int i : keySet) {
+                    ArrayList arrayList = new ArrayList(bics.get(i));
+                    if (l < arrayList.size()) {
+                        sb.append(arrayList.get(l));
+                    }
+                    sb.append("\t");
+                }
+                sb.setLength(sb.length() - 1);
+                sb.append("\n");
+            }
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "bics.txt", sb.toString());
+            Globals.getINSTANCE().println("");
             MSBTemp msbt = new MSBTemp(bics);
             Kmin = msbt.getBestK();
             Kmax = Kmin;
@@ -237,19 +265,9 @@ public class Preprocessing {
         Globals.getINSTANCE().setALIGNMENT_END(L);
         Globals.getINSTANCE().println("Modifying reads\t");
         double shrinkCounter = 0;
-        if (Globals.getINSTANCE().isDEBUG()) {
-            if (new File(Globals.getINSTANCE().getSAVEPATH() + "gap.txt").exists()) {
-                new File(Globals.getINSTANCE().getSAVEPATH() + "gap.txt").delete();
-            }
-        }
-        StringBuilder indelSB = new StringBuilder();
         for (Read r : reads) {
             r.shrink();
-            indelSB.append(r.getInsertion()).append(" ");
             Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
-        }
-        if (Globals.getINSTANCE().isDEBUG()) {
-            Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "gap.txt", indelSB.toString());
         }
         Globals.getINSTANCE().print("Modifying reads\t100%");
         return L;
@@ -351,35 +369,62 @@ public class Preprocessing {
         int start = Globals.getINSTANCE().getALIGNMENT_BEGIN();
         int begin_H = -1;
         int end_H = -1;
+        int begin_FH = -1;
+        int end_FH = -1;
         int begin_T = -1;
         int end_T = -1;
+        int begin_TT = -1;
+        int end_TT = -1;
         for (int i = 0; i < coverage.length; i++) {
             if (begin_H == -1 && coverage[i] >= 100) {
                 begin_H = start + i;
             }
+            if (begin_FH == -1 && coverage[i] >= 500) {
+                begin_FH = start + i;
+            }
             if (begin_T == -1 && coverage[i] >= 1000) {
                 begin_T = start + i;
+            }
+            if (begin_TT == -1 && coverage[i] >= 10000) {
+                begin_TT = start + i;
             }
         }
         for (int i = coverage.length - 1; i >= begin_H - start; i--) {
             if (end_H == -1 && coverage[i] >= 100) {
                 end_H = start + i;
             }
+            if (end_FH == -1 && coverage[i] >= 500) {
+                end_FH = start + i;
+            }
             if (end_T == -1 && coverage[i] >= 1000) {
                 end_T = start + i;
+            }
+            if (end_TT == -1 && coverage[i] >= 10000) {
+                end_TT = start + i;
             }
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "coverage.txt", sb.toString());
         if (Globals.getINSTANCE().isCOVERAGE()) {
+            Utils.saveCoveragePlot();
             Globals.getINSTANCE().println("To create a coverage plot, please execute: R CMD BATCH support/coverage.R");
             if (begin_H == -1 || end_H == -1) {
                 Globals.getINSTANCE().println("There is no region with a sufficient coverage of >100x");
             } else {
                 Globals.getINSTANCE().println("A coverage >100x is in region " + begin_H + "-" + end_H + "");
-                if (begin_T == -1 || end_T == -1) {
-                    Globals.getINSTANCE().println("There is no region with a sufficient coverage of >1000x");
+                if (begin_FH == -1 || end_FH == -1) {
+                    Globals.getINSTANCE().println("There is no region with a sufficient coverage of >500x");
                 } else {
-                    Globals.getINSTANCE().println("A coverage >1000x is in region " + begin_T + "-" + end_T + "");
+                    Globals.getINSTANCE().println("A coverage >500x is in region " + begin_FH + "-" + end_FH + "");
+                    if (begin_T == -1 || end_T == -1) {
+                        Globals.getINSTANCE().println("There is no region with a sufficient coverage of >1000x");
+                    } else {
+                        Globals.getINSTANCE().println("A coverage >1000x is in region " + begin_T + "-" + end_T + "");
+                        if (begin_TT == -1 || end_TT == -1) {
+                            Globals.getINSTANCE().println("There is no region with a sufficient coverage of >10000x");
+                        } else {
+                            Globals.getINSTANCE().println("A coverage >10000x is in region " + begin_TT + "-" + end_TT + "");
+                        }
+                    }
                 }
             }
             System.out.println("");

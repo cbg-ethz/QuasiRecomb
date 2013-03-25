@@ -1,18 +1,19 @@
 /**
  * Copyright (c) 2011-2013 Armin Töpfer
  *
- * This file is part of InDelFixer.
+ * This file is part of QuasiRecomb.
  *
- * InDelFixer is free software: you can redistribute it and/or modify it under
+ * QuasiRecomb is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or any later version.
  *
- * InDelFixer is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * QuasiRecomb is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * InDelFixer. If not, see <http://www.gnu.org/licenses/>.
+ * QuasiRecomb. If not, see <http://www.gnu.org/licenses/>.
  */
 package ch.ethz.bsse.quasirecomb.utils;
 
@@ -169,11 +170,12 @@ public class SFRComputing implements Callable<ReadTMP> {
                         //inner
                     } else if (refStart < from && readEnd > to) {
                         //outer
-                        readBases = Arrays.copyOfRange(readBases, from - refStart, to - refStart - (from - refStart));
-                        cigar = Arrays.copyOfRange(cigar, from - refStart, to - refStart - (from - refStart));
+                        readBases = Arrays.copyOfRange(readBases, from - refStart, to - refStart);
+                        cigar = Arrays.copyOfRange(cigar, from - refStart, to - refStart);
                         if (hasQuality) {
-                            quality = Arrays.copyOfRange(quality, from - refStart, to - refStart - (from - refStart));
+                            quality = Arrays.copyOfRange(quality, from - refStart, to - refStart);
                         }
+                        refStart = from;
                     } else {
                         System.err.println("");
                         System.err.println("start: " + refStart + "\t+end:" + readEnd);

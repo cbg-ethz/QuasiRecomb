@@ -291,7 +291,7 @@ public class Utils extends FastaParser {
         }
         Globals.getINSTANCE().print("Parsing\t\t100%");
         sfr.close();
-        StringBuilder sb = new StringBuilder();
+//        StringBuilder sb = new StringBuilder();
         for (Future<ReadTMP> future : readFutures) {
             try {
                 ReadTMP read = future.get();
@@ -310,7 +310,7 @@ public class Utils extends FastaParser {
                         }
                         Read r2 = readMap.get(name);
                         if (r2.isPaired()) {
-                            sb.append(r2.getCrickBegin() - r2.getWatsonEnd()).append("\n");
+//                            sb.append(r2.getCrickBegin() - r2.getWatsonEnd()).append("\n");
                             if (r2.getCrickBegin() - r2.getWatsonEnd() < 0) {
                                 System.out.println(name + "\t" + r2.getWatsonBegin() + "\t" + r2.getWatsonEnd() + "\t" + r2.getCrickBegin() + "\t" + r2.getCrickEnd());
                             }
@@ -352,7 +352,6 @@ public class Utils extends FastaParser {
                 }
             }
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "indel.txt", sb.toString());
 //        return null;
         return hashed.values().toArray(new Read[hashed.size()]);
     }

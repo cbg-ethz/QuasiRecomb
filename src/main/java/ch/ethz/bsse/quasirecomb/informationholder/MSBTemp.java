@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math.stat.descriptive.rank.Median;
 
+
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
@@ -75,8 +76,12 @@ public class MSBTemp {
         this.select();
         return this.bestK;
     }
-}
 
+    public Map<Integer, SelectionResultBootstrap> getSrMap() {
+        return srMap;
+    }
+    
+}
 class SelectionResultBootstrap {
 
     double median;

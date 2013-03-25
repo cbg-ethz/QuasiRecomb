@@ -38,6 +38,21 @@ public class Read {
     private int crickEnd = -1;
     private int insertion;
 
+    public Read(Read r) {
+        this.watsonSequence = r.watsonSequence;
+        this.watsonQuality = r.watsonQuality;
+        this.watsonCigar = r.watsonCigar;
+        this.watsonBegin = r.watsonBegin;
+        this.watsonEnd = r.watsonEnd;
+        this.crickSequence = r.crickSequence;
+        this.crickQuality = r.crickQuality;
+        this.crickCigar = r.crickCigar;
+        this.crickBegin = r.crickBegin;
+        this.insertion = r.insertion;
+    }
+    
+    
+
     public Read(byte[] sequence, int begin, int end, double[] quality, boolean[] cigar) {
         this.watsonSequence = sequence;
         this.watsonBegin = begin;
