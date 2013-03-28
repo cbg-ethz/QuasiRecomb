@@ -27,8 +27,10 @@ import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -109,35 +111,37 @@ public class JHMM extends Garage {
         this.nJKL = new double[L][K][K];
         this.nJKV = new double[L][K][n];
         this.nneqPos = new double[L];
-        Globals.getINSTANCE().resetTimer();
         this.eStep();
         this.mStep();
         s++;
     }
+    List<Callable<Double>> callables = new LinkedList<>();
 
     private void eStep() {
         clearGarage(L, K, n);
         this.loglikelihood = 0d;
-        List<Future<Double>> results = new ArrayList<>();
-        final int readAmount = allReads.length;
-
-        for (int i = 0; i < readAmount; i += Globals.getINSTANCE().getSTEPS()) {
-            int b = i + Globals.getINSTANCE().getSTEPS();
-            if (b >= readAmount) {
-                b = readAmount;
+        if (callables.isEmpty()) {
+            final int readAmount = allReads.length;
+            int max;
+            if (Globals.getINSTANCE().getSTEPS() == 2) {
+                max = (int) (readAmount / (Runtime.getRuntime().availableProcessors() - 1));
+            } else {
+                max = Globals.getINSTANCE().getSTEPS();
             }
-            results.add(Globals.getINSTANCE().getExecutor().submit(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b))));
-            Globals.getINSTANCE().printPercentage(K, (double) i / readAmount, Kmin);
+            for (int i = 0; i < readAmount; i += max) {
+                int b = i + max;
+                if (b >= readAmount) {
+                    b = readAmount;
+                }
+                callables.add(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b)));
+                Globals.getINSTANCE().printPercentage(K, (double) i / readAmount, Kmin);
+            }
         }
-        Globals.getINSTANCE().getExecutor().shutdown();
+        List<Future<Double>> results = null;
         try {
-            while (!Globals.getINSTANCE().getExecutor().awaitTermination(1, TimeUnit.SECONDS)) {
-                TimeUnit.MILLISECONDS.sleep(10);
-            }
-        } catch (InterruptedException e) {
-            System.err.println(e);
-            Utils.error();
-            System.exit(0);
+            results = Globals.getINSTANCE().getExecutor().invokeAll(callables);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         for (int i = 0; i < results.size(); i++) {
@@ -150,7 +154,6 @@ public class JHMM extends Garage {
         }
 
         updateExpectedCounts();
-        Globals.renewExecutor();
     }
 
     private void updateExpectedCounts() {
@@ -217,6 +220,19 @@ public class JHMM extends Garage {
                         repeat = false;
                     }
                 } while (repeat);
+                if (Globals.getINSTANCE().isMAX()) {
+                    double max = 0;
+                    int maxV = 0;
+                    for (int v = 0; v < n; v++) {
+                        if (muJKV[v] > max) {
+                            max = muJKV[v];
+                            maxV = v;
+                        }
+                    }
+                    for (int v = 0; v < n; v++) {
+                        muJKV[v] = (v == maxV) ? 1 : 0;
+                    }
+                }
                 for (int v = 0; v < n; v++) {
                     this.changedMu(mu[j][k][v], muJKV[v]);
                     mu[j][k][v] = muJKV[v];

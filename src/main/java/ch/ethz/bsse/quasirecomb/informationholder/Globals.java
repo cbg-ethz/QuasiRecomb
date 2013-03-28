@@ -47,7 +47,7 @@ public class Globals {
 
     private static ExecutorService refreshExecutor() {
 //        return Executors.newSingleThreadExecutor();
-        return new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 0L, TimeUnit.MILLISECONDS, blockingQueue, rejectedExecutionHandler);
+        return new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 5L, TimeUnit.MINUTES, blockingQueue, rejectedExecutionHandler);
     }
 
     public static void renewExecutor() {
@@ -57,6 +57,7 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean MAX;
     private boolean COVERAGE;
     private boolean BOOTSTRAP;
     private boolean REFINEMENT;
@@ -128,7 +129,6 @@ public class Globals {
     private final AtomicInteger MERGED_COUNT = new AtomicInteger(0);
     private final AtomicInteger PAIRED_COUNT = new AtomicInteger(0);
     private double PERCENTAGE = 0;
-    private long oldTime = 0;
     private String oldOut = "";
     private double hammingCount = 0;
     private int hammingMax = 0;
@@ -164,6 +164,7 @@ public class Globals {
             System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
         }
     }
+
     public void printBIC(int K, int percentage, int bic) {
         System.out.print("\r                                                                                                                                                   ");
         if (MODELSELECTION) {
@@ -184,20 +185,12 @@ public class Globals {
         System.out.print("\n" + time() + " " + s);
     }
 
-    public void resetTimer() {
-        this.oldTime = 0;
-    }
-
     public void printPercentage(int K, double read, double Kmin) {
         if (!SILENT) {
             if (!oldOut.equals(time())) {
                 this.oldOut = time();
-                if (oldTime == 0) {
-                    oldTime = System.currentTimeMillis();
-                }
-                long time = System.currentTimeMillis() - oldTime;
                 System.out.print("\r                                                                                                                                                   ");
-                System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training ") + " [K " + (int) Kmin + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[ETA:" + df.format(new Date((long) ((1 - read) * time / read))) + "]");
+                System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training ") + " [K " + (int) Kmin + "]:\t" + (Math.round(PERCENTAGE * 1000) / 1000) + "%");
             }
         }
     }
@@ -787,5 +780,13 @@ public class Globals {
 
     public void setCOVERAGE(boolean COVERAGE) {
         this.COVERAGE = COVERAGE;
+    }
+
+    public boolean isMAX() {
+        return MAX;
+    }
+
+    public void setMAX(boolean MAX) {
+        this.MAX = MAX;
     }
 }

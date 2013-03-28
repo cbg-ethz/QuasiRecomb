@@ -338,7 +338,7 @@ public class Preprocessing {
         alignmentEntropy /= L;
         computeAllelFrequencies(L, alignment, alignmentWeighted);
         Globals.getINSTANCE().print("Allel frequencies\t100%");
-        Globals.getINSTANCE().println("Alignment entropy\t" + alignmentEntropy);
+        Globals.getINSTANCE().println("Alignment entropy\t" + Math.round(alignmentEntropy*1000)/1000d);
         return alignment;
     }
 

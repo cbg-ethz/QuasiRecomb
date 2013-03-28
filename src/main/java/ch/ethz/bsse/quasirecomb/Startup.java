@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -195,8 +196,6 @@ public class Startup {
     private boolean noquality;
     @Option(name = "--cutnham")
     private boolean cutnham;
-    @Option(name = "-l")
-    private int l;
     @Option(name = "--annotate")
     private boolean annotate;
     @Option(name = "-sampleReads")
@@ -207,6 +206,10 @@ public class Startup {
     private boolean bootstrap;
     @Option(name = "-coverage")
     private boolean coverage;
+    @Option(name = "-max")
+    private boolean max;
+    @Option(name = "--extended")
+    private boolean extended;
 
     private void setInputOutput() {
         if (output == null) {
@@ -435,16 +438,21 @@ public class Startup {
     private void distanceDetail() {
         Map<String, Double> quasiDouble = FastaParser.parseQuasispeciesFile(input);
         Map<String, String> haps = FastaParser.parseHaplotypeFile(haplotypes);
+        Map<String, String> strain2Hap = new HashMap<>();
         double[][] precision = new double[haps.size()][300];
         String[] head = new String[haps.size()];
         int x = 0;
         for (Entry<String, String> entry : haps.entrySet()) {
+            head[x++] = entry.getValue().replaceAll(">", "");
+            strain2Hap.put(entry.getValue().replaceAll(">", ""), entry.getKey());
+        }
+        Arrays.sort(head);
+        x = 0;
+        for (String strain : head) {
             Map<String, String> h = new HashMap<>();
-            h.put(entry.getKey(), entry.getValue());
-            head[x] = entry.getValue().replaceAll(">", "");
+            h.put(strain2Hap.get(strain), strain);
             precision[x++] = DistanceUtils.calculatePhi2(h, quasiDouble);
         }
-
         for (int i = 0; i < head.length; i++) {
             System.out.print("\t" + head[i]);
         }
@@ -461,7 +469,13 @@ public class Startup {
     }
 
     private void cut() {
-        Cutter.cut(input, output, begin, end);
+        String[] split = this.region.split(";");
+        for (String s : split) {
+            String[] r = s.split("-");
+            int start = Integer.parseInt(r[0]);
+            int stop = Integer.parseInt(r[1]);
+            Cutter.cut(input, start + "-" + stop + ".fasta", start-1, stop-1);
+        }
     }
 
     private void circos() {
@@ -542,8 +556,12 @@ public class Startup {
             Globals.getINSTANCE().setINTERPOLATE_RHO(1);
             Globals.getINSTANCE().setOPTIMUM("support/best.optimum");
             Globals.getINSTANCE().setUSER_OPTIMUM(true);
+            if (!new File(this.output+File.separator+"support/best.optimum").exists()) {
+                System.err.println("QuasiRecomb needs to be executed once without -refine before it can be used with -refine.");
+            }
         }
         Globals.getINSTANCE().setBOOTSTRAP(this.bootstrap);
+        Globals.getINSTANCE().setMAX(this.max);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 
@@ -598,63 +616,82 @@ public class Startup {
             System.err.println("Get latest version from http://bit.ly/quasirecomb");
             System.err.println("");
             System.err.println("USAGE: java -jar QuasiRecomb.jar options...\n");
-            System.err.println(" ------------------------");
+            System.err.println(" -------------------------");
             System.err.println(" === GENERAL options ===");
-            System.err.println("  -i INPUT\t\t: Alignment file in BAM or SAM format");
-            System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory)");
+            System.err.println("  -i INPUT\t\t: Alignment file in BAM or SAM format.");
+            System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory).");
             System.err.println("");
             System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
                     + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached, but will stop at K=5.");
-            System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5)");
-            System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50)");
-            System.err.println("  -r INT-INT\t\t: Only reconstruct a specific region");
-            System.err.println("  -noRecomb\t\t: Do not allow recombination");
-            System.err.println("  -noQuality\t\t: Do not account phred quality scores (faster runtime)");
-            System.err.println("  -global\t\t: Use this if the region is longer than a read");
-//            System.err.println("  -plot\t\t\t: Plot coverage");
-            System.err.println("  -printAlignment\t: Save alignment.txt in a human readable format");
+            System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5).");
+            System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50).");
+            System.err.println("  -r INT-INT\t\t: Only reconstruct a specific region.");
+            System.err.println("  -noRecomb\t\t: Do not allow recombination.");
+            System.err.println("  -noQuality\t\t: Do not account phred quality scores (faster runtime).");
+            System.err.println("  -global\t\t: Use this if the region is longer than a read.");
+            System.err.println("  -printAlignment\t: Save alignment.txt in a human readable format.");
 //            System.err.println("  -sampleReads\t\t: Sample reads in addition to haplotypes");
-            System.err.println("  -sampleProteins\t: Sample full-length protein sequences in three reading frames");
-            System.err.println("");
-            System.err.println(" ------------------------");
+            System.err.println("  -sampleProteins\t: Sample full-length protein sequences in three reading frames.");
+            System.err.println("  -coverage\t: If your dataset only contains a single region of interest, "
+                    + "\n\t\t\t  regions with a minimum coverage of 100x, 500x, 1,000x and 10,000x are reported.");
+            System.err.println("  -bootstrap\t\t: Model-selection is performed on 10 bootstrapped datasets. Very time consuming, but robust.");
+            System.err.println("  -refine\t\t: Can only be used after QuasiRecomb has been executed once before on the same dataset in the same directory."
+                    + "\n\t\t\t  Thins the number of haplotypes.");
+            System.err.println(" -------------------------");
+            System.err.println(" === Technical options ===");
+            System.err.println("  -XX:NewRatio=9\t: Reduces the menory consumption (RECOMMENDED to use).");
+            System.err.println("  -XX:+UseNUMA\t\t: Enhances performance on multi-CPU systems.");
+            System.err.println(" -------------------------");
             System.err.println(" === EXAMPLES ===");
-            System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam");
-            System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global");
-            System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global -K 2");
-            System.err.println("   java -jar QuasiRecomb.jar -i alignment.bam -global -r 790-2292");
-            System.err.println(" ------------------------");
+            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam");
+            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -global");
+            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -global -K 2");
+            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -global -r 790-2292");
+            System.err.println(" -------------------------");
+            System.err.println("  For further information, see http://bit.ly/quasirecomb-howto");
+            System.err.println(" -------------------------");
 //            System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
 //            System.err.println("  -pdelta\t\t: Stop if there is no change of parameters, convergence criterium");
 //            System.err.println("  -e DOUBLE\t\t: Fix error rate of the sequencing machine");
 //            System.err.println("  -noInfoEps\t\t: Do not use the error rate of 0.8% as an informative prior");
 //            System.err.println("");
 //            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === SAMPLE from model === ");
-//            System.err.println("  --sample ");
-//            System.err.println("  -i FILE\t\t: Sample from given trained model");
-//            System.err.println("");
-//            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i path/to/optimumJava");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === SUMMARY of model === ");
-//            System.err.println("  --sample ");
-//            System.err.println("  -i FILE\t\t: Summary of given trained model");
-//            System.err.println("");
-//            System.err.println("  Example for summary:\n   java -jar QuasiRecomb.jar --summary -i path/to/optimumJava");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println("");
-//            System.err.println(" ------------------------");
-//            System.err.println(" === DISTANCE (phi) === ");
+            if (this.extended) {
+            System.err.println(" -------------------------");
+            System.err.println(" === SAMPLE from model === ");
+            System.err.println("  --sample \t\t: Sample from given trained model");
+            System.err.println("  -i FILE\t\t: Path to best.optimum file");
+            System.err.println("");
+            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i support/best.optimum");
+//            System.err.println(" -------------------------");
+//            System.err.println(" === DISTANCE === ");
 //            System.err.println("  --distance ");
-//            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
-//            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes sampled from");
+//            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies"
+//                    + "\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
+//            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes.");
 //            System.err.println("");
-//            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasiespecies.fasta -h dataset.fasta");
-//            System.err.println(" ------------------------");
+//            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasispecies.fasta -h dataset.fasta");
+            System.err.println(" -------------------------");
+            System.err.println(" === DISTANCE === ");
+            System.err.println("  --distanceDetail\t: Frequencies the original haplotypes are present in the quasispecies, allowing q mismatches");
+            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies"
+                    + "\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
+            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes.");
+            System.err.println("");
+            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distanceDetail -i quasispecies.fasta -h dataset.fasta");
+            System.err.println(" -------------------------");
+//            System.err.println(" === SIMULATE === ");
+//            System.err.println("  --simulate ");
+//            System.err.println("  -i FILE\t\t: Multiple fasta file with haplotypes");
+//            System.err.println("  -f INT_ARRAY\t\t: Array with frequencies for haplotypes."
+//                    + "\n\t\t\t  The number of frequencies has to be equal the number of haplotypes.");
+//            System.err.println("  -e DOUBLE\t\t: Error-rate per base, per position (default: 0.003)");
+//            System.err.println("  -N int\t\t: Number of reads");
+//            System.err.println("  -paired\t\t: Paired-end reads 2x250bp");
+//            System.err.println("");
+//            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --simulate -i quasispecies.fasta -h dataset.fasta");
+//            System.err.println(" -------------------------");
+            }
         }
     }
 

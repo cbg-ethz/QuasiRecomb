@@ -60,28 +60,6 @@ public class ReadHMMStatic {
                             for (int l = 0; l < jhmm.getK(); l++) {
                                 sumL += fJK[j - 1][l] * jhmm.getRho()[jGlobal - 1][l][k];
                             }
-//                            switch (read.getPosition(j)) {
-//                                case WATSON_HIT:
-//                                    sumL *= 1 - Globals.getINSTANCE().getTAU_OMEGA().getTauWatsonProbability(j, )[1][jGlobal];
-//                                    break;
-//                                case WATSON_OUT:
-//                                    sumL *= jhmm.getTauOmega()[1][jGlobal];
-//                                    break;
-//                                case INSERTION:
-//                                    sumL *= 1 - jhmm.getTauOmega()[2][jGlobal];
-//                                    break;
-//                                case CRICK_IN:
-//                                    sumL *= jhmm.getTauOmega()[2][jGlobal];
-//                                    break;
-//                                case CRICK_HIT:
-//                                    sumL *= 1 - jhmm.getTauOmega()[3][jGlobal];
-//                                    break;
-//                                case CRICK_OUT:
-//                                    break;
-//                                default:
-//                                    System.err.println(read.getPosition(j));
-//                                    break;
-//                            }
                             fJKV[j][k][v] = sumL;
                             if (Double.isNaN(fJKV[j][k][v])) {
                                 System.err.println("x");

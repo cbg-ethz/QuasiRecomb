@@ -21,11 +21,13 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.ReadTMP;
-import com.google.common.collect.Lists;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 
@@ -269,7 +271,7 @@ public class Utils extends FastaParser {
 //        } else if (isFastaFormat(path)) {
 //            return parseFastaInput(path);
 //        } else {
-            return parseBAMSAM(path);
+        return parseBAMSAM(path);
 //        }
     }
 
@@ -283,55 +285,72 @@ public class Utils extends FastaParser {
         }
         sfr.close();
         sfr = new SAMFileReader(bam);
-        List<Future<ReadTMP>> readFutures = Lists.newArrayListWithExpectedSize((int) size);
         int counter = 0;
+        int x = 0;
+        List<Callable<List<ReadTMP>>> callables = new ArrayList<>();
+        List<SAMRecord> l = new LinkedList<>();
+        int slices = 0;
+        int max = (int) (size / (Runtime.getRuntime().availableProcessors() - 1));
         for (final SAMRecord samRecord : sfr) {
-            readFutures.add(Globals.getINSTANCE().getExecutor().submit(new SFRComputing(samRecord)));
-            Globals.getINSTANCE().print("Parsing\t\t" + (Math.round((counter++ / size) * 100)) + "%");
+            if (x > max) {
+                x = 0;
+                slices++;
+            } else {
+                callables.add(new SFRComputing(l));
+                l = new LinkedList<>();
+            }
+            Globals.getINSTANCE().print("Parsing\t\t" + (Math.round((counter++ / size) * 100)));
+            l.add(samRecord);
+            x++;
         }
-        Globals.getINSTANCE().print("Parsing\t\t100%");
+        Globals.getINSTANCE().print("Parsing\t\tcomputing");
+        callables.add(new SFRComputing(l));
+        List<Future<List<ReadTMP>>> readFutures = null;
+        try {
+            readFutures = Globals.getINSTANCE().getExecutor().invokeAll(callables);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Globals.getINSTANCE().print("Parsing\t\t           ");
+        Globals.getINSTANCE().print("Parsing\t\tdone");
         sfr.close();
-//        StringBuilder sb = new StringBuilder();
-        for (Future<ReadTMP> future : readFutures) {
+        for (Future<List<ReadTMP>> future : readFutures) {
             try {
-                ReadTMP read = future.get();
-                if (read != null) {
-                    String name = read.name;
-                    int refStart = read.refStart;
-                    byte[] readBases = read.readBases;
-                    double[] quality = read.quality;
-                    boolean hasQuality = read.hasQuality;
-                    boolean[] cigar = read.cigar;
-                    if (readMap.containsKey(name)) {
-                        if (hasQuality) {
-                            readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar);
-                        } else {
-                            readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length, cigar);
-                        }
-                        Read r2 = readMap.get(name);
-                        if (r2.isPaired()) {
-//                            sb.append(r2.getCrickBegin() - r2.getWatsonEnd()).append("\n");
-                            if (r2.getCrickBegin() - r2.getWatsonEnd() < 0) {
-                                System.out.println(name + "\t" + r2.getWatsonBegin() + "\t" + r2.getWatsonEnd() + "\t" + r2.getCrickBegin() + "\t" + r2.getCrickEnd());
+                List<ReadTMP> readList = future.get();
+                for (ReadTMP read : readList) {
+                    if (read != null) {
+                        String name = read.name;
+                        int refStart = read.refStart;
+                        byte[] readBases = read.readBases;
+                        double[] quality = read.quality;
+                        boolean hasQuality = read.hasQuality;
+                        boolean[] cigar = read.cigar;
+                        if (readMap.containsKey(name)) {
+                            if (hasQuality) {
+                                readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar);
+                            } else {
+                                readMap.get(name).setPairedEnd(BitMagic.pack(readBases), refStart, refStart + readBases.length, cigar);
                             }
-                        }
-                        if (Globals.getINSTANCE().isUNPAIRED()) {
-                            Read r = readMap.get(name);
-                            if (r.isPaired()) {
-                                r.unpair();
-                                if (hasQuality) {
-                                    readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar));
+                            Read r2 = readMap.get(name);
+                            if (r2.isPaired()) {
+                                if (Globals.getINSTANCE().isUNPAIRED()) {
+                                    readMap.put(name + "_R", r2.unpair());
                                 } else {
-                                    readMap.put(name + "_R", new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, cigar));
+                                    if ((r2.getCrickBegin() - r2.getWatsonEnd()) > 2000) {
+                                        readMap.put(name + "_R", r2.unpair());
+                                    }
+                                    if (r2.getCrickBegin() - r2.getWatsonEnd() < 0) {
+                                        System.out.println(name + "\t" + r2.getWatsonBegin() + "\t" + r2.getWatsonEnd() + "\t" + r2.getCrickBegin() + "\t" + r2.getCrickEnd());
+                                    }
                                 }
                             }
-                        }
-                        Globals.getINSTANCE().incPAIRED();
-                    } else {
-                        if (hasQuality) {
-                            readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar));
+                            Globals.getINSTANCE().incPAIRED();
                         } else {
-                            readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, cigar));
+                            if (hasQuality) {
+                                readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar));
+                            } else {
+                                readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, cigar));
+                            }
                         }
                     }
                 }
@@ -352,7 +371,6 @@ public class Utils extends FastaParser {
                 }
             }
         }
-//        return null;
         return hashed.values().toArray(new Read[hashed.size()]);
     }
 
@@ -488,6 +506,7 @@ public class Utils extends FastaParser {
                 + "dev.off()";
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "modelselection.R", r);
     }
+
     public static void saveCoveragePlot() {
         String r = "dir.create(\"plots\",F)\n"
                 + "coverage <- read.delim(\"support/coverage.txt\", header=F)\n"

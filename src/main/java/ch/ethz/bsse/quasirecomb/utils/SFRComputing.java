@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.ReadTMP;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import net.sf.samtools.AlignmentBlock;
@@ -39,16 +40,27 @@ import net.sf.samtools.SAMRecord;
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class SFRComputing implements Callable<ReadTMP> {
+public class SFRComputing implements Callable<List<ReadTMP>> {
 
-    final SAMRecord samRecord;
+    final List<SAMRecord> samRecordList;
 
-    public SFRComputing(final SAMRecord samRecord) {
-        this.samRecord = samRecord;
+    public SFRComputing(final List<SAMRecord> samRecord) {
+        this.samRecordList = samRecord;
     }
 
     @Override
-    public ReadTMP call() {
+    public List<ReadTMP> call() {
+        List<ReadTMP> results = new LinkedList<>();
+        for (SAMRecord s : samRecordList) {
+            ReadTMP r = single(s);
+            if (r != null) {
+                results.add(r);
+            }
+        }
+        return results;
+    }
+
+    private ReadTMP single(SAMRecord samRecord) {
         try {
             List<AlignmentBlock> alignmentBlocks = samRecord.getAlignmentBlocks();
             if (alignmentBlocks.isEmpty()) {

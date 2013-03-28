@@ -50,7 +50,7 @@ public class Cutter {
                             if (sb.length() > 0) {
                                 out.write(head);
                                 out.write("\n");
-                                out.write(sb.toString().substring(begin - 1, end));
+                                out.write(sb.toString().substring(begin, end));
                                 out.write("\n");
                                 sb.setLength(0);
                             }
@@ -63,7 +63,7 @@ public class Cutter {
                 }
                 out.write(head);
                 out.write("\n");
-                out.write(sb.toString().substring(begin - 1, end));
+                out.write(sb.toString().substring(begin, end));
                 out.write("\n");
             }
         } catch (Exception e) {
