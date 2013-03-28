@@ -61,29 +61,33 @@ ALWAYS look at the alignment with your own eyes, to check the quality, for examp
 
 ##Viral population inference
 ##### Coverage
-The coverage is critical for inference and a MINIMAL coverage of 1,000x is needed to distinguish between sequencing errors and SNPs.  
-To find reliable low-frequency variants, a coverage of >10,000x is needed.
+The coverage is critical for inference and a MINIMAL coverage of 1,000x is recommended to distinguish between sequencing errors and SNPs.  
+To find low-frequency variants reliably, a coverage of >10,000x is needed.
 
-QuasiRecomb is capable of providing regions with a minimum coverage of 1,000x and 10,000x.
+The lower the coverage, the less reliable to reconstruction.
+
+QuasiRecomb is capable of providing regions with a minimum coverage of 100x, 500x, 1,000x and 10,000x.
 ```
 java -jar QuasiRecomb.jar -i reads.sam -coverage
 
 [...]
-00:00:00:563 Compute coverage
-00:00:00:566 To create a coverage plot, please execute: R CMD BATCH support/coverage.R
-00:00:00:567 A coverage >1000x is in region 2929-7047
-00:00:00:567 There is no region with a sufficient coverage of >10000x
+00:00:01:266 Compute coverage
+00:00:01:268 To create a coverage plot, please execute: R CMD BATCH support/coverage.R
+00:00:01:268 A coverage >100x is in region 23-298
+00:00:01:268 A coverage >500x is in region 23-267
+00:00:01:268 A coverage >1000x is in region 24-142
+00:00:01:268 There is no region with a sufficient coverage of >10000x
 ```
 
 One of these regions should be used:
 ```
-java -jar QuasiRecomb.jar -i reads.sam -r 2929-7047
+java -jar QuasiRecomb.jar -i reads.sam -r 24-142
 ```
 
 ##### Model-selection
 Usually model-selection is done automatically in the range of 1-5 generators, but in benchmark situations or if the underlying population is too diverse, model-selection for a larger range of generators can be activated with:
 ```
-java -jar QuasiRecomb.jar -i reads.sam -r 2929-7047 -K 1:10
+java -jar QuasiRecomb.jar -i reads.sam -r 24-142 -K 1:10
 ```
 
 ##### Global reconstruction
@@ -91,3 +95,15 @@ When the region of interest is larger than the average read-length, or the focus
 
 ##### Reduce number of false-positive haplotypes
 If the distribution of haplotypes in the `quasispecies.fasta` file is too flat, the number of false-positives can be reduced with executing the same command-line call as before, but this time with an additional `-refine`. Of course, reducing the number of false-positives is a tradeoff with introducing false-negatives.
+```
+java -jar QuasiRecomb.jar -i reads.sam -r 24-142
+java -jar QuasiRecomb.jar -i reads.sam -r 24-142 -refine
+```
+
+## Technical details
+##### Memory consumption
+To minimize the memory consumption and the number of full garbage collector executions, use:
+`java -XX:NewRatio=9 -jar QuasiRecomb.jar`
+
+If your dataset is very large and you run out of memory, increase the heapspace with:
+`java -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
