@@ -632,7 +632,7 @@ public class Startup {
             System.err.println("  -printAlignment\t: Save alignment.txt in a human readable format.");
 //            System.err.println("  -sampleReads\t\t: Sample reads in addition to haplotypes");
             System.err.println("  -sampleProteins\t: Sample full-length protein sequences in three reading frames.");
-            System.err.println("  -coverage\t: If your dataset only contains a single region of interest, "
+            System.err.println("  -coverage\t\t: If your dataset only contains a single region of interest, "
                     + "\n\t\t\t  regions with a minimum coverage of 100x, 500x, 1,000x and 10,000x are reported.");
             System.err.println("  -bootstrap\t\t: Model-selection is performed on 10 bootstrapped datasets. Very time consuming, but robust.");
             System.err.println("  -refine\t\t: Can only be used after QuasiRecomb has been executed once before on the same dataset in the same directory."
@@ -657,7 +657,6 @@ public class Startup {
 //            System.err.println("");
 //            System.err.println("");
             if (this.extended) {
-            System.err.println(" -------------------------");
             System.err.println(" === SAMPLE from model === ");
             System.err.println("  --sample \t\t: Sample from given trained model");
             System.err.println("  -i FILE\t\t: Path to best.optimum file");
@@ -673,7 +672,7 @@ public class Startup {
 //            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasispecies.fasta -h dataset.fasta");
             System.err.println(" -------------------------");
             System.err.println(" === DISTANCE === ");
-            System.err.println("  --distanceDetail\t: Frequencies the original haplotypes are present in the quasispecies, allowing q mismatches");
+            System.err.println("  --distanceDetail\t: Reports frequencies of the original haplotypes that are present in the quasispecies and false-positive rate, allowing q mismatches");
             System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies"
                     + "\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
             System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes.");
