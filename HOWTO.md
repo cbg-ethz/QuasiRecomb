@@ -46,13 +46,12 @@ wget http://sourceforge.net/projects/indelfixer/files/latest/download
 ```
 An alignment can be computed with:
 ```
-java -jar InDelFixer.jar -i input.fastq -g referenceGenomes.fasta -illumina
+java -jar InDelFixer.jar -i input.fastq -g referenceGenomes.fasta
 ```
 or with paired-end data:
 ```
-java -jar InDelFixer.jar -i input_R1_001.fastq -ir input_R2_001.fastq -g referenceGenomes.fasta -illumina
+java -jar InDelFixer.jar -i input_R1_001.fastq -ir input_R2_001.fastq -g referenceGenomes.fasta
 ```
-Depending on the sequencing platform, please use different options `-illumina`, `-454` or `-pacbio`.
 
 For further information on InDelFixer see https://github.com/armintoepfer/InDelFixer
 
