@@ -95,3 +95,11 @@ When the region of interest is larger than the average read-length, or the focus
 
 ##### Reduce number of false-positive haplotypes
 If the distribution of haplotypes in the `quasispecies.fasta` file is too flat, the number of false-positives can be reduced with executing the same command-line call as before, but this time with an additional `-refine`. Of course, reducing the number of false-positives is a tradeoff with introducing false-negatives.
+
+## Technical details
+##### Memory consumption
+To minimize the memory consumption and the number of full garbage collector executions, use:
+`java -XX:NewRatio=9 -jar /Applications/QuasiRecomb.jar`
+
+If your dataset is very large and you run out of memory, increase the heapspace with:
+`java -XX:NewRatio=9 -Xms2G -Xmx10G -jar /Applications/QuasiRecomb.jar`
