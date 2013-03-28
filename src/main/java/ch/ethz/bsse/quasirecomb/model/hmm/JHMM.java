@@ -177,11 +177,23 @@ public class JHMM extends Garage {
     }
 
     public void computeSNVPosterior() {
+        double[][][] nJKV_norm = new double[L][K][n];
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                double min = Double.MAX_VALUE;
+                for (int v = 0; v < n; v++) {
+                    min = Math.min(this.nJKV[j][k][v], min);
+                }
+                for (int v = 0; v < n; v++) {
+                    nJKV_norm[j][k][v] = this.nJKV[j][k][v] - min;
+                }
+            }
+        }
         for (int j = 0; j < L; j++) {
             for (int v = 0; v < n; v++) {
                 this.snv[j][v] = 0;
                 for (int k = 0; k < K; k++) {
-                    this.snv[j][v] += this.nJKV[j][k][v] / this.coverage[j];
+                    this.snv[j][v] += nJKV_norm[j][k][v] / this.coverage[j];
                 }
             }
         }
