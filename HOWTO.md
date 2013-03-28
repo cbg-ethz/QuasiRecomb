@@ -99,7 +99,7 @@ If the distribution of haplotypes in the `quasispecies.fasta` file is too flat, 
 ## Technical details
 ##### Memory consumption
 To minimize the memory consumption and the number of full garbage collector executions, use:
-`java -XX:NewRatio=9 -jar /Applications/QuasiRecomb.jar`
+`java -XX:NewRatio=9 -jar QuasiRecomb.jar`
 
 If your dataset is very large and you run out of memory, increase the heapspace with:
-`java -XX:NewRatio=9 -Xms2G -Xmx10G -jar /Applications/QuasiRecomb.jar`
+`java -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
