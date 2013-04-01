@@ -32,7 +32,7 @@ public class MSTemp {
     private int bestK;
 
     public void add(EM em, int K) {
-        srMap.put(K, new SelectionResult(em.getMedianBIC(), em.getLowerBoundBIC(), em.getOr(), em.getMaxBIC()));
+        srMap.put(K, new SelectionResult(em.getOr(), em.getMaxBIC()));
     }
 
     private void select() {
@@ -79,14 +79,10 @@ public class MSTemp {
 
 class SelectionResult {
 
-    private double mean;
-    private double lowerBound;
     OptimalResult or;
     double max;
 
-    public SelectionResult(double mean, double lowerBound, OptimalResult or, double max) {
-        this.mean = mean;
-        this.lowerBound = lowerBound;
+    public SelectionResult(OptimalResult or, double max) {
         this.or = or;
         this.max = max;
     }
