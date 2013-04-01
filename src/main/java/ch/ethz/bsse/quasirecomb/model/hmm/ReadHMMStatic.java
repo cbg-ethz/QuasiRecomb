@@ -61,9 +61,6 @@ public class ReadHMMStatic {
                                 sumL += fJK[j - 1][l] * jhmm.getRho()[jGlobal - 1][l][k];
                             }
                             fJKV[j][k][v] = sumL;
-//                            if (Double.isNaN(fJKV[j][k][v])) {
-//                                System.err.println("x");
-//                            }
                         }
 
                         if (hit) {
@@ -71,17 +68,9 @@ public class ReadHMMStatic {
                             fJKV[j][k][v] *= jhmm.getMu()[jGlobal][k][v];
                             fJKV[j][k][v] *= q;
                         }
-//                        if (Double.isNaN(fJKV[j][k][v])) {
-//                            System.err.println("fJKV:\t" + fJKV[j][k][v]);
-//                            System.err.println("mu:\t" + jhmm.getMu()[jGlobal][k][v]);
-//                            System.exit(0);
-//                        }
                         c[j] += fJKV[j][k][v];
                     }
                 }
-//                if (c[j] <= 0) {
-//                    System.err.println("R");
-//                }
                 c[j] = 1d / c[j];
                 for (int k = 0; k < jhmm.getK(); k++) {
                     for (int v = 0; v < jhmm.getn(); v++) {
@@ -117,36 +106,11 @@ public class ReadHMMStatic {
                                     sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] : jhmm.getEps()[jGlobal + 1]) * jhmm.getMu()[jGlobal + 1][l][v];
                                 }
                                 sumV *= q;
-//                                switch (read.getPosition(j + 1)) {
-//                                    case WATSON_HIT:
-//                                        sumV *= 1 - jhmm.getTauOmega()[1][jGlobal + 1];
-//                                        break;
-//                                    case WATSON_OUT:
-//                                        sumV *= jhmm.getTauOmega()[1][jGlobal + 1];
-//                                        break;
-//                                    case INSERTION:
-//                                        sumV *= 1 - jhmm.getTauOmega()[2][jGlobal + 1];
-//                                        break;
-//                                    case CRICK_IN:
-//                                        sumV *= jhmm.getTauOmega()[2][jGlobal + 1];
-//                                        break;
-//                                    case CRICK_HIT:
-//                                        sumV *= 1 - jhmm.getTauOmega()[3][jGlobal + 1];
-//                                        break;
-//                                    case CRICK_OUT:
-//                                        break;
-//                                    default:
-//                                        System.err.println("");
-//                                        break;
-//                                }
                                 bJK[j][k] += sumV * jhmm.getRho()[jGlobal][k][l] * bJK[j + 1][l];
                             } else {
                                 bJK[j][k] += jhmm.getRho()[jGlobal][k][l] * bJK[j + 1][l];
                             }
                         }
-//                        if (c[j] == 0d) {
-//                            System.err.println("C == 0");
-//                        }
                         bJK[j][k] *= c[j];
                     }
                     if (Double.isInfinite(bJK[j][k])) {
@@ -160,10 +124,6 @@ public class ReadHMMStatic {
                     b = read.getBase(j);
                     double xiSum = 0d;
                     for (int k = 0; k < jhmm.getK(); k++) {
-//                        if (Double.isNaN(gammaSum)) {
-//                            System.err.println("XXX");
-//                            System.exit(0);
-//                        } else 
                         if (gammaSum == 0) {
                             for (int v = 0; v < jhmm.getn(); v++) {
                                 storage.addnJKV(jGlobal, k, v, ((double) read.getCount()) / jhmm.getn());
@@ -172,10 +132,6 @@ public class ReadHMMStatic {
                             for (int v = 0; v < jhmm.getn(); v++) {
                                 double gamma = read.getCount() * fJKV[j][k][v] * bJK[j][k] / gammaSum;
                                 storage.addnJKV(jGlobal, k, v, gamma);
-//                                if (Double.isNaN(gamma)) {
-//                                    System.out.println("#####");
-//                                    System.exit(0);
-//                                }
                                 if (b != v) {
                                     storage.addnneqPos(j, gamma);
                                 }
@@ -200,10 +156,6 @@ public class ReadHMMStatic {
                                     marginalV += (b == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
                                 }
                                 double xi = read.getCount() * fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l] / xiSum;
-//                                if (Double.isNaN(xi)) {
-//                                    System.err.println("xi nan");
-//                                    System.exit(0);
-//                                }
                                 storage.addnJKL(jGlobal, k, l, xi);
                             }
                         }
