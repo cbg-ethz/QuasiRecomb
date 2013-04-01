@@ -18,20 +18,20 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
+import ch.ethz.bsse.quasirecomb.informationholder.ParallelJHMMStorage;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
 public class ReadHMMStatic {
 
-    private static void free(JHMM jhmm, TempJHMMStorage storage) {
+    private static void free(JHMM jhmm, ParallelJHMMStorage storage) {
         jhmm.free(storage.getId());
     }
 
     public static double computeFB(JHMM jhmm, Read read) {
         try {
-            TempJHMMStorage storage = jhmm.getStorage();
+            ParallelJHMMStorage storage = jhmm.getStorage();
             int begin = read.getBegin();
 
             int length = read.getLength();

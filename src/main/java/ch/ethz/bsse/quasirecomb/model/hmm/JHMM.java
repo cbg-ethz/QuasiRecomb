@@ -20,7 +20,7 @@ package ch.ethz.bsse.quasirecomb.model.hmm;
 import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
-import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
+import ch.ethz.bsse.quasirecomb.informationholder.ParallelJHMMStorage;
 import ch.ethz.bsse.quasirecomb.informationholder.Threading;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
@@ -157,7 +157,7 @@ public class JHMM extends Garage {
 
     private void updateExpectedCounts() {
         if (Globals.getINSTANCE().isSTORAGE()) {
-            TempJHMMStorage store = mergeGarage();
+            ParallelJHMMStorage store = mergeGarage();
             this.nJKL = new double[L][K][K];
             this.nJKV = new double[L][K][n];
             this.nneqPos = new double[L];

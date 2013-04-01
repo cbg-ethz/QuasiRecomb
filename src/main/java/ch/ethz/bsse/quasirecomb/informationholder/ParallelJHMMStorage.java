@@ -20,14 +20,14 @@ package ch.ethz.bsse.quasirecomb.informationholder;
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class TempJHMMStorage {
+public class ParallelJHMMStorage {
 
     private double[][][] nJKL;
     private double[][][] nJKV;
     private double[] nneqPos;
     private int id;
 
-    public TempJHMMStorage(int L, int K, int n, int id) {
+    public ParallelJHMMStorage(int L, int K, int n, int id) {
         this.id = id;
         this.nJKL = new double[L][K][K];
         this.nJKV = new double[L][K][n];
@@ -50,7 +50,7 @@ public class TempJHMMStorage {
         return id;
     }
 
-    public TempJHMMStorage merge(TempJHMMStorage t) {
+    public ParallelJHMMStorage merge(ParallelJHMMStorage t) {
         for (int j = 0; j < nJKL.length; j++) {
             for (int k = 0; k < nJKL[j].length; k++) {
                 for (int l = 0; l < nJKL[j][k].length; l++) {

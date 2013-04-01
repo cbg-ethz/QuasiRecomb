@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
-import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
+import ch.ethz.bsse.quasirecomb.informationholder.ParallelJHMMStorage;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  */
 public class Garage {
 
-    protected Map<Integer, TempJHMMStorage> garage = new ConcurrentHashMap<>();
+    protected Map<Integer, ParallelJHMMStorage> garage = new ConcurrentHashMap<>();
     protected final List<Integer> available = new ArrayList<>();
 
     protected void clearGarage(int L, int K, int n) {
@@ -42,24 +42,24 @@ public class Garage {
             garage.clear();
             for (int i = 0; i < Globals.getINSTANCE().getCpus(); i++) {
                 available.add(i);
-                garage.put(i, new TempJHMMStorage(L, K, n, i));
+                garage.put(i, new ParallelJHMMStorage(L, K, n, i));
             }
         }
     }
 
-    protected TempJHMMStorage mergeGarage() throws IllegalStateException {
+    protected ParallelJHMMStorage mergeGarage() throws IllegalStateException {
         if (available.size() != Globals.getINSTANCE().getCpus()) {
             throw new IllegalStateException("Not all storages have been returned");
         }
-        Iterator<TempJHMMStorage> iterator = this.garage.values().iterator();
-        TempJHMMStorage store = iterator.next();
+        Iterator<ParallelJHMMStorage> iterator = this.garage.values().iterator();
+        ParallelJHMMStorage store = iterator.next();
         while (iterator.hasNext()) {
             store.merge(iterator.next());
         }
         return store;
     }
 
-    public TempJHMMStorage getStorage() {
+    public ParallelJHMMStorage getStorage() {
         synchronized (this.available) {
             while (!available.iterator().hasNext()) {
                 try {
