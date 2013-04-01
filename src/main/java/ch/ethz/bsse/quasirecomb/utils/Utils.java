@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.ReadTMP;
+import ch.ethz.bsse.quasirecomb.informationholder.Threading;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -307,7 +308,7 @@ public class Utils extends FastaParser {
         callables.add(new SFRComputing(l));
         List<Future<List<ReadTMP>>> readFutures = null;
         try {
-            readFutures = Globals.getINSTANCE().getExecutor().invokeAll(callables);
+            readFutures = Threading.getINSTANCE().getExecutor().invokeAll(callables);
         } catch (InterruptedException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
         }

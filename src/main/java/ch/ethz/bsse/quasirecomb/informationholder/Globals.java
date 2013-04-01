@@ -20,13 +20,7 @@ package ch.ethz.bsse.quasirecomb.informationholder;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -37,18 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Globals {
 
     private static final Globals INSTANCE = new Globals();
-    private static final BlockingQueue<Runnable> blockingQueue = new ArrayBlockingQueue<>(Runtime.getRuntime().availableProcessors() - 1);
-    private static final RejectedExecutionHandler rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
-    private static ExecutorService executor = refreshExecutor();
-
-    private static ExecutorService refreshExecutor() {
-//        return Executors.newSingleThreadExecutor();
-        return new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 5L, TimeUnit.MINUTES, blockingQueue, rejectedExecutionHandler);
-    }
-
-    public static void renewExecutor() {
-        executor = refreshExecutor();
-    }
+    
 
     public static Globals getINSTANCE() {
         return INSTANCE;
@@ -250,11 +233,7 @@ public class Globals {
     public void setSNAPSHOTS(boolean SNAPSHOTS) {
         this.SNAPSHOTS = SNAPSHOTS;
     }
-
-    public ExecutorService getExecutor() {
-        return executor;
-    }
-
+    
     public void setHammingMax(int hammingMax) {
         this.hammingMax = hammingMax;
     }

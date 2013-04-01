@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
+import ch.ethz.bsse.quasirecomb.informationholder.Threading;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
@@ -137,7 +138,7 @@ public class JHMM extends Garage {
         }
         List<Future<Double>> results = null;
         try {
-            results = Globals.getINSTANCE().getExecutor().invokeAll(callables);
+            results = Threading.getINSTANCE().getExecutor().invokeAll(callables);
         } catch (InterruptedException ex) {
             Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
         }

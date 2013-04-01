@@ -19,6 +19,7 @@ package ch.ethz.bsse.quasirecomb.simulation;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
+import ch.ethz.bsse.quasirecomb.informationholder.Threading;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
@@ -87,7 +88,7 @@ public class Simulator {
             int hap = frequency.roll();
             FutureTask<Pair<Read, Read>> futureTask_1 = new FutureTask<>(new CallableSimulator(length, epsilon, n, haplotypes, hap, start, start2));
             taskList.add(futureTask_1);
-            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
+            Threading.getINSTANCE().getExecutor().execute(futureTask_1);
             StatusUpdate.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");
         }
         System.out.println("");
@@ -194,7 +195,7 @@ public class Simulator {
             int hap = frequency.roll();
             FutureTask<Read> futureTask_1 = new FutureTask<>(new CallableSimulatorFulllength(l, epsilon, n, haplotypes, hap, start));
             taskList.add(futureTask_1);
-            Globals.getINSTANCE().getExecutor().execute(futureTask_1);
+            Threading.getINSTANCE().getExecutor().execute(futureTask_1);
             StatusUpdate.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");
         }
         System.out.println("");
