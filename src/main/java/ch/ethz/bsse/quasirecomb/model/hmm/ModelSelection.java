@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
-import ch.ethz.bsse.quasirecomb.informationholder.MSTemp;
+import ch.ethz.bsse.quasirecomb.informationholder.ModelSelectionStorage;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
@@ -50,7 +50,7 @@ public class ModelSelection {
     private int n;
     private int bestK;
     private OptimalResult or;
-    private MSTemp msTemp = new MSTemp();
+    private ModelSelectionStorage msTemp = new ModelSelectionStorage();
     private SortedMap<Integer, Double[]> bics = new TreeMap<>();
 
     public ModelSelection(Read[] reads, int Kmin, int Kmax, int N, int L, int n) {
@@ -153,7 +153,7 @@ public class ModelSelection {
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "bics.txt", sb.toString());
     }
 
-    public MSTemp getMsTemp() {
+    public ModelSelectionStorage getMsTemp() {
         return msTemp;
     }
 }

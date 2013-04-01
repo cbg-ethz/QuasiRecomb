@@ -18,7 +18,7 @@
 package ch.ethz.bsse.quasirecomb.model;
 
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
-import ch.ethz.bsse.quasirecomb.informationholder.MSBTemp;
+import ch.ethz.bsse.quasirecomb.informationholder.ModelSelectionBootstrapStorage;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
@@ -133,7 +133,7 @@ public class Preprocessing {
             }
             Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "bics.txt", sb.toString());
             StatusUpdate.getINSTANCE().println("");
-            MSBTemp msbt = new MSBTemp(bics);
+            ModelSelectionBootstrapStorage msbt = new ModelSelectionBootstrapStorage(bics);
             Kmin = msbt.getBestK();
             Kmax = Kmin;
             Globals.getINSTANCE().setBOOTSTRAP(false);

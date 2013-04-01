@@ -26,15 +26,16 @@ import java.util.Map;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math.stat.descriptive.rank.Median;
 
+
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class MSBTemp {
+public class ModelSelectionBootstrapStorage {
 
     private final Map<Integer, SelectionResultBootstrap> srMap;
     private int bestK;
 
-    public MSBTemp(Multimap<Integer, Double> map) {
+    public ModelSelectionBootstrapStorage(Multimap<Integer, Double> map) {
         this.srMap = new HashMap<>();
         for (Map.Entry<Integer, Collection<Double>> e : map.asMap().entrySet()) {
             this.add(e.getValue(), e.getKey());
@@ -77,7 +78,6 @@ public class MSBTemp {
         return this.bestK;
     }
 }
-
 class SelectionResultBootstrap {
 
     double median;

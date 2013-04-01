@@ -23,10 +23,11 @@ import com.google.common.collect.Multimap;
 import java.util.HashMap;
 import java.util.Map;
 
+
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class MSTemp {
+public class ModelSelectionStorage {
 
     private Map<Integer, SelectionResult> srMap = new HashMap<>();
     private int bestK;
@@ -76,7 +77,6 @@ public class MSTemp {
         return bics;
     }
 }
-
 class SelectionResult {
 
     OptimalResult or;
