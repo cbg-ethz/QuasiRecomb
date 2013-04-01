@@ -23,8 +23,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.informationholder.TempJHMMStorage;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
-import ch.ethz.bsse.quasirecomb.utils.Utils;
-import java.util.ArrayList;
+import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -33,7 +32,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.javatuples.Pair;
@@ -134,7 +132,7 @@ public class JHMM extends Garage {
                     b = readAmount;
                 }
                 callables.add(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b)));
-                Globals.getINSTANCE().printPercentage(K, (double) i / readAmount, Kmin);
+                StatusUpdate.getINSTANCE().printPercentage(K, (double) i / readAmount, Kmin);
             }
         }
         List<Future<Double>> results = null;

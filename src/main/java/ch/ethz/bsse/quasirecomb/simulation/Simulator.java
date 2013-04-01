@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
+import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,7 +88,7 @@ public class Simulator {
             FutureTask<Pair<Read, Read>> futureTask_1 = new FutureTask<>(new CallableSimulator(length, epsilon, n, haplotypes, hap, start, start2));
             taskList.add(futureTask_1);
             Globals.getINSTANCE().getExecutor().execute(futureTask_1);
-            Globals.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");
+            StatusUpdate.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");
         }
         System.out.println("");
 
@@ -115,7 +116,7 @@ public class Simulator {
                     sb.append("I");
                 }
                 sb.append("\n");
-                Globals.getINSTANCE().print("Simulation\t" + Math.round((100d * j) / taskList.size()) + "%");
+                StatusUpdate.getINSTANCE().print("Simulation\t" + Math.round((100d * j) / taskList.size()) + "%");
             } catch (InterruptedException | ExecutionException ex) {
                 System.err.println("Problem");
                 System.err.println(ex);
@@ -194,7 +195,7 @@ public class Simulator {
             FutureTask<Read> futureTask_1 = new FutureTask<>(new CallableSimulatorFulllength(l, epsilon, n, haplotypes, hap, start));
             taskList.add(futureTask_1);
             Globals.getINSTANCE().getExecutor().execute(futureTask_1);
-            Globals.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");
+            StatusUpdate.getINSTANCE().print("Preparation\t" + Math.round((100d * i) / N) + "%");
         }
         System.out.println("");
 
@@ -206,7 +207,7 @@ public class Simulator {
                 Read r = futureTask.get();
                 sb.append(">SAMPLED").append(j).append("_").append(r.getBegin()).append("-").append(r.getEnd()).append("|").append(j).append("/1").append("\n");
                 sb.append(Utils.reverse(r.getSequence(), r.getLength())).append("\n");
-                Globals.getINSTANCE().print("Simulation\t" + Math.round((100d * j) / taskList.size()) + "%");
+                StatusUpdate.getINSTANCE().print("Simulation\t" + Math.round((100d * j) / taskList.size()) + "%");
             } catch (InterruptedException | ExecutionException ex) {
                 System.err.println("Problem");
                 System.err.println(ex);

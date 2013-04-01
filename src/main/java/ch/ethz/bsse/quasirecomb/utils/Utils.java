@@ -299,11 +299,11 @@ public class Utils extends FastaParser {
                 callables.add(new SFRComputing(l));
                 l = new LinkedList<>();
             }
-            Globals.getINSTANCE().print("Parsing\t\t" + (Math.round((counter++ / size) * 100)));
+            StatusUpdate.getINSTANCE().print("Parsing\t\t" + (Math.round((counter++ / size) * 100)));
             l.add(samRecord);
             x++;
         }
-        Globals.getINSTANCE().print("Parsing\t\tcomputing");
+        StatusUpdate.getINSTANCE().print("Parsing\t\tcomputing");
         callables.add(new SFRComputing(l));
         List<Future<List<ReadTMP>>> readFutures = null;
         try {
@@ -311,8 +311,8 @@ public class Utils extends FastaParser {
         } catch (InterruptedException ex) {
             Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Globals.getINSTANCE().print("Parsing\t\t           ");
-        Globals.getINSTANCE().print("Parsing\t\tdone");
+        StatusUpdate.getINSTANCE().print("Parsing\t\t           ");
+        StatusUpdate.getINSTANCE().print("Parsing\t\tdone");
         sfr.close();
         for (Future<List<ReadTMP>> future : readFutures) {
             try {

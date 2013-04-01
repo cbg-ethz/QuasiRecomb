@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.MSTemp;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
+import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -81,7 +82,7 @@ public class ModelSelection {
         if (!Globals.getINSTANCE().isBOOTSTRAP()) {
             Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "training");
             Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
-            Globals.getINSTANCE().setPERCENTAGE(0);
+            StatusUpdate.getINSTANCE().setPERCENTAGE(0);
 //            if (Globals.getINSTANCE().isUSER_OPTIMUM()) {
 //                Globals.getINSTANCE().setINTERPOLATE_MU(0);
 //                Globals.getINSTANCE().setINTERPOLATE_RHO(0);
@@ -123,7 +124,7 @@ public class ModelSelection {
             }
             bics.put(k, em.getBics());
             msTemp.add(em, k);
-            Globals.getINSTANCE().setPERCENTAGE(0);
+            StatusUpdate.getINSTANCE().setPERCENTAGE(0);
             or = msTemp.getBestOR();
             if (!Globals.getINSTANCE().isBOOTSTRAP() && or.getK() < k && or.getK() + 1 == k) {
                 break;

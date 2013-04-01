@@ -18,12 +18,8 @@
 package ch.ethz.bsse.quasirecomb.informationholder;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -113,30 +109,21 @@ public class Globals {
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
     private int STEPS;
-    private int REPEATS;
     private int DESIRED_REPEATS;
     private int SAMPLING_NUMBER;
     private int NREAL;
+        private int REPEATS;
     private final int cpus = Runtime.getRuntime().availableProcessors();
     private List<Integer> runtime = new LinkedList<>();
-    private long start = System.currentTimeMillis();
     private String GENOME;
     private String OPTIMUM;
     private String SAVEPATH;
     private StringBuilder LOG = new StringBuilder();
-    private final DateFormat df = new SimpleDateFormat("HH:mm:ss:SSS");
     private final ForkJoinPool fjPool = new ForkJoinPool();
     private final AtomicInteger MERGED_COUNT = new AtomicInteger(0);
     private final AtomicInteger PAIRED_COUNT = new AtomicInteger(0);
-    private double PERCENTAGE = 0;
-    private String oldOut = "";
-    private double hammingCount = 0;
     private int hammingMax = 0;
     private TauOmega TAU_OMEGA;
-
-    private Globals() {
-        df.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
 
     public Globals getInstance() {
         return INSTANCE;
@@ -150,62 +137,6 @@ public class Globals {
                 LOG.append(o);
             }
         }
-    }
-
-    public void incPercentage() {
-        PERCENTAGE += 100d / REPEATS;
-    }
-
-    public void printBIC(int K, int bic) {
-        System.out.print("\r                                                                                                                                                   ");
-        if (MODELSELECTION) {
-            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
-        } else {
-            System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + Math.round(PERCENTAGE * 1000) / 1000 + "%\t[BIC: " + (int) bic + "]                 ");
-        }
-    }
-
-    public void printBIC(int K, int percentage, int bic) {
-        System.out.print("\r                                                                                                                                                   ");
-        if (MODELSELECTION) {
-            System.out.print("\r" + time() + " Model selection [K " + K + "]:\t" + percentage + "%\t[BIC: " + (int) bic + "]                 ");
-        } else {
-            System.out.print("\r" + time() + " Model training  [K " + K + "]:\t" + percentage + "%\t[BIC: " + (int) bic + "]                 ");
-        }
-    }
-
-    public void print(String s) {
-        if (!oldOut.equals(s)) {
-            this.oldOut = s;
-            System.out.print("\r" + time() + " " + s);
-        }
-    }
-
-    public void println(String s) {
-        System.out.print("\n" + time() + " " + s);
-    }
-
-    public void printPercentage(int K, double read, double Kmin) {
-        if (!SILENT) {
-            if (!oldOut.equals(time())) {
-                this.oldOut = time();
-                System.out.print("\r                                                                                                                                                   ");
-                System.out.print("\r" + time() + " Model " + (MODELSELECTION ? "selection" : "training ") + " [K " + (int) Kmin + "]:\t" + (Math.round(PERCENTAGE * 1000) / 1000) + "%");
-            }
-        }
-    }
-
-    public synchronized void incHamming(int inc) {
-        hammingCount += inc * (100d / hammingMax);
-    }
-
-    public synchronized void printHamming(int inc) {
-        incHamming(inc);
-        System.out.print("\r" + time() + " Computing:\t" + Math.round(hammingCount * 1000) / 1000 + "%");
-    }
-
-    public String time() {
-        return df.format(new Date(System.currentTimeMillis() - start));
     }
 
     public TauOmega getTAU_OMEGA() {
@@ -414,10 +345,6 @@ public class Globals {
         return NO_RECOMB;
     }
 
-    public int getREPEATS() {
-        return REPEATS;
-    }
-
     public int getDESIRED_REPEATS() {
         return DESIRED_REPEATS;
     }
@@ -448,14 +375,6 @@ public class Globals {
 
     public StringBuilder getLOG() {
         return LOG;
-    }
-
-    public long getStart() {
-        return start;
-    }
-
-    public double getPERCENTAGE() {
-        return PERCENTAGE;
     }
 
     public void setALIGNMENT_BEGIN(int ALIGNMENT_BEGIN) {
@@ -510,10 +429,6 @@ public class Globals {
         this.NO_RECOMB = NO_RECOMB;
     }
 
-    public void setREPEATS(int REPEATS) {
-        this.REPEATS = REPEATS;
-    }
-
     public void setDESIRED_REPEATS(int DESIRED_REPEATS) {
         this.DESIRED_REPEATS = DESIRED_REPEATS;
     }
@@ -548,10 +463,6 @@ public class Globals {
 
     public void setLOG(StringBuilder LOG) {
         this.LOG = LOG;
-    }
-
-    public void setPERCENTAGE(double PERCENTAGE) {
-        this.PERCENTAGE = PERCENTAGE;
     }
 
     public boolean isPAIRED() {
@@ -788,5 +699,17 @@ public class Globals {
 
     public void setMAX(boolean MAX) {
         this.MAX = MAX;
+    }
+
+    public int getHammingMax() {
+        return hammingMax;
+    }
+
+    public int getREPEATS() {
+        return REPEATS;
+    }
+
+    public void setREPEATS(int REPEATS) {
+        this.REPEATS = REPEATS;
     }
 }

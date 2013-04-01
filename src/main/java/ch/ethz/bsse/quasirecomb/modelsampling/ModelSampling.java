@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.TauOmega;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
+import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import static ch.ethz.bsse.quasirecomb.utils.Utils.reverse;
 import com.google.common.collect.Lists;
@@ -145,7 +146,7 @@ public final class ModelSampling extends Utils {
                 }
                 readFutures.add(Globals.getINSTANCE().getExecutor().submit(new SingleModelSampling(or, tauOmega, paired, i, b, startF)));
                 counter += Globals.getINSTANCE().getSTEPS();
-                Globals.getINSTANCE().print("Sampling Reads\t\t" + (Math.round((counter / amount) * 100)) + "%");
+                StatusUpdate.getINSTANCE().print("Sampling Reads\t\t" + (Math.round((counter / amount) * 100)) + "%");
             }
             int x = 0;
             for (Future<List<SampledRead>> f : readFutures) {
@@ -201,7 +202,7 @@ public final class ModelSampling extends Utils {
         double counterFullLength = 0;
         for (int i = 0; i < amount; i++) {
             readFuturesFullLength.add(Globals.getINSTANCE().getExecutor().submit(new HaplotypeSampling(or)));
-            Globals.getINSTANCE().print("Sampling Haplotypes\t" + (Math.round((counterFullLength++ / amount) * 100)) + "%");
+            StatusUpdate.getINSTANCE().print("Sampling Haplotypes\t" + (Math.round((counterFullLength++ / amount) * 100)) + "%");
         }
         int y = 0;
         for (Future<byte[]> f : readFuturesFullLength) {

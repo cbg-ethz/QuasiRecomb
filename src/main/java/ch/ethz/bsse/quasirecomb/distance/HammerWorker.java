@@ -50,7 +50,7 @@ public class HammerWorker extends RecursiveTask<Map<String, Map<String, Integer>
                         mapInner.put(fasta[j], DistanceUtils.calcHamming(fasta[i], fasta[j]));
 //                    }
                 }
-//                Globals.getINSTANCE().printHamming(fasta.length);
+//                StatusUpdate.getINSTANCE().printHamming(fasta.length);
                 map.put(fasta[i], mapInner);
             }
             return map;

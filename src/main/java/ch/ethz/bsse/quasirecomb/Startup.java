@@ -29,6 +29,7 @@ import ch.ethz.bsse.quasirecomb.simulation.Simulator;
 import ch.ethz.bsse.quasirecomb.utils.CutNHam;
 import ch.ethz.bsse.quasirecomb.utils.Cutter;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
+import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -303,7 +304,7 @@ public class Startup {
         String[] fasta = hapMap.keySet().toArray(new String[hapMap.size()]);
         Globals.getINSTANCE().setHammingMax((int) Math.pow(fasta.length, 2));
         Map<String, Map<String, Integer>> invoke = Globals.getINSTANCE().getFjPool().invoke(new HammerWorker(fasta, 0, fasta.length));
-        Globals.getINSTANCE().println("done");
+        StatusUpdate.getINSTANCE().println("done");
         int i = 0;
         Utils.saveFile(output + "dist.txt", "");
         StringBuilder sb = new StringBuilder();
@@ -321,7 +322,7 @@ public class Startup {
                 sb.append(String.valueOf(dist));
             }
             sb.append("\n");
-            Globals.getINSTANCE().print("SB\t" + i++);
+            StatusUpdate.getINSTANCE().print("SB\t" + i++);
         }
         Utils.saveFile(output + "dist.txt", sb.toString());
         System.out.println(sb.toString());

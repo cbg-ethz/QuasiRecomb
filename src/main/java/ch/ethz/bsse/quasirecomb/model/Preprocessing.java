@@ -24,6 +24,7 @@ import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
+import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.collect.ArrayListMultimap;
@@ -59,14 +60,14 @@ public class Preprocessing {
     public static void workflow(String input, int Kmin, int Kmax) {
         Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
         //parse file
-        Globals.getINSTANCE().print("Parsing");
+        StatusUpdate.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
         int L = fixAlignment(reads);
         int[][] alignment = computeAlignment(reads, L);
-        Globals.getINSTANCE().println("Unique reads\t" + reads.length);
-        Globals.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
+        StatusUpdate.getINSTANCE().println("Unique reads\t" + reads.length);
+        StatusUpdate.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
         computeInsertDist(reads);
-        Globals.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED() + "\n");
+        StatusUpdate.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED() + "\n");
         printAlignment(reads);
         circos(L, alignment);
         if (Globals.getINSTANCE().isDEBUG()) {
@@ -90,7 +91,7 @@ public class Preprocessing {
             Frequency<Read> readDist = new Frequency<>(piMap);
 
             for (int i = 0; i < 10; i++) {
-                Globals.getINSTANCE().println("Bootstrap " + i + "\n");
+                StatusUpdate.getINSTANCE().println("Bootstrap " + i + "\n");
                 Map<Integer, Read> hashed = new HashMap<>();
 
                 for (int x = 0; x < N; x++) {
@@ -131,7 +132,7 @@ public class Preprocessing {
                 sb.append("\n");
             }
             Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "bics.txt", sb.toString());
-            Globals.getINSTANCE().println("");
+            StatusUpdate.getINSTANCE().println("");
             MSBTemp msbt = new MSBTemp(bics);
             Kmin = msbt.getBestK();
             Kmax = Kmin;
@@ -263,18 +264,18 @@ public class Preprocessing {
         Globals.getINSTANCE().setNREAL(N);
         int L = Globals.getINSTANCE().getALIGNMENT_END() - Globals.getINSTANCE().getALIGNMENT_BEGIN();
         Globals.getINSTANCE().setALIGNMENT_END(L);
-        Globals.getINSTANCE().println("Modifying reads\t");
+        StatusUpdate.getINSTANCE().println("Modifying reads\t");
         double shrinkCounter = 0;
         for (Read r : reads) {
             r.shrink();
-            Globals.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
+            StatusUpdate.getINSTANCE().print("Modifying reads\t" + (Math.round((shrinkCounter++ / reads.length) * 100)) + "%");
         }
-        Globals.getINSTANCE().print("Modifying reads\t100%");
+        StatusUpdate.getINSTANCE().print("Modifying reads\t100%");
         return L;
     }
 
     private static void computeAllelFrequencies(int L, int[][] alignment, double[][] alignmentWeighted) {
-        Globals.getINSTANCE().println("Allel frequencies\t");
+        StatusUpdate.getINSTANCE().println("Allel frequencies\t");
         double allelCounter = 0;
         StringBuilder sb = new StringBuilder();
         StringBuilder sbw = new StringBuilder();
@@ -305,7 +306,7 @@ public class Preprocessing {
             if (hits == 0) {
                 System.out.println("Position " + i + " is not covered.");
             }
-            Globals.getINSTANCE().print("Allel frequencies\t" + (Math.round((allelCounter++ / L) * 100)) + "%");
+            StatusUpdate.getINSTANCE().print("Allel frequencies\t" + (Math.round((allelCounter++ / L) * 100)) + "%");
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "allel_distribution.txt", sb.toString());
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "allel_distribution_phred_weighted.txt", sbw.toString());
@@ -314,7 +315,7 @@ public class Preprocessing {
     }
 
     private static int[][] computeAlignment(Read[] reads, int L) {
-        Globals.getINSTANCE().println("Computing entropy\t");
+        StatusUpdate.getINSTANCE().println("Computing entropy\t");
         double entropyCounter = 0;
         int[][] alignment = countPos(reads, L);
         double[][] alignmentWeighted = countPosWeighted(reads, L);
@@ -332,13 +333,13 @@ public class Preprocessing {
                 }
             }
             alignmentEntropy += shannonEntropy_pos;
-            Globals.getINSTANCE().print("Computing entropy\t" + (Math.round((entropyCounter++ / L) * 100)) + "%");
+            StatusUpdate.getINSTANCE().print("Computing entropy\t" + (Math.round((entropyCounter++ / L) * 100)) + "%");
         }
-        Globals.getINSTANCE().print("Computing entropy\t100%");
+        StatusUpdate.getINSTANCE().print("Computing entropy\t100%");
         alignmentEntropy /= L;
         computeAllelFrequencies(L, alignment, alignmentWeighted);
-        Globals.getINSTANCE().print("Allel frequencies\t100%");
-        Globals.getINSTANCE().println("Alignment entropy\t" + Math.round(alignmentEntropy*1000)/1000d);
+        StatusUpdate.getINSTANCE().print("Allel frequencies\t100%");
+        StatusUpdate.getINSTANCE().println("Alignment entropy\t" + Math.round(alignmentEntropy*1000)/1000d);
         return alignment;
     }
 
@@ -351,12 +352,12 @@ public class Preprocessing {
                     inserts[x++] = r.getCrickBegin() - r.getWatsonEnd();
                 }
             }
-            Globals.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts)) * 10) / 10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts) * 10) / 10 + ")");
+            StatusUpdate.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts)) * 10) / 10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts) * 10) / 10 + ")");
         }
     }
 
     private static void plot() {
-        Globals.getINSTANCE().println("Compute coverage\t");
+        StatusUpdate.getINSTANCE().println("Compute coverage\t");
         StringBuilder sb = new StringBuilder();
         int[] coverage = Globals.getINSTANCE().getTAU_OMEGA().getCoverage();
         {
@@ -406,23 +407,23 @@ public class Preprocessing {
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "coverage.txt", sb.toString());
         if (Globals.getINSTANCE().isCOVERAGE()) {
             Utils.saveCoveragePlot();
-            Globals.getINSTANCE().println("To create a coverage plot, please execute: R CMD BATCH support/coverage.R");
+            StatusUpdate.getINSTANCE().println("To create a coverage plot, please execute: R CMD BATCH support/coverage.R");
             if (begin_H == -1 || end_H == -1) {
-                Globals.getINSTANCE().println("There is no region with a sufficient coverage of >100x");
+                StatusUpdate.getINSTANCE().println("There is no region with a sufficient coverage of >100x");
             } else {
-                Globals.getINSTANCE().println("A coverage >100x is in region " + begin_H + "-" + end_H + "");
+                StatusUpdate.getINSTANCE().println("A coverage >100x is in region " + begin_H + "-" + end_H + "");
                 if (begin_FH == -1 || end_FH == -1) {
-                    Globals.getINSTANCE().println("There is no region with a sufficient coverage of >500x");
+                    StatusUpdate.getINSTANCE().println("There is no region with a sufficient coverage of >500x");
                 } else {
-                    Globals.getINSTANCE().println("A coverage >500x is in region " + begin_FH + "-" + end_FH + "");
+                    StatusUpdate.getINSTANCE().println("A coverage >500x is in region " + begin_FH + "-" + end_FH + "");
                     if (begin_T == -1 || end_T == -1) {
-                        Globals.getINSTANCE().println("There is no region with a sufficient coverage of >1000x");
+                        StatusUpdate.getINSTANCE().println("There is no region with a sufficient coverage of >1000x");
                     } else {
-                        Globals.getINSTANCE().println("A coverage >1000x is in region " + begin_T + "-" + end_T + "");
+                        StatusUpdate.getINSTANCE().println("A coverage >1000x is in region " + begin_T + "-" + end_T + "");
                         if (begin_TT == -1 || end_TT == -1) {
-                            Globals.getINSTANCE().println("There is no region with a sufficient coverage of >10000x");
+                            StatusUpdate.getINSTANCE().println("There is no region with a sufficient coverage of >10000x");
                         } else {
-                            Globals.getINSTANCE().println("A coverage >10000x is in region " + begin_TT + "-" + end_TT + "");
+                            StatusUpdate.getINSTANCE().println("A coverage >10000x is in region " + begin_TT + "-" + end_TT + "");
                         }
                     }
                 }
@@ -435,7 +436,7 @@ public class Preprocessing {
 
     private static void printAlignment(Read[] reads) {
         if (Globals.getINSTANCE().isPRINT_ALIGNMENT()) {
-            Globals.getINSTANCE().println("Saving alignment\t");
+            StatusUpdate.getINSTANCE().println("Saving alignment\t");
             new Summary().printAlignment(reads);
         }
     }

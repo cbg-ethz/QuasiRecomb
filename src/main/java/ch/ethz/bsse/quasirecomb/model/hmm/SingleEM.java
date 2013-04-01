@@ -21,6 +21,7 @@ import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
+import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
@@ -115,7 +116,7 @@ public class SingleEM {
 
         Globals.getINSTANCE().log("###c(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\n");
 
-        Globals.getINSTANCE().incPercentage();
+        StatusUpdate.getINSTANCE().incPercentage();
 
         Globals.getINSTANCE().maxMAX_LLH(loglikelihood);
         this.calcBic();
