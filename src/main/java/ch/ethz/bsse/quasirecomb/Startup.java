@@ -273,7 +273,7 @@ public class Startup {
             if (this.amplicons != null) {
                 Simulator.fromHaplotypesGlobalAmplicon(FastaParser.parseFarFile(input), N, L, this.e, fArray, this.output, this.amplicons, this.ampliconDist, this.length);
             } else {
-                Simulator.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.e, fArray, 4, this.output);
+                Simulator.fromHaplotypes(FastaParser.parseFarFile(input), N, L, this.e, fArray, 5, this.output);
             }
         }
     }
