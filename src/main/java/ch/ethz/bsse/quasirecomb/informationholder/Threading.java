@@ -20,6 +20,7 @@ package ch.ethz.bsse.quasirecomb.informationholder;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -35,17 +36,22 @@ public class Threading {
     private static final BlockingQueue<Runnable> BLOCKING_QUEUE = new ArrayBlockingQueue<>(Runtime.getRuntime().availableProcessors() - 1);
     private static final RejectedExecutionHandler REH = new ThreadPoolExecutor.CallerRunsPolicy();
     private static ExecutorService EXECUTOR = refreshExecutor();
+    private static int CPU_COUNT;
 
     private Threading() {
+        CPU_COUNT = Runtime.getRuntime().availableProcessors();
     }
 
     public static Threading getINSTANCE() {
         return INSTANCE;
     }
-    
+
     private static ExecutorService refreshExecutor() {
-//        return Executors.newSingleThreadExecutor();
-        return new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() - 1, Runtime.getRuntime().availableProcessors() - 1, 5L, TimeUnit.MINUTES, BLOCKING_QUEUE, REH);
+        if (CPU_COUNT == 1) {
+            return Executors.newSingleThreadExecutor();
+        } else {
+            return new ThreadPoolExecutor(CPU_COUNT - 1, CPU_COUNT - 1, 5L, TimeUnit.MINUTES, BLOCKING_QUEUE, REH);
+        }
     }
 
     public static void renewExecutor() {
