@@ -31,6 +31,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -140,6 +141,7 @@ public class Preprocessing {
         }
 
         ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
+//        errorCorrection(ms, reads);
 
         if (!Globals.getINSTANCE().isNOSAMPLE()) {
             ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
@@ -339,7 +341,7 @@ public class Preprocessing {
         alignmentEntropy /= L;
         computeAllelFrequencies(L, alignment, alignmentWeighted);
         StatusUpdate.getINSTANCE().print("Allel frequencies\t100%");
-        StatusUpdate.getINSTANCE().println("Alignment entropy\t" + Math.round(alignmentEntropy*1000)/1000d);
+        StatusUpdate.getINSTANCE().println("Alignment entropy\t" + Math.round(alignmentEntropy * 1000) / 1000d);
         return alignment;
     }
 
@@ -405,8 +407,8 @@ public class Preprocessing {
             }
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "coverage.txt", sb.toString());
+        Utils.saveCoveragePlot();
         if (Globals.getINSTANCE().isCOVERAGE()) {
-            Utils.saveCoveragePlot();
             StatusUpdate.getINSTANCE().println("To create a coverage plot, please execute: R CMD BATCH support/coverage.R");
             if (begin_H == -1 || end_H == -1) {
                 StatusUpdate.getINSTANCE().println("There is no region with a sufficient coverage of >100x");
@@ -447,4 +449,50 @@ public class Preprocessing {
             System.exit(0);
         }
     }
+//    private static void errorCorrection(ModelSelection ms, Read[] reads) {
+//        //Error correction
+//        double[][][] mu = ms.getOptimalResult().getMu();
+//        double[][][] rho = ms.getOptimalResult().getRho();
+//        int K = ms.getOptimalResult().getK();
+//        double[] pi = ms.getOptimalResult().getPi();
+//
+//        for (Read r : reads) {
+//            int begin = r.getBegin();
+//            int length = r.getLength();
+//            double[][] u = new double[length][K];
+//            double[][] q = new double[length][K];
+//            for (int j = 0; j < length; j++) {
+//                final boolean hit = r.isHit(j);
+//                byte b = -1;
+//                if (hit) {
+//                    b = r.getBase(j);
+//                }
+//                int jGlobal = j + begin;
+//                if (j == 0) {
+//                    for (int k = 0; k < K; k++) {
+//                        u[0][k] = Math.log(pi[k]) + Math.log(mu[jGlobal][k][b]);
+//                        q[0][k] = k;
+//                    }
+//                } else {
+//                    for (int k = 0; k < K; k++) {
+//                        double max = Double.NEGATIVE_INFINITY;
+//                        int prevK = 0;
+//                        for (int l = 0; l < K; l++) {
+//                            double tmp = Math.log(rho[jGlobal - 1][l][k]) + Math.log(mu[jGlobal][k][b]) + u[j - 1][l];
+//                            if (tmp > max) {
+//                                max = tmp;
+//                                prevK = l;
+//                            }
+//                        }
+//                        u[j][k] = max;
+//                        q[j][k] = prevK;
+//                    }
+//                }
+//                System.out.println(Arrays.toString(u[j]));
+//            }
+//
+//            for (int j = length - 1; j >= 0; j--) {
+//            }
+//        }
+//    }
 }

@@ -66,7 +66,7 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
             if (alignmentBlocks.isEmpty()) {
                 return null;
             }
-            int refStart = alignmentBlocks.get(0).getReferenceStart() + alignmentBlocks.get(0).getReadStart() - 1;
+            int refStart = samRecord.getAlignmentStart() - 1;
             int readStart = 0;
             List<Byte> buildRead = new ArrayList<>();
             List<Double> buildQuality = new ArrayList<>();
@@ -84,12 +84,6 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                     case M:
                         if ((readStart + c.getLength()) > samRecord.getReadBases().length) {
                             System.out.println("\nInput alignment is corrupt.\nCIGAR is longer than actual read-length.");
-//                            System.out.println("C:" + c.getOperator());
-//                            System.out.println("L:" + c.getLength());
-//                            System.out.println("N:" + samRecord.getReadBases().length);
-//                            System.out.println("R:" + readStart);
-//                            System.out.println("S:" + (alignmentBlocks.get(0).getReadStart() - 1));
-//                            System.out.println("T:" + samRecord.getCigar().toString());
                             System.exit(9);
                         }
                         for (int i = 0; i < c.getLength(); i++) {

@@ -475,7 +475,7 @@ public class Startup {
             String[] r = s.split("-");
             int start = Integer.parseInt(r[0]);
             int stop = Integer.parseInt(r[1]);
-            Cutter.cut(input, start + "-" + stop + ".fasta", start-1, stop-1);
+            Cutter.cut(input, start + "-" + stop + ".fasta", start - 1, stop - 1);
         }
     }
 
@@ -557,7 +557,7 @@ public class Startup {
             Globals.getINSTANCE().setINTERPOLATE_RHO(1);
             Globals.getINSTANCE().setOPTIMUM("support/best.optimum");
             Globals.getINSTANCE().setUSER_OPTIMUM(true);
-            if (!new File(this.output+File.separator+"support/best.optimum").exists()) {
+            if (!new File(this.output + File.separator + "support/best.optimum").exists()) {
                 System.err.println("QuasiRecomb needs to be executed once without -refine before it can be used with -refine.");
             }
         }
@@ -573,6 +573,12 @@ public class Startup {
         try {
             parser.parseArgument(args);
             setInputOutput();
+            StringBuilder sb = new StringBuilder();
+            for (String arg : args) {
+                sb.append(arg).append(" ");
+            }
+            new File(this.output + File.separator + "support/").mkdirs();
+            Utils.saveFile(this.output + File.separator + "support/CMD", sb.toString());
             setMainParameters();
 
             if (this.sample) {
@@ -658,11 +664,11 @@ public class Startup {
 //            System.err.println("");
 //            System.err.println("");
             if (this.extended) {
-            System.err.println(" === SAMPLE from model === ");
-            System.err.println("  --sample \t\t: Sample from given trained model");
-            System.err.println("  -i FILE\t\t: Path to best.optimum file");
-            System.err.println("");
-            System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i support/best.optimum");
+                System.err.println(" === SAMPLE from model === ");
+                System.err.println("  --sample \t\t: Sample from given trained model");
+                System.err.println("  -i FILE\t\t: Path to best.optimum file");
+                System.err.println("");
+                System.err.println("  Example for sampling:\n   java -jar QuasiRecomb.jar --sample -i support/best.optimum");
 //            System.err.println(" -------------------------");
 //            System.err.println(" === DISTANCE === ");
 //            System.err.println("  --distance ");
@@ -671,15 +677,15 @@ public class Startup {
 //            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes.");
 //            System.err.println("");
 //            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distance -i quasispecies.fasta -h dataset.fasta");
-            System.err.println(" -------------------------");
-            System.err.println(" === DISTANCE === ");
-            System.err.println("  --distanceDetail\t: Reports frequencies of the original haplotypes that are present in the quasispecies and false-positive rate, allowing q mismatches");
-            System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies"
-                    + "\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
-            System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes.");
-            System.err.println("");
-            System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distanceDetail -i quasispecies.fasta -h dataset.fasta");
-            System.err.println(" -------------------------");
+                System.err.println(" -------------------------");
+                System.err.println(" === DISTANCE === ");
+                System.err.println("  --distanceDetail\t: Reports frequencies of the original haplotypes that are present in the quasispecies and false-positive rate, allowing q mismatches");
+                System.err.println("  -i FILE\t\t: Multiple fasta file with quasispecies incl. frequencies"
+                        + "\n\t\t\t  The corresponding frequency has to be the suffix in the fasta description delimited by an underscore, i.e. >seq1231_0.4212");
+                System.err.println("  -h FILE\t\t: Multiple fasta file with original haplotypes.");
+                System.err.println("");
+                System.err.println("  Example for distance:\n   java -jar QuasiRecomb.jar --distanceDetail -i quasispecies.fasta -h dataset.fasta");
+                System.err.println(" -------------------------");
 //            System.err.println(" === SIMULATE === ");
 //            System.err.println("  --simulate ");
 //            System.err.println("  -i FILE\t\t: Multiple fasta file with haplotypes");
@@ -698,37 +704,85 @@ public class Startup {
     private void annotate() {
         StringBuilder fasta = new StringBuilder();
         Map<String, Double> parseQuasispeciesFile = FastaParser.parseQuasispeciesFile(this.input);
-
+        Map<String, Double> mutationMap = new HashMap<>();
         int i = 0;
-        for (Object o : ModelSampling.sortMapByValue(parseQuasispeciesFile).keySet()) {
+        for (Object o : ModelSampling.sortMapByValue(parseQuasispeciesFile).entrySet()) {
+            Entry<String, Double> e = (Entry<String, Double>) o;
             StringBuilder sb = new StringBuilder();
-            String c = (String) o;
+            String c = e.getKey();
             String s = ModelSampling.dna2protein(c, 0);
             char[] cs = s.toCharArray();
+            StringBuilder mutations = new StringBuilder();
             int secondary = 0;
             if (cs[21] == 'M') {
                 secondary++;
+                mutations.append("M");
+            } else {
+                mutations.append(" ");
             }
             if (cs[44] == 'A') {
                 secondary++;
+                mutations.append("A");
+            } else {
+                mutations.append(" ");
+            }
+            if (cs[90] == 'H') {
+                secondary++;
+                mutations.append("H");
+            } else {
+                mutations.append(" ");
             }
             if (cs[98] == 'I') {
                 secondary++;
+                mutations.append("I");
+            } else {
+                mutations.append(" ");
+            }
+            if (cs[110] == 'R') {
+                secondary++;
+                mutations.append("R");
+            } else {
+                mutations.append(" ");
             }
             if ((cs[90] == 'R' || cs[90] == 'C') && cs[102] == 'H') {
-                sb.append(12 + secondary);
+                sb.append(17 + secondary);
+                mutations.append(cs[90]);
+                mutations.append(cs[102]);
             } else if (cs[90] == 'R' || cs[90] == 'C') {
-                sb.append(4 + secondary);
+                sb.append(6 + secondary);
+                mutations.append(cs[90]);
             } else if (cs[102] == 'H') {
-                sb.append(8 + secondary);
+                sb.append(11 + secondary);
+                mutations.append(cs[102]);
             } else {
                 sb.append(secondary);
+            }
+            String mutationSummary = mutations.toString();
+            if (mutationMap.containsKey(mutationSummary)) {
+                mutationMap.put(mutationSummary, mutationMap.get(mutationSummary) + e.getValue());
+            } else {
+                mutationMap.put(mutationSummary, e.getValue());
             }
 
             fasta.append(">read").append(String.valueOf(i)).append("_").append(parseQuasispeciesFile.get(c)).append("_0_").append(sb).append("\n").append(c).append("\n");
             i++;
         }
+        StringBuilder mutationSummary = new StringBuilder();
+        int maxLength = 0;
+        for (Object o : ModelSampling.sortMapByValue(mutationMap).entrySet()) {
+            Entry<String, Double> e = (Entry<String, Double>) o;
+            maxLength = Math.max(maxLength, e.getKey().length());
+        }
+        for (Object o : ModelSampling.sortMapByValue(mutationMap).entrySet()) {
+            Entry<String, Double> e = (Entry<String, Double>) o;
+            mutationSummary.append(e.getKey());
+            for (int j = e.getKey().length() - 1; j < maxLength; j++) {
+                mutationSummary.append(" ");
+            }
+            mutationSummary.append(Math.round(e.getValue() * 10000) / 10000d).append("\n");
+        }
         Utils.saveFile(this.input + "_annotated", fasta.toString());
+        Utils.saveFile(this.input + "_summary", mutationSummary.toString());
     }
 //    private void annotate() {
 //        StringBuilder fasta = new StringBuilder();
