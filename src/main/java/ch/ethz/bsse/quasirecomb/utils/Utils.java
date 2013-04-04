@@ -300,7 +300,7 @@ public class Utils extends FastaParser {
                 callables.add(new SFRComputing(l));
                 l = new LinkedList<>();
             }
-            StatusUpdate.getINSTANCE().print("Parsing\t\t" + (Math.round((counter++ / size) * 100)));
+            StatusUpdate.getINSTANCE().print("Parsing\t\t" + (Math.round((counter++ / size) * 100))+"%");
             l.add(samRecord);
             x++;
         }
