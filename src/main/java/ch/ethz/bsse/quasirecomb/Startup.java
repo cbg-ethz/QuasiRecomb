@@ -681,6 +681,7 @@ public class Startup {
             System.err.println("  -bootstrap\t\t: Model-selection is performed on 10 bootstrapped datasets. Very time consuming, but robust.");
             System.err.println("  -refine\t\t: Can only be used after QuasiRecomb has been executed once before on the same dataset in the same directory."
                     + "\n\t\t\t  Thins the number of haplotypes.");
+            System.err.println("  -noGaps\t\t: Weight gaps down. Useful if data is 454 and gaps are only technical errors.");
             System.err.println(" -------------------------");
             System.err.println(" === Technical options ===");
             System.err.println("  -XX:NewRatio=9\t: Reduces the menory consumption (RECOMMENDED to use).");
