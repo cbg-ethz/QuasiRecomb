@@ -92,9 +92,12 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                             if (hasQuality) {
                                 double q = 1 - Math.pow(10, -(samRecord.getBaseQualities()[readStart]) / 10d);
                                 if (q == 0) {
+//                                    q = 0.79432823472;
                                     q = 0.01;
                                 }
                                 buildQuality.add(q);
+                            } else {
+                                buildQuality.add(1d);
                             }
                             buildCigar.add(true);
                             readStart++;
@@ -106,14 +109,17 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                     case D:
                         for (int i = 0; i < c.getLength(); i++) {
                             buildRead.add((byte) "-".charAt(0));
+                            double q;
 
-                            if (hasQuality) {
-                                double q = 0.01;
-                                if (c.getLength() % 3 == 0) {
-                                    q = 1;
-                                }
-                                buildQuality.add(q);
+                            if (Globals.getINSTANCE().isNO_GAPS()) {
+                                q = 0.0001;
+                            } else {
+//                                q = 0.01;
+//                                if (c.getLength() % 3 == 0) {
+                                    q = 0.79432823472;
+//                                }
                             }
+                            buildQuality.add(q);
                             buildCigar.add(false);
                         }
                         break;
@@ -135,11 +141,11 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                 }
             }
             double[] quality = new double[buildQuality.size()];
-            if (hasQuality) {
-                for (int i = 0; i < buildQuality.size(); i++) {
-                    quality[i] = buildQuality.get(i);
-                }
+//            if (hasQuality) {
+            for (int i = 0; i < buildQuality.size(); i++) {
+                quality[i] = buildQuality.get(i);
             }
+//            }
             boolean[] cigar = new boolean[buildCigar.size()];
             for (int i = 0; i < buildCigar.size(); i++) {
                 cigar[i] = buildCigar.get(i);
@@ -161,26 +167,26 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                     if (refStart < from && readEnd <= to) {
                         readBases = Arrays.copyOfRange(readBases, from - refStart, length);
                         cigar = Arrays.copyOfRange(cigar, from - refStart, length);
-                        if (hasQuality) {
-                            quality = Arrays.copyOfRange(quality, from - refStart, length);
-                        }
+//                        if (hasQuality) {
+                        quality = Arrays.copyOfRange(quality, from - refStart, length);
+//                        }
                         refStart = from;
                     } else if (refStart >= from && readEnd > to) {
                         //rightover
                         readBases = Arrays.copyOfRange(readBases, 0, to - refStart);
                         cigar = Arrays.copyOfRange(cigar, 0, to - refStart);
-                        if (hasQuality) {
-                            quality = Arrays.copyOfRange(quality, 0, to - refStart);
-                        }
+//                        if (hasQuality) {
+                        quality = Arrays.copyOfRange(quality, 0, to - refStart);
+//                        }
                     } else if (refStart >= from && readEnd <= to) {
                         //inner
                     } else if (refStart < from && readEnd > to) {
                         //outer
                         readBases = Arrays.copyOfRange(readBases, from - refStart, to - refStart);
                         cigar = Arrays.copyOfRange(cigar, from - refStart, to - refStart);
-                        if (hasQuality) {
-                            quality = Arrays.copyOfRange(quality, from - refStart, to - refStart);
-                        }
+//                        if (hasQuality) {
+                        quality = Arrays.copyOfRange(quality, from - refStart, to - refStart);
+//                        }
                         refStart = from;
                     } else {
                         System.err.println("");
@@ -199,7 +205,7 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
             }
             String name = samRecord.getReadName();
 
-            return new ReadTMP(name, quality, readBases, refStart, hasQuality, cigar);
+            return new ReadTMP(name, quality, readBases, refStart, true, cigar);
 
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println();

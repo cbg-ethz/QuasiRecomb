@@ -171,18 +171,28 @@ public class DistanceUtils {
         return result;
     }
 
-    public static Double calculateKLD2(Map<String, Integer> P, Map<String, Integer> Q) {
-
-        double Psize = (double) P.values().size();
-        double Qsize = (double) Q.values().size();
-
+    public static Double calculateKLD2(Map<String, Double> P, Map<String, Double> Q) {
+        Map<String, Double> M = new HashMap<>();
+        for (Entry<String, Double> e : P.entrySet()) {
+            M.put(e.getKey(), e.getValue() / 2d);
+        }
+        for (Entry<String, Double> e : Q.entrySet()) {
+            double prev = 0d;
+            if (M.containsKey(e.getKey())) {
+                prev = M.get(e.getKey());
+            }
+            M.put(e.getKey(), prev + e.getValue() / 2d);
+        }
         double result = 0.0;
         for (String sequence : P.keySet()) {
-            double fP = P.get(sequence) / Psize;
-            double fQ = Q.containsKey(sequence) ? Q.get(sequence) / Qsize : 0d;
-            fQ += fP;
-            fQ /= 2;
-            result += fP * (Math.log(fP / fQ) / Math.log(2));
+            double p = P.get(sequence);
+            double m = M.get(sequence);
+            result += (p * (Math.log(p / m) / Math.log(2))) / 2d;
+        }
+        for (String sequence : Q.keySet()) {
+            double q = Q.get(sequence);
+            double m = M.get(sequence);
+            result += (q * (Math.log(q / m) / Math.log(2))) / 2d;
         }
         return result;
     }

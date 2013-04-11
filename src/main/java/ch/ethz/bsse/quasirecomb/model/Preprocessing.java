@@ -392,18 +392,20 @@ public class Preprocessing {
                 begin_TT = start + i;
             }
         }
-        for (int i = coverage.length - 1; i >= begin_H - start; i--) {
-            if (end_H == -1 && coverage[i] >= 100) {
-                end_H = start + i;
-            }
-            if (end_FH == -1 && coverage[i] >= 500) {
-                end_FH = start + i;
-            }
-            if (end_T == -1 && coverage[i] >= 1000) {
-                end_T = start + i;
-            }
-            if (end_TT == -1 && coverage[i] >= 10000) {
-                end_TT = start + i;
+        if (begin_H >= 0) {
+            for (int i = coverage.length - 1; i >= begin_H - start; i--) {
+                if (end_H == -1 && coverage[i] >= 100) {
+                    end_H = start + i;
+                }
+                if (end_FH == -1 && coverage[i] >= 500) {
+                    end_FH = start + i;
+                }
+                if (end_T == -1 && coverage[i] >= 1000) {
+                    end_T = start + i;
+                }
+                if (end_TT == -1 && coverage[i] >= 10000) {
+                    end_TT = start + i;
+                }
             }
         }
         Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "coverage.txt", sb.toString());

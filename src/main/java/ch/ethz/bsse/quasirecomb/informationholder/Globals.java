@@ -36,6 +36,7 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean NO_GAPS;
     private boolean MAX;
     private boolean COVERAGE;
     private boolean BOOTSTRAP;
@@ -690,5 +691,13 @@ public class Globals {
 
     public void setREPEATS(int REPEATS) {
         this.REPEATS = REPEATS;
+    }
+
+    public boolean isNO_GAPS() {
+        return NO_GAPS;
+    }
+
+    public void setNO_GAPS(boolean NO_GAPS) {
+        this.NO_GAPS = NO_GAPS;
     }
 }

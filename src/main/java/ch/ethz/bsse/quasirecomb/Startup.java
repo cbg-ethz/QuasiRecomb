@@ -36,8 +36,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import net.sf.samtools.SAMFormatException;
@@ -211,6 +214,8 @@ public class Startup {
     private boolean max;
     @Option(name = "--extended")
     private boolean extended;
+    @Option(name = "-noGaps")
+    private boolean noGaps;
 
     private void setInputOutput() {
         if (output == null) {
@@ -241,6 +246,7 @@ public class Startup {
         Globals.getINSTANCE().setSAMPLE_READS(this.sampleReads);
         Globals.getINSTANCE().setSAMPLE_PROTEINS(this.sampleProteins);
         Globals.getINSTANCE().setCOVERAGE(this.coverage);
+        Globals.getINSTANCE().setNO_GAPS(this.noGaps);
     }
 
     private void sample() {
@@ -349,18 +355,49 @@ public class Startup {
     }
 
     private void kullbackLeibler() {
-        OptimalResult or = null;
-        try {
-            FileInputStream fis = new FileInputStream(input);
-            try (ObjectInputStream in = new ObjectInputStream(fis)) {
-                or = (OptimalResult) in.readObject();
+        if (this.input.equals("+")) {
+            List<String> fileList = new ArrayList<>(Arrays.asList(new File(System.getProperty("user.dir") + File.separator).list()));
+            fileList.remove("support");
+            String[] files = fileList.toArray(new String[fileList.size()]);
+            boolean startHeader = true;
+            for (int i = 0; i < files.length; i++) {
+                if (files[i].equals("support")) {
+                    continue;
+                }
+                if (!startHeader) {
+                    System.out.print("\t");
+                } else {
+                    startHeader = false;
+                }
+                System.out.print(files[i].split("\\.")[0]);
             }
-        } catch (IOException | ClassNotFoundException ex) {
-            System.err.println(ex);
-        }
-        if (or != null) {
-            Summary s = new Summary();
-            System.out.println(s.kl(or));
+            System.out.println("");
+            for (int i = 0; i < files.length; i++) {
+                if (files[i].equals("support")) {
+                    continue;
+                }
+                boolean start = true;
+                for (int j = 0; j < files.length; j++) {
+                    if (files[i].equals("support")) {
+                        continue;
+                    }
+                    Map<String, Double> x = FastaParser.parseQuasispeciesFile(files[i]);
+                    Map<String, Double> x2 = FastaParser.parseQuasispeciesFile(files[j]);
+                    Double calculateKLD2 = DistanceUtils.calculateKLD2(x, x2);
+                    if (!start) {
+                        System.out.print("\t");
+                    } else {
+                        start = false;
+                    }
+                    System.out.print(calculateKLD2);
+                }
+                System.out.println("");
+            }
+        } else {
+            Map<String, Double> i = FastaParser.parseQuasispeciesFile(this.input);
+            Map<String, Double> i2 = FastaParser.parseQuasispeciesFile(this.haplotypes);
+            Double calculateKLD2 = DistanceUtils.calculateKLD2(i, i2);
+            System.out.println("Jensen-Shannon divergence: " + calculateKLD2);
         }
     }
 
@@ -502,8 +539,8 @@ public class Startup {
 
         if (this.region != null && !this.region.isEmpty()) {
             String[] r = this.region.split("-");
-            Globals.getINSTANCE().setWINDOW_BEGIN(Integer.parseInt(r[0]));
-            Globals.getINSTANCE().setWINDOW_END(Integer.parseInt(r[1]));
+            Globals.getINSTANCE().setWINDOW_BEGIN(Integer.parseInt(r[0])-1);
+            Globals.getINSTANCE().setWINDOW_END(Integer.parseInt(r[1])-1);
             Globals.getINSTANCE().setWINDOW(true);
         }
         if (this.global) {
@@ -703,8 +740,11 @@ public class Startup {
 
     private void annotate() {
         StringBuilder fasta = new StringBuilder();
+        StringBuilder protein = new StringBuilder();
         Map<String, Double> parseQuasispeciesFile = FastaParser.parseQuasispeciesFile(this.input);
         Map<String, Double> mutationMap = new HashMap<>();
+        Map<String, Double> proteins = new LinkedHashMap<>();
+        Map<String, String> proteinAnnotation = new LinkedHashMap<>();
         int i = 0;
         for (Object o : ModelSampling.sortMapByValue(parseQuasispeciesFile).entrySet()) {
             Entry<String, Double> e = (Entry<String, Double>) o;
@@ -751,10 +791,13 @@ public class Startup {
             } else if (cs[90] == 'R' || cs[90] == 'C') {
                 sb.append(6 + secondary);
                 mutations.append(cs[90]);
+                mutations.append(" ");
             } else if (cs[102] == 'H') {
                 sb.append(11 + secondary);
+                mutations.append(" ");
                 mutations.append(cs[102]);
             } else {
+                mutations.append("  ");
                 sb.append(secondary);
             }
             String mutationSummary = mutations.toString();
@@ -765,6 +808,12 @@ public class Startup {
             }
 
             fasta.append(">read").append(String.valueOf(i)).append("_").append(parseQuasispeciesFile.get(c)).append("_0_").append(sb).append("\n").append(c).append("\n");
+            if (proteins.containsKey(s)) {
+                proteins.put(s, proteins.get(s) + e.getValue());
+            } else {
+                proteins.put(s, e.getValue());
+                proteinAnnotation.put(s, sb.toString());
+            }
             i++;
         }
         StringBuilder mutationSummary = new StringBuilder();
@@ -781,8 +830,43 @@ public class Startup {
             }
             mutationSummary.append(Math.round(e.getValue() * 10000) / 10000d).append("\n");
         }
+        i = 0;
+        for (Object o : ModelSampling.sortMapByValue(proteins).entrySet()) {
+            Entry<String, Double> e = (Entry<String, Double>) o;
+            protein.append(">read").append(String.valueOf(i++)).append("_").append(e.getValue()).append("_0_").append(proteinAnnotation.get(e.getKey())).append("\n").append(e.getKey()).append("\n");
+        }
         Utils.saveFile(this.input + "_annotated", fasta.toString());
+        Utils.saveFile(this.input + "_protein0_annotated", protein.toString());
         Utils.saveFile(this.input + "_summary", mutationSummary.toString());
+
+        char[] as = {' ', 'M'};
+        char[] bs = {' ', 'A'};
+        char[] cs = {' ', 'H'};
+        char[] ds = {' ', 'I'};
+        char[] es = {' ', 'R'};
+        char[] fs = {' ', 'H'};
+        char[] gs = {' ', 'R', 'C'};
+        StringBuilder table = new StringBuilder();
+        StringBuilder table2 = new StringBuilder();
+        for (char a : as) {
+            for (char b : bs) {
+                for (char c : cs) {
+                    for (char d : ds) {
+                        for (char e : es) {
+                            for (char f : fs) {
+                                for (char g : gs) {
+                                    String x = "" + a + b + c + d + e + g + f;
+                                    table2.append(x).append("\n");
+                                    table.append(mutationMap.get(x) == null ? "0.0" : Math.round(mutationMap.get(x) * 10000) / 10000d).append("\n");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Utils.saveFile(this.input + "_tableOverview", table2.toString());
+        Utils.saveFile(this.input + "_table", table.toString());
     }
 //    private void annotate() {
 //        StringBuilder fasta = new StringBuilder();
