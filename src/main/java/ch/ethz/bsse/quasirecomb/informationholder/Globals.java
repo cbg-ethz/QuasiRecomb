@@ -36,6 +36,8 @@ public class Globals {
     public static Globals getINSTANCE() {
         return INSTANCE;
     }
+    private boolean GRADIENT;
+    private boolean ANNEALING;
     private boolean NO_GAPS;
     private boolean MAX;
     private boolean COVERAGE;
@@ -699,5 +701,21 @@ public class Globals {
 
     public void setNO_GAPS(boolean NO_GAPS) {
         this.NO_GAPS = NO_GAPS;
+    }
+
+    public boolean isANNEALING() {
+        return ANNEALING;
+    }
+
+    public void setANNEALING(boolean ANNEALING) {
+        this.ANNEALING = ANNEALING;
+    }
+
+    public boolean isGRADIENT() {
+        return GRADIENT;
+    }
+
+    public void setGRADIENT(boolean GRADIENT) {
+        this.GRADIENT = GRADIENT;
     }
 }

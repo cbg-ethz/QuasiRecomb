@@ -49,16 +49,16 @@ public class Summary extends Utils {
             sb.append(j);
             double sum = 0d;
             for (int v = 0; v < or.getn(); v++) {
-                sum += or.getSnv()[j][v]>1e-5?or.getSnv()[j][v]:0;
+                sum += or.getSnv()[j][v] > 1e-5 ? or.getSnv()[j][v] : 0;
             }
             for (int v = 0; v < or.getn(); v++) {
-                sb.append("\t").append(shortenSmall(or.getSnv()[j][v]/sum));
+                sb.append("\t").append(shortenSmall(or.getSnv()[j][v] / sum));
             }
             sb.append("\n");
         }
         return sb.toString();
     }
-    
+
     public static String shortenSmall(double value) {
         String s;
         if (value < 1e-5) {

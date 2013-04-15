@@ -25,6 +25,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Threading;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -75,6 +76,7 @@ public class JHMM extends Garage {
     private int biasCounter = 0;
     private int unBiasCounter = 0;
     private int s = 0;
+    private double beta = 0.0001;
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon, int Kmin) {
         this(reads, N, L, K, n, epsilon,
@@ -203,9 +205,11 @@ public class JHMM extends Garage {
         for (int j = 0; j < L; j++) {
             for (int k = 0; k < K; k++) {
                 double eta = 0;
-                if (Globals.getINSTANCE().getINTERPOLATE_MU() > 0) {
+                if (Globals.getINSTANCE().isANNEALING()) {
+                    muJKV = Regularizations.deterministicAnnealing(this.nJKV[j][k], this.mu[j][k], beta);
+                } else if (Globals.getINSTANCE().getINTERPOLATE_MU() > 0) {
                     eta = Math.pow(Math.pow(s, 2) + 2, -Globals.getINSTANCE().getINTERPOLATE_MU());
-                    muJKV = Regularizations.step(this.nJKV[j][k], this.mu[j][k], eta, true);
+                    muJKV = Regularizations.step(this.nJKV[j][k], this.mu[j][k], eta, Globals.getINSTANCE().isPAIRED());
                 } else {
                     muJKV = Regularizations.ml(this.nJKV[j][k]);
                 }
@@ -334,15 +338,22 @@ public class JHMM extends Garage {
     }
 
     private void maximizePi() {
+        StringBuilder sb = new StringBuilder();
         double[] piTmp = new double[K];
         for (int j = 0; j < L; j++) {
+            
             for (int k = 0; k < K; k++) {
+                double sum = 0d;
                 for (int v = 0; v < n; v++) {
                     piTmp[k] += this.nJKV[j][k][v];
+                    sum += this.nJKV[j][k][v];;
                 }
+                sb.append(sum).append("\t");
             }
+            sb.setLength(sb.length()-1);
+            sb.append("\n");
         }
-
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH()+"piDist.txt", sb.toString());
         double eta = Math.pow(s + 2, -1);
         pi = Regularizations.step(piTmp, pi, eta, false);
     }
@@ -399,7 +410,7 @@ public class JHMM extends Garage {
         }
     }
 
-    private void biasMu() {
+    public void biasMu() {
         for (int j = 0; j < L; j++) {
             boolean flat = false;
             for (int k = 0; k < K; k++) {
@@ -630,5 +641,17 @@ public class JHMM extends Garage {
 
     public double[][] getSnv() {
         return this.snv;
+    }
+
+    public double getBeta() {
+        return beta;
+    }
+
+    public void incBeta(double alpha) {
+        this.beta *= alpha;
+    }
+
+    public void setBeta(double beta) {
+        this.beta = beta;
     }
 }

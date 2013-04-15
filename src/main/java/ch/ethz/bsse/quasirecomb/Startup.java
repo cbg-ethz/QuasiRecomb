@@ -216,6 +216,10 @@ public class Startup {
     private boolean extended;
     @Option(name = "-noGaps")
     private boolean noGaps;
+    @Option(name = "-annealing")
+    private boolean annealing;
+    @Option(name = "-gradient")
+    private boolean gradient;
 
     private void setInputOutput() {
         if (output == null) {
@@ -600,6 +604,8 @@ public class Startup {
         }
         Globals.getINSTANCE().setBOOTSTRAP(this.bootstrap);
         Globals.getINSTANCE().setMAX(this.max);
+        Globals.getINSTANCE().setANNEALING(this.annealing);
+        Globals.getINSTANCE().setGRADIENT(this.gradient);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 

@@ -95,16 +95,16 @@ public class Random {
 
         for (int j = L - 1; j >= 0; j--) {
             for (int k = K - 1; k >= 0; k--) {
-                if (Globals.getINSTANCE().isPRIORMU()) {
-                    double[] d = new double[n];
-                    for (int v = 0; v < n; v++) {
+//                if (Globals.getINSTANCE().isPRIORMU()) {
+                double[] d = new double[n];
+                for (int v = 0; v < n; v++) {
 //                        d[v] = (double) Globals.getINSTANCE().getMU_PRIOR()[j][v] + 1;
-                        d[v] = 1d / n;
-                    }
-                    mu[j][k] = new Dirichlet(d).nextDistribution();
-                } else {
-                    mu[j][k] = muDir.nextDistribution();
+                    d[v] = 1d / n;
                 }
+                mu[j][k] = d;//new Dirichlet(d).nextDistribution();
+//                } else {
+//                    mu[j][k] = muDir.nextDistribution();
+//                }
             }
         }
         return mu;

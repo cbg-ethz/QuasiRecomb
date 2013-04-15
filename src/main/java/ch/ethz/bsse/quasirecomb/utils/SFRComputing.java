@@ -114,10 +114,10 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                             if (Globals.getINSTANCE().isNO_GAPS()) {
                                 q = 0.0001;
                             } else {
-//                                q = 0.01;
-//                                if (c.getLength() % 3 == 0) {
+                                q = 0.01;
+                                if (c.getLength() % 3 == 0) {
                                     q = 0.79432823472;
-//                                }
+                                }
                             }
                             buildQuality.add(q);
                             buildCigar.add(false);

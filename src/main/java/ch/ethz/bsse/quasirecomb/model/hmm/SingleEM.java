@@ -90,14 +90,14 @@ public class SingleEM {
     }
 
     private void snapshot() {
-        String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "K" + K  + "_R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
+        String save = Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "K" + K + "_R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations;
         OptimalResult localOr = new OptimalResult(N, K, L, n,
                 jhmm.getRho(),
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
                 calcBIC(), jhmm.getEps(), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), jhmm.getSnv());
-//        Utils.saveOptimum(save + ".optimum", localOr);
+        Utils.saveOptimum(save + ".optimum", localOr);
         Summary summary = new Summary();
         Utils.saveFile(save + ".txt", summary.print(localOr));
 //        Utils.saveFile(save + ".html", summary.html(localOr));
@@ -108,12 +108,28 @@ public class SingleEM {
         this.loglikelihood = Double.NEGATIVE_INFINITY;
         this.maxBIC = calcBIC(jhmm);
 
-        if (Globals.getINSTANCE().isSNAPSHOTS()) {
-            this.snapshot();
+        if (Globals.getINSTANCE().isGRADIENT()) {
+            double multMu = Globals.getINSTANCE().getMULT_MU();
+            while (Globals.getINSTANCE().getMULT_MU() > 1) {
+                this.iterate();
+                Globals.getINSTANCE().setMULT_MU(Globals.getINSTANCE().getMULT_MU() / 1.2);
+                System.out.println("= " + Globals.getINSTANCE().getMULT_MU());
+            }
+            Globals.getINSTANCE().setMULT_MU(1);
+            this.iterate();
+            Globals.getINSTANCE().setMULT_MU(multMu);
+        } else if (Globals.getINSTANCE().isANNEALING()) {
+            while (jhmm.getBeta() < 1) {
+                this.iterate();
+                this.jhmm.biasMu();
+                jhmm.incBeta(1.2);
+                System.out.println("= " + jhmm.getBeta());
+            }
+            this.iterate();
+            jhmm.setBeta(1);
+        } else {
+            this.iterate();
         }
-
-        this.iterate();
-
         Globals.getINSTANCE().log("###c(" + jhmm.getMuChanged() + "|" + jhmm.getRhoChanged() + ")\n");
 
         StatusUpdate.getINSTANCE().incPercentage();
@@ -125,9 +141,13 @@ public class SingleEM {
             Globals.getINSTANCE().log("####");
             Globals.getINSTANCE().log("\n");
         }
+        if (Globals.getINSTANCE().isSNAPSHOTS()) {
+            this.snapshot();
+        }
     }
 
     private void iterate() {
+        iterations = 0;
         double oldllh;
         List<Double> history = new LinkedList<>();
         if (Globals.getINSTANCE().isDEBUG()) {
@@ -174,9 +194,9 @@ public class SingleEM {
                 Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", " " + jhmm.getLoglikelihood());
             }
 
-            if (Globals.getINSTANCE().isSNAPSHOTS()) {
-                this.snapshot();
-            }
+//            if (Globals.getINSTANCE().isSNAPSHOTS()) {
+//                this.snapshot();
+//            }
         } while ((Math.abs((oldllh - loglikelihood) / loglikelihood) > this.delta && !Globals.getINSTANCE().isPDELTA()) || (Globals.getINSTANCE().isPDELTA() && (jhmm.getRhoChanged() + jhmm.getMuChanged()) != 0));
         if (Globals.getINSTANCE().isDEBUG()) {
             Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", "\n");
