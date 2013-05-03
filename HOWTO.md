@@ -73,7 +73,7 @@ function alignMem () {
     samtools index reads.bam
 }
 ```
-Single read alignment: `alignMem input.fastq reference.fasta`
+Single read alignment: `alignMem input.fastq reference.fasta`  
 Paired-end read alignment: `alignMem input1.fastq reference.fasta input.fastq`
 
 ###Quality control
