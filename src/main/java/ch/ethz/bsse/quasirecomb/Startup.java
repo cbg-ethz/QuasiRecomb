@@ -75,13 +75,13 @@ public class Startup {
     @Option(name = "-prune")
     private boolean prune;
     @Option(name = "-multMu")
-    private double multMu = 10;
+    private double multMu = 0;
     @Option(name = "-multMuMin")
     private double multMuMin = 0;
     @Option(name = "-multRhoMin")
     private double multRhoMin = 0;
     @Option(name = "-multRho")
-    private double multRho = 100;
+    private double multRho = 0;
     @Option(name = "-nosample")
     private boolean nosample;
     @Option(name = "-m")
@@ -774,7 +774,7 @@ public class Startup {
             Globals.getINSTANCE().setWINDOW_END(Integer.parseInt(r[1]) - 1);
             Globals.getINSTANCE().setWINDOW(true);
         }
-        
+
         Globals.getINSTANCE().setGRADIENT(!this.noGradient);
         if (!this.noGradient) {
             Globals.getINSTANCE().setMULT_MU(100);
@@ -798,12 +798,16 @@ public class Startup {
         } else {
             Globals.getINSTANCE().setALPHA_H(this.alphah);
             Globals.getINSTANCE().setALPHA_Z(this.alphaz);
-            Globals.getINSTANCE().setMULT_MU(this.multMu);
-            Globals.getINSTANCE().setMULT_RHO(this.multRho);
+            if (this.multMu > 0) {
+                Globals.getINSTANCE().setMULT_MU(this.multMu);
+            }
+            if (this.multRho > 0) {
+                Globals.getINSTANCE().setMULT_RHO(this.multRho);
+            }
             Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
             Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
         }
-        
+
         Globals.getINSTANCE().setNO_QUALITY(!this.quality);
         Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
         Globals.getINSTANCE().setUNPAIRED(this.unpaired);
