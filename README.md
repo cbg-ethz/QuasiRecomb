@@ -99,7 +99,7 @@ R CMD BATCH support/modelselection.R
 `java -XX:+UseParallelGC -XX:+UseNUMA -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
 #####Unix wrapper:
-`function qr() { java -XX:+UseParallelGC -Xms2g -Xmx10g -XX:+UseNUMA -XX:NewRatio=9 -jar ~/Dropbox/QuasiAsterisk/QuasiRecomb/target/QuasiRecomb.jar $*; }`
+`function qr() { java -XX:+UseParallelGC -Xms2g -Xmx10g -XX:+UseNUMA -XX:NewRatio=9 -jar ~/QuasiRecomb.jar $*; }`
 
 ### Help:
  Further help can be showed by running without additional parameters:
