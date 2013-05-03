@@ -80,8 +80,8 @@ If you are new to QuasiRecomb, please read the **[Beginners' guide to viral popu
 ### Filter reads with too large consecutive deletions
  `-maxDel INT` 
 
-### Filter reads with too many deletions
- `-maxPercDel DOUBLE`
+### Filter reads with a too high ratio of deletions
+ `-maxPercDel DOUBLE` Interval if between 0.0 - 1.0
 
 ### Do not merge and pair reads
  `-unpaired` 

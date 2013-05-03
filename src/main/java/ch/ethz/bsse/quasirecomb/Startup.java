@@ -938,7 +938,7 @@ public class Startup {
             System.err.println("  -noGaps\t\t: Ignore gaps; useful if data is 454 and gaps are only technical errors.");
             System.err.println("  -conservative\t\t: Use this if the major haplotypes are only of interest.");
             System.err.println("  -maxDel INT\t\t: Remove reads with more than INT consecutive deletions.");
-            System.err.println("  -maxPercDel DOUBLE\t: Remove reads with more than DOUBLE percentage of deletions.");
+            System.err.println("  -maxPercDel DOUBLE\t: Remove reads with more than DOUBLE ratio of deletions, between 0.0 - 1.0");
             System.err.println("  -unpaired\t\t: If read names are not unique and reads are single-end, prevent pairing and merging.");
             System.err.println(" -------------------------");
             System.err.println(" === Technical options ===");
