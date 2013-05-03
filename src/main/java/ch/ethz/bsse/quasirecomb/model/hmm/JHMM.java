@@ -361,7 +361,7 @@ public class JHMM extends Garage {
             sb.setLength(sb.length() - 1);
             sb.append("\n");
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "piDist.txt", sb.toString());
+//        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "piDist.txt", sb.toString());
 //        double eta = Math.pow(s + 2, -1);
 //        pi = Regularizations.step(piTmp, pi, eta, false);
     }
