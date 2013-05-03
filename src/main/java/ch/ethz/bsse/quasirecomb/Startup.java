@@ -938,7 +938,7 @@ public class Startup {
             System.err.println("  -conservative\t\t: Use this if the major haplotypes are only of interest.");
             System.err.println(" -------------------------");
             System.err.println(" === Technical options ===");
-            System.err.println("  -XX:NewRatio=9\t: Reduces the menory consumption (RECOMMENDED to use).");
+            System.err.println("  -XX:NewRatio=9\t: Reduces the memory consumption (RECOMMENDED to use).");
             System.err.println("  -Xms2G -Xmx10G\t: Increase heap space.");
             System.err.println("  -XX:+UseNUMA\t\t: Enhances performance on multicore systems.");
             System.err.println("  -XX:+UseNUMA\t\t: Enhances performance on multi-CPU systems.");
