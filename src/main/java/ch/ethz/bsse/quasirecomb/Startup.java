@@ -940,7 +940,7 @@ public class Startup {
             System.err.println(" === Technical options ===");
             System.err.println("  -XX:NewRatio=9\t: Reduces the memory consumption (RECOMMENDED to use).");
             System.err.println("  -Xms2G -Xmx10G\t: Increase heap space.");
-            System.err.println("  -XX:+UseNUMA\t\t: Enhances performance on multicore systems.");
+            System.err.println("  -XX:+UseParallelGC\t\t: Enhances performance on multicore systems.");
             System.err.println("  -XX:+UseNUMA\t\t: Enhances performance on multi-CPU systems.");
             System.err.println(" -------------------------");
             System.err.println(" === EXAMPLES ===");

@@ -86,18 +86,20 @@ R CMD BATCH support/modelselection.R
 ```
 
 ## Technical details
-##### Memory consumption
-To minimize the memory consumption and the number of full garbage collector executions, use:
+#####To minimize the memory consumption and the number of full garbage collector executions, use:
 `java -XX:NewRatio=9 -jar QuasiRecomb.jar`
 
-If your dataset is very large and you run out of memory, increase the heapspace with:
+#####If your dataset is very large and you run out of memory, increase the heapspace with:
 `java -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
-If have a multicore system:
+####$If have a multicore system:
 `java -XX:+UseParallelGC -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
-For multicpu systems:
+####$For multicpu systems:
 `java -XX:+UseParallelGC -XX:+UseNUMA -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
+
+#####Unix wrapper:
+`function qr() { java -XX:+UseParallelGC -Xms2g -Xmx10g -XX:+UseNUMA -XX:NewRatio=9 -jar ~/Dropbox/QuasiAsterisk/QuasiRecomb/target/QuasiRecomb.jar $*; }`
 
 ### Help:
  Further help can be showed by running without additional parameters:
