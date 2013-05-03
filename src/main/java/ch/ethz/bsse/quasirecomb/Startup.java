@@ -780,7 +780,7 @@ public class Startup {
             Globals.getINSTANCE().setMULT_MU(100);
             Globals.getINSTANCE().setMULT_RHO(1000);
             Globals.getINSTANCE().setMULT_RHO_MIN(100);
-            Globals.getINSTANCE().setMULT_MU_MIN(1);
+            Globals.getINSTANCE().setMULT_MU_MIN(10);
         }
         if (this.multRhoMin > 0) {
             Globals.getINSTANCE().setMULT_RHO_MIN(this.multRhoMin);
