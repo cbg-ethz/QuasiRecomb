@@ -52,11 +52,11 @@ If you are new to QuasiRecomb, please read the **[Beginners' guide to viral popu
  Reads need to be properly aligned.
 
 ### Conservative reconstruction
- `-conservative`
+ `-conservative` 
   In this case, only major haplotypes will be reconstructed.
 
 ### Disregard deletions
- `-noGaps`
+ `-noGaps` 
   If deletions are not of interest, not expected, or only due to technical noise, all deletions will be ignored.
 
 ### Use fixed number of generators
@@ -73,6 +73,16 @@ If you are new to QuasiRecomb, please read the **[Beginners' guide to viral popu
 
 ### Disable recombination process
  `-noRecomb`
+
+### Filter reads with too large consecutive deletions
+ `-maxDel INT` 
+
+### Filter reads with too many deletions
+ `-maxPercDel DOUBLE`
+
+### Do not merge and pair reads
+ `-unpaired` 
+  If read names are not unique and reads are single-end, prevent pairing and merging. Should be used with 454/Roche sequencing data, because read names are often not unique.
 
 ### Output
  The reconstructed DNA haplotype distribution quasispecies.fasta will be saved in the working directory.
