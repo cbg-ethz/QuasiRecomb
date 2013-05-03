@@ -672,7 +672,7 @@ public class Startup {
             throw new CmdLineException("No input given");
         }
         int Kmin, Kmax;
-        if (K.contains(":")) {
+        if (K.contains("-")) {
             Kmin = Integer.parseInt(K.split("-")[0]);
             Kmax = Integer.parseInt(K.split("-")[1]);
         } else {
