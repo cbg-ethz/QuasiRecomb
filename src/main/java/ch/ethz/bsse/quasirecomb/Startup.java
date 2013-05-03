@@ -939,6 +939,8 @@ public class Startup {
             System.err.println(" -------------------------");
             System.err.println(" === Technical options ===");
             System.err.println("  -XX:NewRatio=9\t: Reduces the menory consumption (RECOMMENDED to use).");
+            System.err.println("  -Xms2G -Xmx10G\t: Increase heap space.");
+            System.err.println("  -XX:+UseNUMA\t\t: Enhances performance on multicore systems.");
             System.err.println("  -XX:+UseNUMA\t\t: Enhances performance on multi-CPU systems.");
             System.err.println(" -------------------------");
             System.err.println(" === EXAMPLES ===");
@@ -946,6 +948,7 @@ public class Startup {
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -conservative ");
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -K 2");
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -noRecomb -r 790-2292");
+            System.err.println("   java -XX:+UseParallelGC -Xms20g -Xmx200g -XX:+UseNUMA -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam");
             System.err.println(" -------------------------");
             System.err.println("  For further information, see http://bit.ly/quasirecomb-howto");
             System.err.println(" -------------------------");

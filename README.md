@@ -93,6 +93,12 @@ To minimize the memory consumption and the number of full garbage collector exec
 If your dataset is very large and you run out of memory, increase the heapspace with:
 `java -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
+If have a multicore system:
+`java -XX:+UseParallelGC -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
+
+For multicpu systems:
+`java -XX:+UseParallelGC -XX:+UseNUMA -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
+
 ### Help:
  Further help can be showed by running without additional parameters:
   `java -jar QuasiRecomb.jar`
