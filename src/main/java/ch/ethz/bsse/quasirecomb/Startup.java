@@ -920,7 +920,7 @@ public class Startup {
             System.err.println("  -i INPUT\t\t: Alignment file in BAM or SAM format.");
             System.err.println("  -o PATH\t\t: Path to the output directory (default: current directory).");
             System.err.println("");
-            System.err.println("  -K INT or INT:INT\t: The interval or fixed number of sequence generators, i.e. 1:4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
+            System.err.println("  -K INT or INT-INT\t: The interval or fixed number of sequence generators, i.e. 1-4 or 2\n\t\t\t  In a grid enviroment the $SGE_TASK_ID."
                     + "\n\t\t\t  In case of no input, K will be incremented as long as max BIC has not been reached, but will stop at K=5.");
             System.err.println("  -m INT\t\t: The number of EM restarts during model selection (default: 5).");
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50).");
