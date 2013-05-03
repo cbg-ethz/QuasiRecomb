@@ -948,7 +948,7 @@ public class Startup {
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -conservative ");
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -K 2");
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -noRecomb -r 790-2292");
-            System.err.println("   java -XX:+UseParallelGC -Xms20g -Xmx200g -XX:+UseNUMA -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam");
+            System.err.println("   java -XX:+UseParallelGC -Xms2g -Xmx10g -XX:+UseNUMA -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam");
             System.err.println(" -------------------------");
             System.err.println("  For further information, see http://bit.ly/quasirecomb-howto");
             System.err.println(" -------------------------");
