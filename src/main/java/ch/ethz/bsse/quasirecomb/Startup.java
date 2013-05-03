@@ -71,7 +71,7 @@ public class Startup {
     private boolean verbose;
     //TRAIN
     @Option(name = "-K")
-    private String K = "1:5";
+    private String K = "1-5";
     @Option(name = "-prune")
     private boolean prune;
     @Option(name = "-multMu")
