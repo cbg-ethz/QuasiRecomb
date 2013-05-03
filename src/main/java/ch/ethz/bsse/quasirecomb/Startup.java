@@ -673,8 +673,8 @@ public class Startup {
         }
         int Kmin, Kmax;
         if (K.contains(":")) {
-            Kmin = Integer.parseInt(K.split(":")[0]);
-            Kmax = Integer.parseInt(K.split(":")[1]);
+            Kmin = Integer.parseInt(K.split("-")[0]);
+            Kmax = Integer.parseInt(K.split("-")[1]);
         } else {
             Kmin = Integer.parseInt(K);
             Kmax = Integer.parseInt(K);
@@ -794,7 +794,7 @@ public class Startup {
             Globals.getINSTANCE().setINTERPOLATE_MU(1);
             Globals.getINSTANCE().setINTERPOLATE_RHO(1);
             Globals.getINSTANCE().setMULT_RHO_MIN(1);
-            Globals.getINSTANCE().setMULT_MU_MIN(10);
+            Globals.getINSTANCE().setMULT_MU_MIN(1);
         } else {
             Globals.getINSTANCE().setALPHA_H(this.alphah);
             Globals.getINSTANCE().setALPHA_Z(this.alphaz);
@@ -803,6 +803,7 @@ public class Startup {
             Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
             Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
         }
+        
         Globals.getINSTANCE().setNO_QUALITY(!this.quality);
         Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
         Globals.getINSTANCE().setUNPAIRED(this.unpaired);
@@ -936,6 +937,9 @@ public class Startup {
                     + "\n\t\t\t  Thins the number of haplotypes.");
             System.err.println("  -noGaps\t\t: Ignore gaps; useful if data is 454 and gaps are only technical errors.");
             System.err.println("  -conservative\t\t: Use this if the major haplotypes are only of interest.");
+            System.err.println("  -maxDel INT\t\t: Remove reads with more than INT consecutive deletions.");
+            System.err.println("  -maxPercDel DOUBLE\t: Remove reads with more than DOUBLE percentage of deletions.");
+            System.err.println("  -unpaired\t\t: If read names are not unique and reads are single-end, prevent pairing and merging.");
             System.err.println(" -------------------------");
             System.err.println(" === Technical options ===");
             System.err.println("  -XX:NewRatio=9\t: Reduces the memory consumption (RECOMMENDED to use).");
@@ -946,7 +950,7 @@ public class Startup {
             System.err.println(" === EXAMPLES ===");
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam");
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -conservative ");
-            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -K 2");
+            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -K 1:10");
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -noRecomb -r 790-2292");
             System.err.println("   java -XX:+UseParallelGC -Xms2g -Xmx10g -XX:+UseNUMA -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam");
             System.err.println(" -------------------------");

@@ -63,6 +63,9 @@ public class Preprocessing {
         StatusUpdate.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
         int L = fixAlignment(reads);
+        if (L > 300) {
+            Globals.getINSTANCE().setINTERPOLATE_MU(.5);
+        }
         int[][] alignment = computeAlignment(reads, L);
         StatusUpdate.getINSTANCE().println("Unique reads\t" + reads.length);
         StatusUpdate.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
