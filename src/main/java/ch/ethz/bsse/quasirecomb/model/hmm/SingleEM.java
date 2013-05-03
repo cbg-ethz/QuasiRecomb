@@ -17,7 +17,6 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm;
 
-import ch.ethz.bsse.quasirecomb.distance.KullbackLeibler;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
@@ -27,11 +26,8 @@ import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import org.javatuples.Triplet;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -110,20 +106,28 @@ public class SingleEM {
 
         if (Globals.getINSTANCE().isGRADIENT()) {
             double multMu = Globals.getINSTANCE().getMULT_MU();
-            while (Globals.getINSTANCE().getMULT_MU() > 1) {
+            double multRho = Globals.getINSTANCE().getMULT_RHO();
+            while (Globals.getINSTANCE().getMULT_MU() > Globals.getINSTANCE().getMULT_MU_MIN() || Globals.getINSTANCE().getMULT_RHO() > Globals.getINSTANCE().getMULT_RHO_MIN()) {
+                Globals.getINSTANCE().log("MU: " + Globals.getINSTANCE().getMULT_MU() + "\tRHO: " + Globals.getINSTANCE().getMULT_RHO() + "\n");
                 this.iterate();
-                Globals.getINSTANCE().setMULT_MU(Globals.getINSTANCE().getMULT_MU() / 1.2);
-                System.out.println("= " + Globals.getINSTANCE().getMULT_MU());
+                if (Globals.getINSTANCE().getMULT_MU() > Globals.getINSTANCE().getMULT_MU_MIN()) {
+                    Globals.getINSTANCE().setMULT_MU(Globals.getINSTANCE().getMULT_MU() / 1.2);
+                }
+                if (Globals.getINSTANCE().getMULT_RHO() > Globals.getINSTANCE().getMULT_RHO_MIN()) {
+                    Globals.getINSTANCE().setMULT_RHO(Globals.getINSTANCE().getMULT_RHO() / 1.2);
+                }
             }
-            Globals.getINSTANCE().setMULT_MU(1);
+            Globals.getINSTANCE().setMULT_MU(Globals.getINSTANCE().getMULT_MU_MIN());
+            Globals.getINSTANCE().setMULT_RHO(Globals.getINSTANCE().getMULT_RHO_MIN());
             this.iterate();
             Globals.getINSTANCE().setMULT_MU(multMu);
+            Globals.getINSTANCE().setMULT_RHO(multRho);
         } else if (Globals.getINSTANCE().isANNEALING()) {
             while (jhmm.getBeta() < 1) {
                 this.iterate();
                 this.jhmm.biasMu();
                 jhmm.incBeta(1.2);
-                System.out.println("= " + jhmm.getBeta());
+                Globals.getINSTANCE().log("= " + jhmm.getBeta());
             }
             this.iterate();
             jhmm.setBeta(1);
@@ -185,11 +189,11 @@ public class SingleEM {
                 Globals.getINSTANCE().log(loglikelihood + "\n");
             }
 
-            if (Globals.getINSTANCE().isPRUNE() && K > Kmin) {
-                this.jhmm = prune();
-            } else {
-                jhmm.restart();
-            }
+//            if (Globals.getINSTANCE().isPRUNE() && K > Kmin) {
+//                this.jhmm = prune();
+//            } else {
+            jhmm.restart();
+//            }
             if (Globals.getINSTANCE().isDEBUG()) {
                 Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "support/log/" + "LOG-" + K + "-" + repeat + ".txt", " " + jhmm.getLoglikelihood());
             }
@@ -203,180 +207,179 @@ public class SingleEM {
         }
     }
 
-    private JHMM prune() {
-//        double currentBIC = calcBIC(jhmm);
-        double currentBIC = Double.MAX_VALUE;
-        Triplet<Integer, Integer, Double> minKL = jhmm.minKL();
-        int kPrime = minKL.getValue0();
-        double entropyKPrime = KullbackLeibler.shannonEntropy(jhmm.mu, kPrime);
-        int lPrime = minKL.getValue1();
-        double entropyLPrime = KullbackLeibler.shannonEntropy(jhmm.mu, lPrime);
-
-        int survivingGenerator = entropyKPrime <= entropyLPrime ? kPrime : lPrime;
-        int dieingGenerator = entropyKPrime > entropyLPrime ? kPrime : lPrime;
-
-        double[][][] muDeletion = new double[L][K - 1][n];
-        double[][][] rhoDeletion = new double[L][K - 1][K - 1];
-        double[] piDeletion = new double[K - 1];
-
-        double[][][] muMerging = new double[L][K - 1][n];
-        double[][][] rhoMerging = new double[L][K - 1][K - 1];
-        double[] piMerging = new double[K - 1];
-
-        int kResorted = 0;
-        Map<Integer, Integer> resortedDeletionMap = new HashMap<>();
-        for (int k = 0; k < K; k++) {
-            if (k != dieingGenerator) {
-                resortedDeletionMap.put(k, kResorted);
-                kResorted++;
-            }
-        }
-
-        kResorted = 0;
-        Map<Integer, Integer> resortedMergedMap = new HashMap<>();
-        for (int k = 0; k < K; k++) {
-            if (k == kPrime || k == lPrime) {
-                resortedMergedMap.put(k, K - 2);
-            } else {
-                resortedMergedMap.put(k, kResorted);
-                kResorted++;
-            }
-        }
-
-        //PI DELETION
-        double piSumDel = 0d;
-        for (int k = 0; k < K; k++) {
-            if (resortedDeletionMap.containsKey(k)) {
-                int kR = resortedDeletionMap.get(k);
-                piDeletion[kR] = jhmm.pi[k];
-                piSumDel += jhmm.pi[k];
-            }
-        }
-        for (int k = 0; k < K - 1; k++) {
-            piDeletion[k] = piDeletion[k] / piSumDel;
-        }
-
-        //PI MERGING
-        double piSumMer = 0d;
-        for (int k = 0; k < K; k++) {
-            if (resortedMergedMap.containsKey(k)) {
-                int kR = resortedMergedMap.get(k);
-                piMerging[kR] = jhmm.pi[k];
-                piSumMer += jhmm.pi[k];
-            }
-        }
-        for (int k = 0; k < K - 1; k++) {
-            piMerging[k] = piMerging[k] / piSumMer;
-        }
-
-
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                //MU DELETION
-                if (resortedDeletionMap.containsKey(k)) {
-                    int kRD = resortedDeletionMap.get(k);
-                    for (int v = 0; v < n; v++) {
-                        muDeletion[j][kRD][v] = jhmm.mu[j][k][v];
-                    }
-                }
-                //MU MERGING
-                if (resortedMergedMap.containsKey(k)) {
-                    int kRM = resortedMergedMap.get(k);
-                    for (int v = 0; v < n; v++) {
-                        muMerging[j][kRM][v] += jhmm.mu[j][k][v];
-                    }
-                }
-            }
-            for (int v = 0; v < n; v++) {
-                muMerging[j][K - 2][v] /= 2;
-            }
-        }
-
-        //RHO DELETION
-        for (int j = 0; j < L - 1; j++) {
-            for (int k = 0; k < K; k++) {
-                if (resortedDeletionMap.containsKey(k)) {
-                    int kR = resortedDeletionMap.get(k);
-                    for (int l = 0; l < K; l++) {
-                        if (resortedDeletionMap.containsKey(l)) {
-                            int lR = resortedDeletionMap.get(l);
-                            rhoDeletion[j][kR][lR] = jhmm.rho[j][k][l];
-                        }
-                    }
-                }
-            }
-        }
-        //RHO DEL NORMALIZATION
-        for (int j = 0; j < L - 1; j++) {
-            for (int k = 0; k < K - 1; k++) {
-                double sum = 0;
-                for (int l = 0; l < K - 1; l++) {
-                    sum += rhoDeletion[j][k][l];
-                }
-                if (sum > 0) {
-                    for (int l = 0; l < K - 1; l++) {
-                        rhoDeletion[j][k][l] /= sum;
-                    }
-                }
-            }
-        }
-
-        //RHO MERGING
-        for (int j = 0; j < L - 1; j++) {
-            for (int k = 0; k < K; k++) {
-                if (resortedMergedMap.containsKey(k)) {
-                    int kR = resortedMergedMap.get(k);
-                    for (int l = 0; l < K; l++) {
-                        if (resortedMergedMap.containsKey(l)) {
-                            int lR = resortedMergedMap.get(l);
-                            rhoMerging[j][kR][lR] += jhmm.rho[j][k][l];
-                        }
-                    }
-                }
-            }
-        }
-        //RHO MER NORMALIZATION
-        for (int j = 0; j < L - 1; j++) {
-            for (int k = 0; k < K - 1; k++) {
-                double sum = 0;
-                for (int l = 0; l < K - 1; l++) {
-                    sum += rhoMerging[j][k][l];
-                }
-                if (sum > 0) {
-                    for (int l = 0; l < K - 1; l++) {
-                        rhoMerging[j][k][l] /= sum;
-                    }
-                }
-            }
-        }
-
-
-        JHMM merge = new JHMM(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoMerging, piMerging, muMerging, Kmin);
-        double mergeBIC = calcBIC(merge);
-        JHMM del = new JHMM(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoDeletion, piDeletion, muDeletion, Kmin);
-        double delBIC = calcBIC(del);
-
-        maxBIC = currentBIC;
-        JHMM argMax = jhmm;
-        String s = "C";
-        if (delBIC < maxBIC) {
-            argMax = del;
-            maxBIC = delBIC;
-            s = "D";
-        }
-        if (mergeBIC < maxBIC) {
-            argMax = merge;
-            maxBIC = mergeBIC;
-            s = "M";
-        }
-        if (s.equals("C")) {
-            maxBIC = calcBIC(jhmm);
-            argMax.restart();
-        }
-        this.K = argMax.getK();
-        return argMax;
-    }
-
+//    private JHMM prune() {
+////        double currentBIC = calcBIC(jhmm);
+//        double currentBIC = Double.MAX_VALUE;
+//        Triplet<Integer, Integer, Double> minKL = jhmm.minKL();
+//        int kPrime = minKL.getValue0();
+//        double entropyKPrime = KullbackLeibler.shannonEntropy(jhmm.mu, kPrime);
+//        int lPrime = minKL.getValue1();
+//        double entropyLPrime = KullbackLeibler.shannonEntropy(jhmm.mu, lPrime);
+//
+//        int survivingGenerator = entropyKPrime <= entropyLPrime ? kPrime : lPrime;
+//        int dieingGenerator = entropyKPrime > entropyLPrime ? kPrime : lPrime;
+//
+//        double[][][] muDeletion = new double[L][K - 1][n];
+//        double[][][] rhoDeletion = new double[L][K - 1][K - 1];
+//        double[] piDeletion = new double[K - 1];
+//
+//        double[][][] muMerging = new double[L][K - 1][n];
+//        double[][][] rhoMerging = new double[L][K - 1][K - 1];
+//        double[] piMerging = new double[K - 1];
+//
+//        int kResorted = 0;
+//        Map<Integer, Integer> resortedDeletionMap = new HashMap<>();
+//        for (int k = 0; k < K; k++) {
+//            if (k != dieingGenerator) {
+//                resortedDeletionMap.put(k, kResorted);
+//                kResorted++;
+//            }
+//        }
+//
+//        kResorted = 0;
+//        Map<Integer, Integer> resortedMergedMap = new HashMap<>();
+//        for (int k = 0; k < K; k++) {
+//            if (k == kPrime || k == lPrime) {
+//                resortedMergedMap.put(k, K - 2);
+//            } else {
+//                resortedMergedMap.put(k, kResorted);
+//                kResorted++;
+//            }
+//        }
+//
+//        //PI DELETION
+//        double piSumDel = 0d;
+//        for (int k = 0; k < K; k++) {
+//            if (resortedDeletionMap.containsKey(k)) {
+//                int kR = resortedDeletionMap.get(k);
+//                piDeletion[kR] = jhmm.pi[k];
+//                piSumDel += jhmm.pi[k];
+//            }
+//        }
+//        for (int k = 0; k < K - 1; k++) {
+//            piDeletion[k] = piDeletion[k] / piSumDel;
+//        }
+//
+//        //PI MERGING
+//        double piSumMer = 0d;
+//        for (int k = 0; k < K; k++) {
+//            if (resortedMergedMap.containsKey(k)) {
+//                int kR = resortedMergedMap.get(k);
+//                piMerging[kR] = jhmm.pi[k];
+//                piSumMer += jhmm.pi[k];
+//            }
+//        }
+//        for (int k = 0; k < K - 1; k++) {
+//            piMerging[k] = piMerging[k] / piSumMer;
+//        }
+//
+//
+//        for (int j = 0; j < L; j++) {
+//            for (int k = 0; k < K; k++) {
+//                //MU DELETION
+//                if (resortedDeletionMap.containsKey(k)) {
+//                    int kRD = resortedDeletionMap.get(k);
+//                    for (int v = 0; v < n; v++) {
+//                        muDeletion[j][kRD][v] = jhmm.mu[j][k][v];
+//                    }
+//                }
+//                //MU MERGING
+//                if (resortedMergedMap.containsKey(k)) {
+//                    int kRM = resortedMergedMap.get(k);
+//                    for (int v = 0; v < n; v++) {
+//                        muMerging[j][kRM][v] += jhmm.mu[j][k][v];
+//                    }
+//                }
+//            }
+//            for (int v = 0; v < n; v++) {
+//                muMerging[j][K - 2][v] /= 2;
+//            }
+//        }
+//
+//        //RHO DELETION
+//        for (int j = 0; j < L - 1; j++) {
+//            for (int k = 0; k < K; k++) {
+//                if (resortedDeletionMap.containsKey(k)) {
+//                    int kR = resortedDeletionMap.get(k);
+//                    for (int l = 0; l < K; l++) {
+//                        if (resortedDeletionMap.containsKey(l)) {
+//                            int lR = resortedDeletionMap.get(l);
+//                            rhoDeletion[j][kR][lR] = jhmm.rho[j][k][l];
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        //RHO DEL NORMALIZATION
+//        for (int j = 0; j < L - 1; j++) {
+//            for (int k = 0; k < K - 1; k++) {
+//                double sum = 0;
+//                for (int l = 0; l < K - 1; l++) {
+//                    sum += rhoDeletion[j][k][l];
+//                }
+//                if (sum > 0) {
+//                    for (int l = 0; l < K - 1; l++) {
+//                        rhoDeletion[j][k][l] /= sum;
+//                    }
+//                }
+//            }
+//        }
+//
+//        //RHO MERGING
+//        for (int j = 0; j < L - 1; j++) {
+//            for (int k = 0; k < K; k++) {
+//                if (resortedMergedMap.containsKey(k)) {
+//                    int kR = resortedMergedMap.get(k);
+//                    for (int l = 0; l < K; l++) {
+//                        if (resortedMergedMap.containsKey(l)) {
+//                            int lR = resortedMergedMap.get(l);
+//                            rhoMerging[j][kR][lR] += jhmm.rho[j][k][l];
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        //RHO MER NORMALIZATION
+//        for (int j = 0; j < L - 1; j++) {
+//            for (int k = 0; k < K - 1; k++) {
+//                double sum = 0;
+//                for (int l = 0; l < K - 1; l++) {
+//                    sum += rhoMerging[j][k][l];
+//                }
+//                if (sum > 0) {
+//                    for (int l = 0; l < K - 1; l++) {
+//                        rhoMerging[j][k][l] /= sum;
+//                    }
+//                }
+//            }
+//        }
+//
+//
+//        JHMM merge = new JHMM(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoMerging, piMerging, muMerging, Kmin);
+//        double mergeBIC = calcBIC(merge);
+//        JHMM del = new JHMM(reads, N, L, K - 1, n, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), rhoDeletion, piDeletion, muDeletion, Kmin);
+//        double delBIC = calcBIC(del);
+//
+//        maxBIC = currentBIC;
+//        JHMM argMax = jhmm;
+//        String s = "C";
+//        if (delBIC < maxBIC) {
+//            argMax = del;
+//            maxBIC = delBIC;
+//            s = "D";
+//        }
+//        if (mergeBIC < maxBIC) {
+//            argMax = merge;
+//            maxBIC = mergeBIC;
+//            s = "M";
+//        }
+//        if (s.equals("C")) {
+//            maxBIC = calcBIC(jhmm);
+//            argMax.restart();
+//        }
+//        this.K = argMax.getK();
+//        return argMax;
+//    }
     private double calcBIC(JHMM jhmm) {
         // count free parameters
         double BIC_current = jhmm.getLoglikelihood();
@@ -390,7 +393,7 @@ public class SingleEM {
 
         double[][][] rho = jhmm.getRho();
         double[][][] mu = jhmm.getMu();
-        double[] pi = jhmm.getPi();
+        double[][] pi = jhmm.getPi();
         double[] eps = jhmm.getEps();
 
         for (int j = 0; j < mu.length; j++) {
@@ -417,9 +420,10 @@ public class SingleEM {
                     freeParameters++;
                 }
             }
-
-            for (int k = 0; k < pi.length; k++) {
-                if (pi[k] > ERROR) {
+        }
+        for (int j = 0; j < pi.length; j++) {
+            for (int k = 0; k < pi[j].length; k++) {
+                if (pi[j][k] > ERROR) {
                     freeParameters++;
                 }
             }

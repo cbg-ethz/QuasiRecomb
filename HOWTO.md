@@ -39,6 +39,8 @@ you might get paired-end data with two files `input_R1_001.fastq` and `input_R2_
 The most reliable PacBio data are CCS (circular consesus sequences). These files are often called `input.ccs.fastq`. It is recommended to use the FASTQ.
 
 ##Alignment
+
+###InDelFixer
 The key to a good results is a high quality alignment of the input data. For this case InDelFixer will be used.  
 InDelFixer can be downloaded with:
 ```
@@ -54,6 +56,25 @@ java -jar InDelFixer.jar -i input_R1_001.fastq -ir input_R2_001.fastq -g referen
 ```
 
 For further information on InDelFixer see https://github.com/armintoepfer/InDelFixer
+
+###BWA
+BWA is a good alternative to create an alignment with following bash script:
+```
+function alignMem () {
+    bwa index -a bwtsw $2;
+    bwa mem -B 20 -A 3 -O 30 -E 3 -t 79 $2 $1 $3 > aln.sam;
+    samtools faidx $2;
+    samtools view -bt $2.fai aln.sam > aln.bam;
+    samtools sort aln.bam aln-sorted;
+    samtools index aln-sorted.bam;
+    rm aln.sam aln.bam;
+    samtools view -bq 1 -F 4 aln-sorted.bam > reads.bam;
+    rm aln*;
+    samtools index reads.bam
+}
+```
+Single read alignment: `alignMem input.fastq reference.fasta`
+Paired-end read alignment: `alignMem input1.fastq reference.fasta input.fastq`
 
 ###Quality control
 ALWAYS look at the alignment with your own eyes, to check the quality, for example with [Tablet](http://bioinf.scri.ac.uk/tablet/)
@@ -80,17 +101,14 @@ java -jar QuasiRecomb.jar -i reads.sam -coverage
 
 One of these regions should be used:
 ```
-java -jar QuasiRecomb.jar -i reads.sam -r 24-142
+java -jar QuasiRecomb.jar -i reads.bam -r 24-142
 ```
 
 ##### Model-selection
 Usually model-selection is done automatically in the range of 1-5 generators, but in benchmark situations or if the underlying population is too diverse, model-selection for a larger range of generators can be activated with:
 ```
-java -jar QuasiRecomb.jar -i reads.sam -r 24-142 -K 1:10
+java -jar QuasiRecomb.jar -i reads.bam -r 24-142 -K 1:10
 ```
-
-##### Global reconstruction
-When the region of interest is larger than the average read-length, or the focus is only on the dominant haplotypes, please use `-global`.
 
 ##### Reduce number of false-positive haplotypes
 If the distribution of haplotypes in the `quasispecies.fasta` file is too flat, the number of false-positives can be reduced with executing the same command-line call as before, but this time with an additional `-refine`. Of course, reducing the number of false-positives is a tradeoff with introducing false-negatives.
@@ -98,11 +116,3 @@ If the distribution of haplotypes in the `quasispecies.fasta` file is too flat, 
 java -jar QuasiRecomb.jar -i reads.sam -r 24-142
 java -jar QuasiRecomb.jar -i reads.sam -r 24-142 -refine
 ```
-
-## Technical details
-##### Memory consumption
-To minimize the memory consumption and the number of full garbage collector executions, use:
-`java -XX:NewRatio=9 -jar QuasiRecomb.jar`
-
-If your dataset is very large and you run out of memory, increase the heapspace with:
-`java -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`

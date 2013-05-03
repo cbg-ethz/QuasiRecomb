@@ -152,8 +152,8 @@ public class Summary extends Utils {
         double[][] alignmentE = new double[L][5];
         for (int i = 0; i < genome.length; i++) {
             byte[] r = splitReadIntoByteArray(genome[i]);
-            for (int j = 0; j < genome[0].length(); j++) {
-                alignmentG[i][j][r[j]]++;
+            for (int j = 0; j < Globals.getINSTANCE().getWINDOW_END() - Globals.getINSTANCE().getWINDOW_BEGIN(); j++) {
+                alignmentG[i][j][r[j + Globals.getINSTANCE().getWINDOW_BEGIN()]]++;
                 alignmentE[j][r[j]] += 1d / genome.length;
             }
         }
@@ -168,9 +168,12 @@ public class Summary extends Utils {
 //            }
             StringBuilder dataSB = new StringBuilder();
             StringBuilder rawEntropyFill = new StringBuilder();
+            StringBuilder rawEntropyFillR = new StringBuilder();
             StringBuilder[] genomeEntropyFill = new StringBuilder[genome.length];
+            StringBuilder[] genomeEntropyFillR = new StringBuilder[genome.length];
             for (int x = 0; x < genome.length; x++) {
                 genomeEntropyFill[x] = new StringBuilder();
+                genomeEntropyFillR[x] = new StringBuilder();
             }
             StringBuilder ticks = new StringBuilder();
             ticks.append("show_ticks          = yes\n"
@@ -190,14 +193,44 @@ public class Summary extends Utils {
             int g = 0;
             boolean nextTick = false;
             for (int j = from; j < to; j++) {
-                double max = 0d;
-                for (int v = 0; v < 5; v++) {
-                    max = Math.max(max, alignmentE[j][v]);
+//                double max = 0d;
+                boolean same = true;
+                for (int a = 1; a < alignmentG.length; a++) {
+                    for (int v = 0; v < 5; v++) {
+                        if (alignmentG[a - 1][j][v] != alignmentG[a][j][v]) {
+                            same = false;
+                            break;
+                        }
+                        if (!same) {
+                            break;
+                        }
+//                        max = Math.max(max, alignmentG[a][j][v]);
+                    }
                 }
-                if ((5433 + j) % 250 == 0) {
+                int globalJ = j + Globals.getINSTANCE().getWINDOW_BEGIN();
+                if (globalJ == 490
+                        || globalJ == 790
+                        || globalJ == 1186
+                        || globalJ == 5619
+                        || globalJ == 5559
+                        || globalJ == 5580
+                        || globalJ == 6062
+                        || globalJ == 1879
+                        || globalJ == 2085
+                        || globalJ == 2292
+                        || globalJ == 2253
+                        || globalJ == 2550
+                        || globalJ == 3870
+                        || globalJ == 4230
+                        || globalJ == 5096
+                        || globalJ == 5041
+                        || globalJ == 6225
+                        || globalJ == 6310
+                        || globalJ == 8795
+                        || globalJ == 9417) {
                     nextTick = true;
                 }
-                if (max < 1d) {
+                if (!same) {
                     if (nextTick) {
                         nextTick = false;
                         ticks.append("<tick>\n"
@@ -205,7 +238,7 @@ public class Summary extends Utils {
                                 + "position       = " + g + "u\n"
                                 + "size           = 15p\n"
                                 + "label_size     = 36p\n"
-                                + "label          = " + (j + 5433) + "\n"
+                                + "label          = " + (j + Globals.getINSTANCE().getWINDOW_BEGIN()) + "\n"
                                 + "</tick>\n");
                     }
                     double sum = 0d;
@@ -217,18 +250,24 @@ public class Summary extends Utils {
                         }
                     }
                     rawEntropyFill.append("h0 ").append(g).append(" ").append(g + 1).append(" ").append(alignment[j][0] / sum);
+                    rawEntropyFillR.append("h0 ").append(g).append(" ").append(g + 1).append(" ").append(alignment[j][0] / sum);
                     for (int x = 0; x < genome.length; x++) {
                         genomeEntropyFill[x].append("h0 ").append(g).append(" ").append(g + 1).append(" ").append(alignmentG[x][j][0] / sumG[x]);
+                        genomeEntropyFillR[x].append(j + Globals.getINSTANCE().getWINDOW_BEGIN()).append("\t").append(alignmentG[x][j][0] / sumG[x]);
                     }
                     for (int v = 1; v < alignment[j].length; v++) {
                         rawEntropyFill.append(",").append(alignment[j][v] / sum);
+                        rawEntropyFillR.append("\t").append(alignment[j][v] / sum);
                         for (int x = 0; x < genome.length; x++) {
                             genomeEntropyFill[x].append(",").append(alignmentG[x][j][v] / sumG[x]);
+                            genomeEntropyFillR[x].append("\t").append(alignmentG[x][j][v] / sumG[x]);
                         }
                     }
                     rawEntropyFill.append("\n");
+                    rawEntropyFillR.append("\n");
                     for (int x = 0; x < genome.length; x++) {
                         genomeEntropyFill[x].append("\n");
+                        genomeEntropyFillR[x].append("\n");
                     }
                     coverage.append("h0 ").append(g).append(" ").append(g + 1).append(" ").append(sum).append("\n");
                     g++;
@@ -240,8 +279,10 @@ public class Summary extends Utils {
             Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/ticks.conf", ticks.toString());
             Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/data.txt", dataSB.toString());
             Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/rawEntropy.txt", rawEntropyFill.toString());
+            Utils.saveFile("/Users/XLR/Dropbox/basicPlot//support/rawEntropyR.txt", rawEntropyFillR.toString());
             for (int x = 0; x < genome.length; x++) {
                 Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/genomeEntropy" + x + ".txt", genomeEntropyFill[x].toString());
+                Utils.saveFile("/Users/XLR/Dropbox/basicPlot/support/genomeEntropy" + x + ".txt", genomeEntropyFillR[x].toString());
             }
 //            Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/rawEntropy1.txt", rawEntropy1.toString());
 //            Utils.saveFile("/Users/XLR/Dropbox/basicPlot/" + i + "/support/rawEntropy2.txt", rawEntropy2.toString());
@@ -279,7 +320,7 @@ public class Summary extends Utils {
         double[][][] rho = or.getRho();
         sb.append("\nPI:\t\t");
         for (int k = 0; k < or.getK(); k++) {
-            sb.append(shorten(or.getPi()[k]));
+            sb.append(shorten(or.getPi()[0][k]));
             sb.append("\t\t\t\t\t");
         }
         sb.append("\n\n");
@@ -444,7 +485,7 @@ public class Summary extends Utils {
 //        sb.append("#PE:").append((mue - rhoe) / (or.getK() * or.getL())).append("\n");
         sb.append("\nPI:\t\t");
         for (int k = 0; k < or.getK(); k++) {
-            sb.append(shorten(or.getPi()[k]));
+            sb.append(shorten(or.getPi()[0][k]));
             sb.append("\t\t\t\t\t");
         }
         sb.append("\n\n");
@@ -602,7 +643,7 @@ public class Summary extends Utils {
             sb.append("<tr>");
             sb.append("<td>G").append(k).append("</td>");
             sb.append("<td>");
-            sb.append(shorten(or.getPi()[k]));
+            sb.append(shorten(or.getPi()[0][k]));
             sb.append("</td>");
 
             for (int j = 0; j < or.getL(); j++) {

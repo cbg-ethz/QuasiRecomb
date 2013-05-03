@@ -67,7 +67,17 @@ public final class ModelSampling extends Utils {
         this.L = or.getL();
         this.n = or.getn();
         this.rho = or.getRho();
-        this.pi = or.getPi();
+        double piSum = 0;
+        this.pi = new double[K];
+        for (int j = 0; j < L; j++) {
+            for (int k = 0; k < K; k++) {
+                this.pi[k] = or.getPi()[j][k];
+                piSum += or.getPi()[j][k];
+            }
+        }
+        for (int k = 0; k < K; k++) {
+            this.pi[k] /= piSum;
+        }
         this.mu = or.getMu();
         this.rhoArray = new Frequency[L - 1][K];
         this.muArray = new Frequency[L][K];
@@ -93,13 +103,25 @@ public final class ModelSampling extends Utils {
         if (or == null) {
             throw new IllegalStateException("Optimal result could not be parsed");
         }
-//        this.amount = or.getN();
+        if (Globals.getINSTANCE().getNREAL() > 0) {
+            this.amount = Globals.getINSTANCE().getNREAL();
+        }
         this.savePath = path;
         this.K = or.getK();
         this.L = or.getL();
         this.n = or.getn();
         this.rho = or.getRho();
-        this.pi = or.getPi();
+        this.pi = new double[K];
+        double piSum = 0;
+        for (int j = 0; j < or.getPi().length; j++) {
+            for (int k = 0; k < or.getPi()[j].length; k++) {
+                this.pi[k] = or.getPi()[j][k];
+                piSum += or.getPi()[j][k];
+            }
+        }
+        for (int k = 0; k < K; k++) {
+            this.pi[k] /= piSum;
+        }
         this.mu = or.getMu();
         this.tauOmega = or.getTauOmega();
         this.rhoArray = new Frequency[L - 1][K];

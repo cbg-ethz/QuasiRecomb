@@ -47,23 +47,36 @@ Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
 If you are new to QuasiRecomb, please read the **[Beginners' guide to viral population inference](https://github.com/armintoepfer/QuasiRecomb/blob/master/HOWTO.md)**
 
 ## RUN:
-### Local reconstruction
+### Local / Global reconstruction
  `java -jar QuasiRecomb.jar -i alignment.bam`
- Reads need to be aligned, therefore it is only useful for local reconstruction.
+ Reads need to be properly aligned.
 
-### Global reconstruction
- `java -jar QuasiRecomb.jar -i alignment.bam -global`
-  In this case, all insertions will be omitted, but deletions are preserved.
+### Conservative reconstruction
+ `-conservative`
+  In this case, only major haplotypes will be reconstructed.
+
+### Disregard deletions
+ `-noGaps`
+  If deletions are not of interest, not expected, or only due to technical noise, all deletions will be ignored.
 
 ### Use fixed number of generators
- `java -jar QuasiRecomb.jar -i alignment.bam -K 2`
+ `-K 2`
 
 ### Reconstruct specific region with respect to reference genome numbering
- `java -jar QuasiRecomb.jar -i alignment.bam -global -r 790-2292`
+ `-r 790-2292`
+
+### Robust model selection
+ `-bootstrap`
+
+### Incorporate PHRED quality scores (slower)
+ `-quality`
+
+### Disable recombination process
+ `-noRecomb`
 
 ### Output
  The reconstructed DNA haplotype distribution quasispecies.fasta will be saved in the working directory.
- An amino acid translation of the quasispecies in all three reading frame is saved as support/quasispecies_protein_(0|1|2).fasta, if -protein is used.
+ An amino acid translation of the quasispecies in all three reading frame is saved as support/quasispecies_protein_(0|1|2).fasta, if `-protein` is used.
  
 ### Plots
  Summary statistics can be produced with R:
@@ -71,6 +84,14 @@ If you are new to QuasiRecomb, please read the **[Beginners' guide to viral popu
 R CMD BATCH support/coverage.R
 R CMD BATCH support/modelselection.R
 ```
+
+## Technical details
+##### Memory consumption
+To minimize the memory consumption and the number of full garbage collector executions, use:
+`java -XX:NewRatio=9 -jar QuasiRecomb.jar`
+
+If your dataset is very large and you run out of memory, increase the heapspace with:
+`java -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
 ### Help:
  Further help can be showed by running without additional parameters:
@@ -81,7 +102,7 @@ R CMD BATCH support/modelselection.R
 
 ## INSTALL (only for dev):
     cd QuasiRecomb
-    mvn -DartifactId=samtools -DgroupId=net.sf -Dversion=1.8.4 -Dpackaging=jar -Dfile=src/main/resources/jars/sam-1.84.jar -DgeneratePom=false install:install-file
+    mvn -DartifactId=samtools -DgroupId=net.sf -Dversion=1.8.9 -Dpackaging=jar -Dfile=src/main/resources/jars/sam-1.89.jar -DgeneratePom=false install:install-file
     mvn clean package
     java -jar QuasiRecomb/target/QuasiRecomb.jar
 

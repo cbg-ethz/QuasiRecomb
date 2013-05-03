@@ -76,6 +76,10 @@ public class Startup {
     private boolean prune;
     @Option(name = "-multMu")
     private double multMu = 10;
+    @Option(name = "-multMuMin")
+    private double multMuMin = 0;
+    @Option(name = "-multRhoMin")
+    private double multRhoMin = 0;
     @Option(name = "-multRho")
     private double multRho = 100;
     @Option(name = "-nosample")
@@ -180,6 +184,8 @@ public class Startup {
     private boolean stopQuick;
     @Option(name = "-spikeRho")
     private boolean spikeRho = true;
+    @Option(name = "-conservative")
+    private boolean conservative;
     @Option(name = "-global")
     private boolean global;
     @Option(name = "-silent")
@@ -196,8 +202,8 @@ public class Startup {
     private boolean refine;
     @Option(name = "-r")
     private String region;
-    @Option(name = "-noQuality")
-    private boolean noquality;
+    @Option(name = "-quality")
+    private boolean quality;
     @Option(name = "--cutnham")
     private boolean cutnham;
     @Option(name = "--annotate")
@@ -218,8 +224,14 @@ public class Startup {
     private boolean noGaps;
     @Option(name = "-annealing")
     private boolean annealing;
-    @Option(name = "-gradient")
-    private boolean gradient;
+    @Option(name = "-noGradient")
+    private boolean noGradient;
+    @Option(name = "-maxDel")
+    private double maxDel = Integer.MAX_VALUE;
+    @Option(name = "-maxPercDel")
+    private double maxPercDel = 1;
+    @Option(name = "-HIV")
+    private String hiv;
 
     private void setInputOutput() {
         if (output == null) {
@@ -250,10 +262,13 @@ public class Startup {
         Globals.getINSTANCE().setSAMPLE_READS(this.sampleReads);
         Globals.getINSTANCE().setSAMPLE_PROTEINS(this.sampleProteins);
         Globals.getINSTANCE().setCOVERAGE(this.coverage);
+        Globals.getINSTANCE().setMAX_DEL(this.maxDel);
+        Globals.getINSTANCE().setMAX_OVERALL_DEL(this.maxPercDel);
         Globals.getINSTANCE().setNO_GAPS(this.noGaps);
     }
 
     private void sample() {
+        Globals.getINSTANCE().setNREAL(N);
         ModelSampling simulation = new ModelSampling(input, output);
         simulation.save();
     }
@@ -276,7 +291,7 @@ public class Startup {
             this.output += "reads";
         }
         if (this.global) {
-            Simulator.fromHaplotypesGlobal(FastaParser.parseFarFile(input), N, L, this.e, fArray, 4, this.output);
+            Simulator.fromHaplotypesGlobal(FastaParser.parseFarFile(input), N, L, this.e, fArray, this.output);
         } else if (paired) {
             Simulator.fromHaplotypesGlobalPaired(FastaParser.parseFarFile(input), N, L, this.e, fArray, this.output);
         } else {
@@ -363,6 +378,7 @@ public class Startup {
             List<String> fileList = new ArrayList<>(Arrays.asList(new File(System.getProperty("user.dir") + File.separator).list()));
             fileList.remove("support");
             String[] files = fileList.toArray(new String[fileList.size()]);
+            Arrays.sort(files);
             boolean startHeader = true;
             for (int i = 0; i < files.length; i++) {
                 if (files[i].equals("support")) {
@@ -521,8 +537,131 @@ public class Startup {
     }
 
     private void circos() {
+//        for (int i = 0; i < 10; i++) {
+//
+//        }
+
         Globals.getINSTANCE().setCIRCOS(this.circos);
         Globals.getINSTANCE().setGENOME(this.genome);
+
+        if (this.hiv != null) {
+            int begin_hiv = -1;
+            int end_hiv = -1;
+            switch (this.hiv) {
+                case "1":
+                case "p17":
+                    begin_hiv = 790;
+                    end_hiv = 1186;
+                    break;
+                case "2":
+                case "p24":
+                    begin_hiv = 1186;
+                    end_hiv = 1879;
+                    break;
+                case "3":
+                case "p2p6":
+                    begin_hiv = 1879;
+                    end_hiv = 2292;
+                    break;
+                case "4":
+                case "prot":
+                    begin_hiv = 2253;
+                    end_hiv = 2550;
+                    break;
+                case "5":
+                case "RT":
+                    begin_hiv = 2550;
+                    end_hiv = 3870;
+                    break;
+                case "6":
+                case "RNase":
+                    begin_hiv = 3870;
+                    end_hiv = 4230;
+                    break;
+                case "7":
+                case "int":
+                    begin_hiv = 4230;
+                    end_hiv = 5096;
+                    break;
+                case "8":
+                case "vif":
+                    begin_hiv = 5041;
+                    end_hiv = 5619;
+                    break;
+                case "9":
+                case "vpr":
+                    begin_hiv = 5559;
+                    end_hiv = 5850;
+                    break;
+                case "10":
+                case "vpu":
+                    begin_hiv = 6062;
+                    end_hiv = 6310;
+                    break;
+                case "11":
+                case "gp120":
+                    begin_hiv = 6225;
+                    end_hiv = 7758;
+                    break;
+                case "12":
+                case "gp41":
+                    begin_hiv = 7758;
+                    end_hiv = 8795;
+                    break;
+                case "13":
+                case "nef":
+                    begin_hiv = 8797;
+                    end_hiv = 9417;
+                    break;
+                case "14":
+                case "gag":
+                    begin_hiv = 790;
+                    end_hiv = 2292;
+                    break;
+                case "15":
+                case "pol":
+                    begin_hiv = 2085;
+                    end_hiv = 5096;
+                    break;
+                case "16":
+                case "env":
+                    begin_hiv = 6225;
+                    end_hiv = 8795;
+                    break;
+                case "17":
+                case "cg":
+                    begin_hiv = 490;
+                    end_hiv = 9540;
+                    break;
+                case "LTRGAG":
+                    begin_hiv = 490;
+                    end_hiv = 2292;
+                    break;
+                case "5LTR":
+                    begin_hiv = 490;
+                    end_hiv = 790;
+                    break;
+                case "ENVGP120":
+                    begin_hiv = 5041;
+                    end_hiv = 7758;
+                    break;
+                case "GP41LTR":
+                    begin_hiv = 7758;
+                    end_hiv = 9540;
+                    break;
+                case "VVV":
+                    begin_hiv = 5096;
+                    end_hiv = 6310;
+                    break;
+                case "POL":
+                    begin_hiv = 2253;
+                    end_hiv = 5096;
+                    break;
+            }
+            Globals.getINSTANCE().setWINDOW_BEGIN(begin_hiv - 1);
+            Globals.getINSTANCE().setWINDOW_END(end_hiv - 1);
+            Globals.getINSTANCE().setWINDOW(true);
+        }
         Preprocessing.workflow(this.input, 0, 0);
     }
 
@@ -541,19 +680,121 @@ public class Startup {
             Kmax = Integer.parseInt(K);
         }
 
-        if (this.region != null && !this.region.isEmpty()) {
+        if (this.hiv != null) {
+            int begin_hiv = -1;
+            int end_hiv = -1;
+            switch (this.hiv) {
+                case "1":
+                case "p17":
+                    begin_hiv = 790;
+                    end_hiv = 1186;
+                    break;
+                case "2":
+                case "p24":
+                    begin_hiv = 1186;
+                    end_hiv = 1879;
+                    break;
+                case "3":
+                case "p2p6":
+                    begin_hiv = 1879;
+                    end_hiv = 2292;
+                    break;
+                case "4":
+                case "prot":
+                    begin_hiv = 2253;
+                    end_hiv = 2550;
+                    break;
+                case "5":
+                case "RT":
+                    begin_hiv = 2550;
+                    end_hiv = 3870;
+                    break;
+                case "6":
+                case "RNase":
+                    begin_hiv = 3870;
+                    end_hiv = 4230;
+                    break;
+                case "7":
+                case "int":
+                    begin_hiv = 4230;
+                    end_hiv = 5096;
+                    break;
+                case "8":
+                case "vif":
+                    begin_hiv = 5041;
+                    end_hiv = 5619;
+                    break;
+                case "9":
+                case "vpr":
+                    begin_hiv = 5559;
+                    end_hiv = 5850;
+                    break;
+                case "10":
+                case "vpu":
+                    begin_hiv = 6062;
+                    end_hiv = 6310;
+                    break;
+                case "11":
+                case "gp120":
+                    begin_hiv = 6225;
+                    end_hiv = 7758;
+                    break;
+                case "12":
+                case "gp41":
+                    begin_hiv = 7758;
+                    end_hiv = 8795;
+                    break;
+                case "13":
+                case "nef":
+                    begin_hiv = 8797;
+                    end_hiv = 9417;
+                    break;
+                case "14":
+                case "gag":
+                    begin_hiv = 790;
+                    end_hiv = 2292;
+                    break;
+                case "15":
+                case "pol":
+                    begin_hiv = 2085;
+                    end_hiv = 5096;
+                    break;
+                case "16":
+                case "env":
+                    begin_hiv = 6225;
+                    end_hiv = 8795;
+                    break;
+            }
+            Globals.getINSTANCE().setWINDOW_BEGIN(begin_hiv - 1);
+            Globals.getINSTANCE().setWINDOW_END(end_hiv - 1);
+            Globals.getINSTANCE().setWINDOW(true);
+        } else if (this.region != null && !this.region.isEmpty()) {
             String[] r = this.region.split("-");
-            Globals.getINSTANCE().setWINDOW_BEGIN(Integer.parseInt(r[0])-1);
-            Globals.getINSTANCE().setWINDOW_END(Integer.parseInt(r[1])-1);
+            Globals.getINSTANCE().setWINDOW_BEGIN(Integer.parseInt(r[0]) - 1);
+            Globals.getINSTANCE().setWINDOW_END(Integer.parseInt(r[1]) - 1);
             Globals.getINSTANCE().setWINDOW(true);
         }
-        if (this.global) {
+        
+        Globals.getINSTANCE().setGRADIENT(!this.noGradient);
+        if (!this.noGradient) {
+            Globals.getINSTANCE().setMULT_MU(100);
+            Globals.getINSTANCE().setMULT_RHO(1000);
+            Globals.getINSTANCE().setMULT_RHO_MIN(100);
+            Globals.getINSTANCE().setMULT_MU_MIN(1);
+        }
+        if (this.multRhoMin > 0) {
+            Globals.getINSTANCE().setMULT_RHO_MIN(this.multRhoMin);
+        }
+        if (this.multMuMin > 0) {
+            Globals.getINSTANCE().setMULT_MU_MIN(this.multMuMin);
+        }
+        if (this.conservative) {
             Globals.getINSTANCE().setALPHA_H(1e-6);
             Globals.getINSTANCE().setALPHA_Z(1e-6);
-            Globals.getINSTANCE().setMULT_MU(10);
-            Globals.getINSTANCE().setMULT_RHO(1);
             Globals.getINSTANCE().setINTERPOLATE_MU(1);
             Globals.getINSTANCE().setINTERPOLATE_RHO(1);
+            Globals.getINSTANCE().setMULT_RHO_MIN(1);
+            Globals.getINSTANCE().setMULT_MU_MIN(10);
         } else {
             Globals.getINSTANCE().setALPHA_H(this.alphah);
             Globals.getINSTANCE().setALPHA_Z(this.alphaz);
@@ -562,7 +803,7 @@ public class Startup {
             Globals.getINSTANCE().setINTERPOLATE_MU(this.interpolateMu);
             Globals.getINSTANCE().setINTERPOLATE_RHO(this.interpolateRho);
         }
-        Globals.getINSTANCE().setNO_QUALITY(this.noquality);
+        Globals.getINSTANCE().setNO_QUALITY(!this.quality);
         Globals.getINSTANCE().setSPIKERHO(this.spikeRho);
         Globals.getINSTANCE().setUNPAIRED(this.unpaired);
         Globals.getINSTANCE().setSTOP_QUICK(this.stopQuick);
@@ -605,7 +846,13 @@ public class Startup {
         Globals.getINSTANCE().setBOOTSTRAP(this.bootstrap);
         Globals.getINSTANCE().setMAX(this.max);
         Globals.getINSTANCE().setANNEALING(this.annealing);
-        Globals.getINSTANCE().setGRADIENT(this.gradient);
+        if (this.global) {
+            System.err.println("");
+            System.err.println("Parameter -global is not supported anymore.");
+            System.err.println("Please use -conservative if the quasispecies should be peaked.");
+            System.err.println("");
+        }
+
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 
@@ -659,6 +906,7 @@ public class Startup {
         } catch (SAMFormatException e) {
             System.err.println("");
             System.err.println("Input file is not in SAM or BAM format.");
+            System.err.println(e);
         } catch (CmdLineException cmderror) {
             System.err.println(cmderror.getMessage());
             System.err.println("");
@@ -677,8 +925,7 @@ public class Startup {
             System.err.println("  -t INT\t\t: The number of EM restarts for best K to find optimum (default: 50).");
             System.err.println("  -r INT-INT\t\t: Only reconstruct a specific region.");
             System.err.println("  -noRecomb\t\t: Do not allow recombination.");
-            System.err.println("  -noQuality\t\t: Do not account phred quality scores (faster runtime).");
-            System.err.println("  -global\t\t: Use this if the region is longer than a read.");
+            System.err.println("  -quality\t\t: Account phred quality scores (slower runtime).");
             System.err.println("  -printAlignment\t: Save alignment.txt in a human readable format.");
 //            System.err.println("  -sampleReads\t\t: Sample reads in addition to haplotypes");
             System.err.println("  -sampleProteins\t: Sample full-length protein sequences in three reading frames.");
@@ -687,7 +934,8 @@ public class Startup {
             System.err.println("  -bootstrap\t\t: Model-selection is performed on 10 bootstrapped datasets. Very time consuming, but robust.");
             System.err.println("  -refine\t\t: Can only be used after QuasiRecomb has been executed once before on the same dataset in the same directory."
                     + "\n\t\t\t  Thins the number of haplotypes.");
-            System.err.println("  -noGaps\t\t: Weight gaps down. Useful if data is 454 and gaps are only technical errors.");
+            System.err.println("  -noGaps\t\t: Ignore gaps; useful if data is 454 and gaps are only technical errors.");
+            System.err.println("  -conservative\t\t: Use this if the major haplotypes are only of interest.");
             System.err.println(" -------------------------");
             System.err.println(" === Technical options ===");
             System.err.println("  -XX:NewRatio=9\t: Reduces the menory consumption (RECOMMENDED to use).");
@@ -695,9 +943,9 @@ public class Startup {
             System.err.println(" -------------------------");
             System.err.println(" === EXAMPLES ===");
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam");
-            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -global");
-            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -global -K 2");
-            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -global -r 790-2292");
+            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -conservative ");
+            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -K 2");
+            System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -noRecomb -r 790-2292");
             System.err.println(" -------------------------");
             System.err.println("  For further information, see http://bit.ly/quasirecomb-howto");
             System.err.println(" -------------------------");

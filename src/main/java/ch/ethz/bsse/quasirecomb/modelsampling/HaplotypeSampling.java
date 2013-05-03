@@ -40,7 +40,7 @@ public class HaplotypeSampling implements Callable<byte[]> {
         int n = or.getn();
         int K = or.getK();
         double[][][] rho = or.getRho();
-        double[] pi = or.getPi();
+        double[] pi = or.getPi()[0];
         double[][][] mu = or.getMu();
         Frequency<Integer>[][] rhoArray = new Frequency[L - 1][K];
         Frequency<Byte>[][] muArray = new Frequency[L][K];

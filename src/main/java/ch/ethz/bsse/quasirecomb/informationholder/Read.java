@@ -50,8 +50,6 @@ public class Read {
         this.crickBegin = r.crickBegin;
         this.insertion = r.insertion;
     }
-    
-    
 
     public Read(byte[] sequence, int begin, int end, double[] quality, boolean[] cigar) {
         this.watsonSequence = sequence;
@@ -264,7 +262,9 @@ public class Read {
         this.crickCigar = cigar;
         rearrange();
         this.insertion = this.crickBegin - this.watsonEnd;
-        merge();
+        if (!Globals.getINSTANCE().isUNPAIRED()) {
+            merge();
+        }
     }
 
     public final void setPairedEnd(byte[] sequence, int begin, int end, boolean[] cigar) {
@@ -274,7 +274,9 @@ public class Read {
         this.crickCigar = cigar;
         rearrange();
         this.insertion = this.crickBegin - this.watsonEnd;
-        merge();
+        if (!Globals.getINSTANCE().isUNPAIRED()) {
+            merge();
+        }
     }
 
     public int getCrickEnd() {

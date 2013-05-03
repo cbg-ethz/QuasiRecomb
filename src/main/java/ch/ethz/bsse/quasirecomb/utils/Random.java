@@ -75,16 +75,22 @@ public class Random {
         return rho;
     }
 
-    public static double[] generateInitPi(int L, int K) {
-//        if (Globals.getINSTANCE().isNO_RECOMB()) {
-        return new Dirichlet(K, 2).nextDistribution();
-//        } else {
-//            double[] pi = new double[K];
-//            for (int k = 1; k <= K; k++) {
-//                pi[k - 1] = 1d / K;
-//            }
-//            return pi;
-//        }
+    public static double[][] generateInitPi(int L, int K) {
+        if (Globals.getINSTANCE().isNO_RECOMB()) {
+            double[][] pis = new double[L][K];
+            for (int j = 0; j < L; j++) {
+                pis[j] = new Dirichlet(K, 2).nextDistribution();
+            }
+            return pis;
+        } else {
+            double[][] pi = new double[L][K];
+            for (int j = 0; j < L; j++) {
+                for (int k = 1; k <= K; k++) {
+                    pi[j][k - 1] = 1d / K;
+                }
+            }
+            return pi;
+        }
     }
 
     public static double[][][] generateMuInit(int L, int K, int n) {
@@ -95,13 +101,20 @@ public class Random {
 
         for (int j = L - 1; j >= 0; j--) {
             for (int k = K - 1; k >= 0; k--) {
+
 //                if (Globals.getINSTANCE().isPRIORMU()) {
                 double[] d = new double[n];
                 for (int v = 0; v < n; v++) {
 //                        d[v] = (double) Globals.getINSTANCE().getMU_PRIOR()[j][v] + 1;
                     d[v] = 1d / n;
                 }
-                mu[j][k] = d;//new Dirichlet(d).nextDistribution();
+                if (Globals.getINSTANCE().isNO_RECOMB()) {
+                    mu[j][k] = muDir.nextDistribution();
+                } else {
+                    for (int v = 0; v < n; v++) {
+                        mu[j][k][v] = 1d / n;
+                    }
+                }
 //                } else {
 //                    mu[j][k] = muDir.nextDistribution();
 //                }

@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Globals {
 
     private static final Globals INSTANCE = new Globals();
-    
 
     public static Globals getINSTANCE() {
         return INSTANCE;
@@ -73,10 +72,14 @@ public class Globals {
     private boolean PAIRED = false;
     private boolean PRIORMU;
     private boolean SPIKERHO;
+    private double MAX_DEL;
+    private double MAX_OVERALL_DEL;
     private double CUTOFF;
     private double PCHANGE;
     private double MULT_RHO;
+    private double MULT_RHO_MIN;
     private double MULT_MU;
+    private double MULT_MU_MIN;
     private double BETA_Z;
     private double ALPHA_Z;
     private double ALPHA_H;
@@ -98,7 +101,7 @@ public class Globals {
     private int DESIRED_REPEATS;
     private int SAMPLING_NUMBER;
     private int NREAL;
-        private int REPEATS;
+    private int REPEATS;
     private final int cpus = Runtime.getRuntime().availableProcessors();
     private List<Integer> runtime = new LinkedList<>();
     private String GENOME;
@@ -236,7 +239,7 @@ public class Globals {
     public void setSNAPSHOTS(boolean SNAPSHOTS) {
         this.SNAPSHOTS = SNAPSHOTS;
     }
-    
+
     public void setHammingMax(int hammingMax) {
         this.hammingMax = hammingMax;
     }
@@ -717,5 +720,37 @@ public class Globals {
 
     public void setGRADIENT(boolean GRADIENT) {
         this.GRADIENT = GRADIENT;
+    }
+
+    public double getMULT_MU_MIN() {
+        return MULT_MU_MIN;
+    }
+
+    public void setMULT_MU_MIN(double MULT_MU_MIN) {
+        this.MULT_MU_MIN = MULT_MU_MIN;
+    }
+
+    public double getMAX_DEL() {
+        return MAX_DEL;
+    }
+
+    public void setMAX_DEL(double MAX_DEL) {
+        this.MAX_DEL = MAX_DEL;
+    }
+
+    public double getMAX_PERC_DEL() {
+        return MAX_OVERALL_DEL;
+    }
+
+    public void setMAX_OVERALL_DEL(double MAX_OVERALL_DEL) {
+        this.MAX_OVERALL_DEL = MAX_OVERALL_DEL;
+    }
+
+    public double getMULT_RHO_MIN() {
+        return MULT_RHO_MIN;
+    }
+
+    public void setMULT_RHO_MIN(double MULT_RHO_MIN) {
+        this.MULT_RHO_MIN = MULT_RHO_MIN;
     }
 }

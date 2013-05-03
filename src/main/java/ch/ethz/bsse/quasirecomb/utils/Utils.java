@@ -269,11 +269,11 @@ public class Utils extends FastaParser {
     public static Read[] parseInput(String path) {
 //        if (isFastaGlobalMatePairFormat(path)) {
 //            return FastaParser.parseFastaPairedEnd(path);
-//        } else if (isFastaFormat(path)) {
-//            return parseFastaInput(path);
-//        } else {
-        return parseBAMSAM(path);
-//        }
+        if (isFastaFormat(path)) {
+            return parseFastaInput(path);
+        } else {
+            return parseBAMSAM(path);
+        }
     }
 
     public static Read[] parseBAMSAM(String location) {
@@ -291,7 +291,7 @@ public class Utils extends FastaParser {
         List<Callable<List<ReadTMP>>> callables = new ArrayList<>();
         List<SAMRecord> l = new LinkedList<>();
         int slices = 0;
-        int max = (int) (size / (Runtime.getRuntime().availableProcessors() - 1));
+        int max = (int) Math.ceil(size / (Runtime.getRuntime().availableProcessors() - 1));
         for (final SAMRecord samRecord : sfr) {
             if (x > max) {
                 x = 0;
@@ -300,7 +300,7 @@ public class Utils extends FastaParser {
                 callables.add(new SFRComputing(l));
                 l = new LinkedList<>();
             }
-            StatusUpdate.getINSTANCE().print("Parsing\t\t" + (Math.round((counter++ / size) * 100))+"%");
+            StatusUpdate.getINSTANCE().print("Parsing\t\t" + (Math.round((counter++ / size) * 100)) + "%");
             l.add(samRecord);
             x++;
         }

@@ -54,7 +54,7 @@ public class ReadHMMStatic {
                 for (int k = 0; k < jhmm.getK(); k++) {
                     for (int v = 0; v < jhmm.getn(); v++) {
                         if (j == 0) {
-                            fJKV[j][k][v] = jhmm.getPi()[k];
+                            fJKV[j][k][v] = jhmm.getPi()[jGlobal][k];
                         } else {
                             double sumL = 0d;
                             for (int l = 0; l < jhmm.getK(); l++) {

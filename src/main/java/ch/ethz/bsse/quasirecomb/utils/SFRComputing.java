@@ -112,7 +112,7 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                             double q;
 
                             if (Globals.getINSTANCE().isNO_GAPS()) {
-                                q = 0.0001;
+                                q = 0.0;
                             } else {
                                 q = 0.01;
                                 if (c.getLength() % 3 == 0) {
@@ -201,6 +201,31 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
             }
 
             if (readBases.length < Globals.getINSTANCE().getREAD_MINLENGTH()) {
+                return null;
+            }
+            double delCountSum = 0;
+            double delCountMax = 0;
+            double delCount = 0;
+            for (boolean b : cigar) {
+                if (!b) {
+                    delCount++;
+                    delCountSum++;
+                } else {
+                    if (delCount > delCountMax) {
+                        delCountMax = delCount;
+                    }
+                    delCount = 0;
+                }
+            }
+            if (delCount > delCountMax) {
+                delCountMax = delCount;
+            }
+            if (Globals.getINSTANCE().getMAX_DEL() != -1) {
+                if (delCountMax > Globals.getINSTANCE().getMAX_DEL()) {
+                    return null;
+                }
+            }
+            if (delCountSum/cigar.length > Globals.getINSTANCE().getMAX_PERC_DEL()) {
                 return null;
             }
             String name = samRecord.getReadName();

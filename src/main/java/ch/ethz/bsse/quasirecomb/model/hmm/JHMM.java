@@ -54,7 +54,7 @@ public class JHMM extends Garage {
     protected double[][] snv;
     //rho[j][k][l] := transition prob. at position j, for l given k
     protected double[][][] rho;
-    protected double[] pi;
+    protected double[][] pi;
     protected double[][][] mu;
     protected double[] eps;
     protected double[] antieps;
@@ -85,7 +85,7 @@ public class JHMM extends Garage {
                 Random.generateMuInit(L, K, n), Kmin);
     }
 
-    public JHMM(Read[] reads, int N, int L, int K, int n, double eps, double[][][] rho, double[] pi, double[][][] mu, int Kmin) {
+    public JHMM(Read[] reads, int N, int L, int K, int n, double eps, double[][][] rho, double[][] pi, double[][][] mu, int Kmin) {
         this.eps = new double[L];
         this.antieps = new double[L];
         for (int j = 0; j < L; j++) {
@@ -97,7 +97,7 @@ public class JHMM extends Garage {
         this.compute();
     }
 
-    public JHMM(Read[] reads, int N, int L, int K, int n, double[] eps, double[][][] rho, double[] pi, double[][][] mu, int Kmin) {
+    public JHMM(Read[] reads, int N, int L, int K, int n, double[] eps, double[][][] rho, double[][] pi, double[][][] mu, int Kmin) {
         this.eps = eps;
         this.antieps = new double[L];
         for (int j = 0; j < L; j++) {
@@ -214,27 +214,29 @@ public class JHMM extends Garage {
                     muJKV = Regularizations.ml(this.nJKV[j][k]);
                 }
                 double mult = Globals.getINSTANCE().getMULT_MU();
-                double[] muPriorLocal = new double[n];
-                System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
-                boolean repeat = true;
-                do {
-                    muJKV = Regularizations.regularizeOnce(muJKV, restart, muPriorLocal, mult);
-                    double prev = muJKV[0];
-                    for (int v = 1; v < n; v++) {
-                        if (prev != muJKV[v] && prev > 0d) {
+//                if (Globals.getINSTANCE().getINTERPOLATE_MU() > 0) {
+                    double[] muPriorLocal = new double[n];
+                    System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
+                    boolean repeat = true;
+                    do {
+                        muJKV = Regularizations.regularizeOnce(muJKV, restart, muPriorLocal, mult);
+                        double prev = muJKV[0];
+                        for (int v = 1; v < n; v++) {
+                            if (prev != muJKV[v] && prev > 0d) {
+                                repeat = false;
+                            }
+                        }
+                        if (repeat) {
+                            mult *= 2;
+                            for (int v = 0; v < n; v++) {
+                                muPriorLocal[v] *= 10;
+                            }
+                        }
+                        if (mult > 1000) {
                             repeat = false;
                         }
-                    }
-                    if (repeat) {
-                        mult *= 2;
-                        for (int v = 0; v < n; v++) {
-                            muPriorLocal[v] *= 10;
-                        }
-                    }
-                    if (mult > 1000) {
-                        repeat = false;
-                    }
-                } while (repeat);
+                    } while (repeat);
+//                }
                 if (Globals.getINSTANCE().isMAX()) {
                     double max = 0;
                     int maxV = 0;
@@ -339,23 +341,29 @@ public class JHMM extends Garage {
 
     private void maximizePi() {
         StringBuilder sb = new StringBuilder();
-        double[] piTmp = new double[K];
+        double[][] piTmp = new double[L][K];
+        double eta = Math.pow(s + 2, -1);
         for (int j = 0; j < L; j++) {
-            
+            double sum_j = 0;
             for (int k = 0; k < K; k++) {
                 double sum = 0d;
                 for (int v = 0; v < n; v++) {
-                    piTmp[k] += this.nJKV[j][k][v];
+                    piTmp[j][k] += this.nJKV[j][k][v];
                     sum += this.nJKV[j][k][v];;
+                    sum_j += this.nJKV[j][k][v];;
                 }
                 sb.append(sum).append("\t");
             }
-            sb.setLength(sb.length()-1);
+            for (int k = 0; k < K; k++) {
+                piTmp[j][k] /= sum_j;
+            }
+            pi[j] = Regularizations.step(piTmp[j], pi[j], eta, false);
+            sb.setLength(sb.length() - 1);
             sb.append("\n");
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH()+"piDist.txt", sb.toString());
-        double eta = Math.pow(s + 2, -1);
-        pi = Regularizations.step(piTmp, pi, eta, false);
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "piDist.txt", sb.toString());
+//        double eta = Math.pow(s + 2, -1);
+//        pi = Regularizations.step(piTmp, pi, eta, false);
     }
 
     private void mStep() {
@@ -492,7 +500,7 @@ public class JHMM extends Garage {
         }
     }
 
-    protected final void prepare(Read[] reads, int N, int L, int K, int n, double[][][] rho, double[] pi, double[][][] mu) {
+    protected final void prepare(Read[] reads, int N, int L, int K, int n, double[][][] rho, double[][] pi, double[][][] mu) {
         this.N = N;
         this.L = L;
         this.K = K;
@@ -619,7 +627,7 @@ public class JHMM extends Garage {
         return mu;
     }
 
-    public double[] getPi() {
+    public double[][] getPi() {
         return pi;
     }
 
