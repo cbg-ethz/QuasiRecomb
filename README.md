@@ -105,10 +105,10 @@ R CMD BATCH support/modelselection.R
 #####If your dataset is very large and you run out of memory, increase the heapspace with:
 `java -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
-####$If have a multicore system:
+####On a multicore system:
 `java -XX:+UseParallelGC -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
-####$For multicpu systems:
+####$For multi-CPU systems:
 `java -XX:+UseParallelGC -XX:+UseNUMA -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
 #####Unix wrapper:
