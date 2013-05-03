@@ -59,8 +59,11 @@ If you are new to QuasiRecomb, please read the **[Beginners' guide to viral popu
  `-noGaps` 
   If deletions are not of interest, not expected, or only due to technical noise, all deletions will be ignored.
 
-### Use fixed number of generators
- `-K 2`
+### Use fixed number of generators or bigger interval
+ ```
+ -K 2
+ -K 1-8
+ ```
 
 ### Reconstruct specific region with respect to reference genome numbering
  `-r 790-2292`

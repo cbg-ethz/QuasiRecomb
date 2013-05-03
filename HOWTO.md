@@ -107,7 +107,7 @@ java -jar QuasiRecomb.jar -i reads.bam -r 24-142
 ##### Model-selection
 Usually model-selection is done automatically in the range of 1-5 generators, but in benchmark situations or if the underlying population is too diverse, model-selection for a larger range of generators can be activated with:
 ```
-java -jar QuasiRecomb.jar -i reads.bam -r 24-142 -K 1:10
+java -jar QuasiRecomb.jar -i reads.bam -r 24-142 -K 1-10
 ```
 
 ##### Reduce number of false-positive haplotypes
