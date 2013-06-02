@@ -102,6 +102,7 @@ public class Globals {
     private int SAMPLING_NUMBER;
     private int NREAL;
     private int REPEATS;
+    private int K_MIN;
     private final int cpus = Runtime.getRuntime().availableProcessors();
     private List<Integer> runtime = new LinkedList<>();
     private String GENOME;
@@ -752,5 +753,13 @@ public class Globals {
 
     public void setMULT_RHO_MIN(double MULT_RHO_MIN) {
         this.MULT_RHO_MIN = MULT_RHO_MIN;
+    }
+
+    public int getK_MIN() {
+        return K_MIN;
+    }
+
+    public void setK_MIN(int K_MIN) {
+        this.K_MIN = K_MIN;
     }
 }

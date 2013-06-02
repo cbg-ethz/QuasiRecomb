@@ -29,9 +29,11 @@ import java.util.concurrent.Callable;
 public class HaplotypeSampling implements Callable<byte[]> {
 
     private final OptimalResult or;
+    private final double[] pi;
 
-    public HaplotypeSampling(final OptimalResult or) {
+    public HaplotypeSampling(final OptimalResult or, double[] pi) {
         this.or = or;
+        this.pi = pi;
     }
 
     @Override
@@ -40,7 +42,7 @@ public class HaplotypeSampling implements Callable<byte[]> {
         int n = or.getn();
         int K = or.getK();
         double[][][] rho = or.getRho();
-        double[] pi = or.getPi()[0];
+        double[] pi = this.pi;
         double[][][] mu = or.getMu();
         Frequency<Integer>[][] rhoArray = new Frequency[L - 1][K];
         Frequency<Byte>[][] muArray = new Frequency[L][K];

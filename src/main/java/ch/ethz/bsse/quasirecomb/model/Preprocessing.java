@@ -354,6 +354,9 @@ public class Preprocessing {
             for (Read r : reads) {
                 if (r.isPaired()) {
                     inserts[x++] = r.getCrickBegin() - r.getWatsonEnd();
+                    Globals.getINSTANCE().incPAIRED();
+                } else if (r.isMerged()) {
+                    Globals.getINSTANCE().incMERGED();
                 }
             }
             StatusUpdate.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts)) * 10) / 10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts) * 10) / 10 + ")");

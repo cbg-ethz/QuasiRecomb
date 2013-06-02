@@ -857,7 +857,7 @@ public class Startup {
             System.err.println("Please use -conservative if the quasispecies should be peaked.");
             System.err.println("");
         }
-
+        Globals.getINSTANCE().setK_MIN(Kmin);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 

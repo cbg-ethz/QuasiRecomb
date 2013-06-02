@@ -46,16 +46,16 @@ public class Random {
     }
 
     public static double[][][] generateInitRho(int Ldec, int K) {
-        if (rhoDir == null || rhoDir.length != K) {
-            rhoDir = new Dirichlet[K];
-            for (int k = 0; k < K; k++) {
-                double[] d = new double[K];
-                for (int l = 0; l < K; l++) {
-                    d[l] = k == l ? 1 : 0.01;
-                }
-                rhoDir[k] = new Dirichlet(d);
+//        if (rhoDir == null || rhoDir.length != K) {
+        rhoDir = new Dirichlet[K];
+        for (int k = 0; k < K; k++) {
+            double[] d = new double[K];
+            for (int l = 0; l < K; l++) {
+                d[l] = k == l ? 1 : 0.01;
             }
+            rhoDir[k] = new Dirichlet(d);
         }
+//        }
         double[][][] rho = new double[Ldec][K][K];
         if (!Globals.getINSTANCE().isNO_RECOMB()) {
             for (int j = 0; j < Ldec; j++) {
@@ -94,9 +94,9 @@ public class Random {
     }
 
     public static double[][][] generateMuInit(int L, int K, int n) {
-        if (muDir == null) {
-            muDir = new Dirichlet(n, 100);
-        }
+//        if (muDir == null) {
+        muDir = new Dirichlet(n, 100);
+//        }
         double[][][] mu = new double[L][K][n];
 
         for (int j = L - 1; j >= 0; j--) {

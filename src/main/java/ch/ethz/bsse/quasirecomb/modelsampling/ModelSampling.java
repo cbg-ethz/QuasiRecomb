@@ -45,7 +45,7 @@ public final class ModelSampling extends Utils {
     private String savePath = "";
     private int L;
     private int n;
-    private final int K;
+    private int K;
     private double[][][] rho;
     private double[] pi;
     private double[][][] mu;
@@ -58,35 +58,11 @@ public final class ModelSampling extends Utils {
     private Map<String, Double> hexMap = new HashMap<>();
     private StringBuilder sb = new StringBuilder();
     private Map<String, Double> map = new LinkedHashMap<>();
-    private final OptimalResult or;
+    private OptimalResult or;
     private int[] coverage;
 
     public ModelSampling(OptimalResult or, String savePath) {
-//        this.amount = or.getN();
-        this.K = or.getK();
-        this.L = or.getL();
-        this.n = or.getn();
-        this.rho = or.getRho();
-        double piSum = 0;
-        this.pi = new double[K];
-        for (int j = 0; j < L; j++) {
-            for (int k = 0; k < K; k++) {
-                this.pi[k] = or.getPi()[j][k];
-                piSum += or.getPi()[j][k];
-            }
-        }
-        for (int k = 0; k < K; k++) {
-            this.pi[k] /= piSum;
-        }
-        this.mu = or.getMu();
-        this.rhoArray = new Frequency[L - 1][K];
-        this.muArray = new Frequency[L][K];
-        this.recombPerObservation = new int[amount];
-        this.tauOmega = or.getTauOmega();
-        this.coverage = new int[L];
-        this.savePath = savePath;
-        this.or = or;
-        this.start();
+        this.start(or, savePath);
     }
 
     public ModelSampling(String string, String path) {
@@ -106,6 +82,11 @@ public final class ModelSampling extends Utils {
         if (Globals.getINSTANCE().getNREAL() > 0) {
             this.amount = Globals.getINSTANCE().getNREAL();
         }
+        start(or, path);
+    }
+
+    public void start(OptimalResult or, String path) {
+        this.or = or;
         this.savePath = path;
         this.K = or.getK();
         this.L = or.getL();
@@ -115,23 +96,20 @@ public final class ModelSampling extends Utils {
         double piSum = 0;
         for (int j = 0; j < or.getPi().length; j++) {
             for (int k = 0; k < or.getPi()[j].length; k++) {
-                this.pi[k] = or.getPi()[j][k];
+                this.pi[k] += or.getPi()[j][k];
                 piSum += or.getPi()[j][k];
             }
         }
         for (int k = 0; k < K; k++) {
             this.pi[k] /= piSum;
         }
+        System.out.println(Arrays.toString(pi));
         this.mu = or.getMu();
         this.tauOmega = or.getTauOmega();
         this.rhoArray = new Frequency[L - 1][K];
         this.muArray = new Frequency[L][K];
         this.recombPerObservation = new int[amount];
         this.coverage = new int[L];
-        this.start();
-    }
-
-    public void start() {
         if (!new File(savePath).exists()) {
             if (!new File(savePath).mkdirs()) {
                 throw new RuntimeException("Cannot create directory: " + savePath);
@@ -224,7 +202,7 @@ public final class ModelSampling extends Utils {
         List<Future<byte[]>> readFuturesFullLength = Lists.newArrayListWithExpectedSize(amount);
         double counterFullLength = 0;
         for (int i = 0; i < amount; i++) {
-            readFuturesFullLength.add(Threading.getINSTANCE().getExecutor().submit(new HaplotypeSampling(or)));
+            readFuturesFullLength.add(Threading.getINSTANCE().getExecutor().submit(new HaplotypeSampling(or,pi)));
             StatusUpdate.getINSTANCE().print("Sampling Haplotypes\t" + (Math.round((counterFullLength++ / amount) * 100)) + "%");
         }
         int y = 0;

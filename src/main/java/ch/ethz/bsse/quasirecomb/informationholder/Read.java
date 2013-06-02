@@ -37,6 +37,7 @@ public class Read {
     private int crickBegin;
     private int crickEnd = -1;
     private int insertion;
+    private boolean merged;
 
     public Read(Read r) {
         this.watsonSequence = r.watsonSequence;
@@ -49,6 +50,7 @@ public class Read {
         this.crickCigar = r.crickCigar;
         this.crickBegin = r.crickBegin;
         this.insertion = r.insertion;
+        this.merged = r.merged;
     }
 
     public Read(byte[] sequence, int begin, int end, double[] quality, boolean[] cigar) {
@@ -118,7 +120,7 @@ public class Read {
         this.crickSequence = null;
         this.crickQuality = null;
         this.crickCigar = null;
-        Globals.getINSTANCE().incMERGED();
+        this.merged = true;
     }
 
     public void setCount(int count) {
@@ -394,5 +396,9 @@ public class Read {
 
     public boolean[] getCrickCigar() {
         return crickCigar;
+    }
+
+    public boolean isMerged() {
+        return merged;
     }
 }

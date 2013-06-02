@@ -345,7 +345,6 @@ public class Utils extends FastaParser {
                                     }
                                 }
                             }
-                            Globals.getINSTANCE().incPAIRED();
                         } else {
                             if (hasQuality) {
                                 readMap.put(name, new Read(BitMagic.pack(readBases), refStart, refStart + readBases.length, quality, cigar));

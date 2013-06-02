@@ -46,7 +46,7 @@ public class ModelSelectionStorage {
                 maxK = entry.getKey();
             }
         }
-        if (maxK == 1) {
+        if (maxK == Globals.getINSTANCE().getK_MIN()) {
             this.bestK = maxK;
         } else {
             while (maxK - 1 > 0) {
