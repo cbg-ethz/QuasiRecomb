@@ -103,7 +103,7 @@ public final class ModelSampling extends Utils {
         for (int k = 0; k < K; k++) {
             this.pi[k] /= piSum;
         }
-        System.out.println(Arrays.toString(pi));
+//        System.out.println(Arrays.toString(pi));
         this.mu = or.getMu();
         this.tauOmega = or.getTauOmega();
         this.rhoArray = new Frequency[L - 1][K];
