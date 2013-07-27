@@ -107,6 +107,20 @@ public class SingleEM {
         if (Globals.getINSTANCE().isGRADIENT()) {
             double multMu = Globals.getINSTANCE().getMULT_MU();
             double multRho = Globals.getINSTANCE().getMULT_RHO();
+//            int window_size = Globals.getINSTANCE().getWINDOW_END() - Globals.getINSTANCE().getWINDOW_BEGIN();
+//            Globals.getINSTANCE().setTRAIN_WINDOW_BEGIN(Globals.getINSTANCE().getWINDOW_BEGIN());
+//            Globals.getINSTANCE().setTRAIN_WINDOW_END(Globals.getINSTANCE().getWINDOW_BEGIN() + 250);
+//            if (window_size > 1000) {
+//                while (Globals.getINSTANCE().getTRAIN_WINDOW_END() < Globals.getINSTANCE().getWINDOW_END()) {
+//                    Globals.getINSTANCE().log("WINDOW: " + Globals.getINSTANCE().getWINDOW_BEGIN() + "-" + Globals.getINSTANCE().getTRAIN_WINDOW_END() + "\n");
+//                    this.iterate();
+//                    Globals.getINSTANCE().setTRAIN_WINDOW_END(Globals.getINSTANCE().getTRAIN_WINDOW_END() + 250);
+//                }
+//            }
+//            Globals.getINSTANCE().setTRAIN_WINDOW_BEGIN(Integer.MIN_VALUE);
+//            Globals.getINSTANCE().setTRAIN_WINDOW_END(Integer.MAX_VALUE);
+//            Globals.getINSTANCE().log("WINDOW FINAL: " + Globals.getINSTANCE().getWINDOW_BEGIN() + "-" + Globals.getINSTANCE().getTRAIN_WINDOW_END() + "\n");
+
             while (Globals.getINSTANCE().getMULT_MU() > Globals.getINSTANCE().getMULT_MU_MIN() || Globals.getINSTANCE().getMULT_RHO() > Globals.getINSTANCE().getMULT_RHO_MIN()) {
                 Globals.getINSTANCE().log("MU: " + Globals.getINSTANCE().getMULT_MU() + "\tRHO: " + Globals.getINSTANCE().getMULT_RHO() + "\n");
                 this.iterate();

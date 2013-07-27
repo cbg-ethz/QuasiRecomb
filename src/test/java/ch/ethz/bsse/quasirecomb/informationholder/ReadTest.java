@@ -4,7 +4,7 @@
  */
 package ch.ethz.bsse.quasirecomb.informationholder;
 
-import ch.ethz.bsse.quasirecomb.utils.BitMagic;
+import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

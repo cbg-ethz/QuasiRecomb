@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
+import net.sf.samtools.SAMRecordIterator;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -276,7 +277,7 @@ public class Utils extends FastaParser {
         }
     }
 
-    public static Read[] parseBAMSAM(String location) {
+    public static Map<String, Read> parseBAMSAMPure(String location) {
         Map<String, Read> readMap = new HashMap<>();
         File bam = new File(location);
         SAMFileReader sfr = new SAMFileReader(bam);
@@ -290,13 +291,10 @@ public class Utils extends FastaParser {
         int x = 0;
         List<Callable<List<ReadTMP>>> callables = new ArrayList<>();
         List<SAMRecord> l = new LinkedList<>();
-        int slices = 0;
-        int max = (int) Math.ceil(size / (Runtime.getRuntime().availableProcessors() - 1));
+        int max = (int) Math.ceil(size / Runtime.getRuntime().availableProcessors());
         for (final SAMRecord samRecord : sfr) {
             if (x > max) {
                 x = 0;
-                slices++;
-            } else {
                 callables.add(new SFRComputing(l));
                 l = new LinkedList<>();
             }
@@ -315,6 +313,8 @@ public class Utils extends FastaParser {
         StatusUpdate.getINSTANCE().print("Parsing\t\t           ");
         StatusUpdate.getINSTANCE().print("Parsing\t\tdone");
         sfr.close();
+        StatusUpdate.getINSTANCE().println("Start pairing");
+        StringBuilder sb = new StringBuilder();
         for (Future<List<ReadTMP>> future : readFutures) {
             try {
                 List<ReadTMP> readList = future.get();
@@ -334,15 +334,16 @@ public class Utils extends FastaParser {
                             }
                             Read r2 = readMap.get(name);
                             if (r2.isPaired()) {
+                                sb.append(r2.getCrickEnd() - r2.getWatsonBegin()).append("\n");
                                 if (Globals.getINSTANCE().isUNPAIRED()) {
                                     readMap.put(name + "_R", r2.unpair());
                                 } else {
                                     if ((r2.getCrickBegin() - r2.getWatsonEnd()) > 2000) {
                                         readMap.put(name + "_R", r2.unpair());
                                     }
-                                    if (r2.getCrickBegin() - r2.getWatsonEnd() < 0) {
-                                        System.out.println(name + "\t" + r2.getWatsonBegin() + "\t" + r2.getWatsonEnd() + "\t" + r2.getCrickBegin() + "\t" + r2.getCrickEnd());
-                                    }
+//                                    if (r2.getCrickBegin() - r2.getWatsonEnd() < 0) {
+//                                        System.out.println(name + "\t" + r2.getWatsonBegin() + "\t" + r2.getWatsonEnd() + "\t" + r2.getCrickBegin() + "\t" + r2.getCrickEnd());
+//                                    }
                                 }
                             }
                         } else {
@@ -358,8 +359,17 @@ public class Utils extends FastaParser {
                 System.err.println(ex);
             }
         }
+        if (Globals.getINSTANCE().isDEBUG()) {
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support/fragment.size", sb.toString());
+        }
         readFutures.clear();
+        StatusUpdate.getINSTANCE().println("End pairing");
+        return readMap;
+    }
 
+    public static Read[] parseBAMSAM(String location) {
+        Map<String, Read> readMap = parseBAMSAMPure(location);
+        StatusUpdate.getINSTANCE().println("Begin sorting");
         Map<Integer, Read> hashed = new HashMap<>();
         for (Read r1 : readMap.values()) {
             if (r1 != null) {
@@ -371,6 +381,7 @@ public class Utils extends FastaParser {
                 }
             }
         }
+        StatusUpdate.getINSTANCE().println("Finished sorting");
         return hashed.values().toArray(new Read[hashed.size()]);
     }
 

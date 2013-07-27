@@ -32,6 +32,8 @@ import com.google.common.collect.Multimap;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
@@ -63,7 +65,7 @@ public class Preprocessing {
         StatusUpdate.getINSTANCE().print("Parsing");
         Read[] reads = Utils.parseInput(input);
         int L = fixAlignment(reads);
-        if (L > 300) {
+        if (L > 300 && Globals.getINSTANCE().getINTERPOLATE_MU() > 0) {
             Globals.getINSTANCE().setINTERPOLATE_MU(.5);
         }
         int[][] alignment = computeAlignment(reads, L);
@@ -348,19 +350,27 @@ public class Preprocessing {
     }
 
     private static void computeInsertDist(Read[] reads) {
-        if (Globals.getINSTANCE().getPAIRED_COUNT() > 0) {
-            double[] inserts = new double[Globals.getINSTANCE().getPAIRED_COUNT()];
-            int x = 0;
-            for (Read r : reads) {
-                if (r.isPaired()) {
-                    inserts[x++] = r.getCrickBegin() - r.getWatsonEnd();
-                    Globals.getINSTANCE().incPAIRED();
-                } else if (r.isMerged()) {
-                    Globals.getINSTANCE().incMERGED();
-                }
+        List<Integer> l = new LinkedList<>();
+        StringBuilder insertSB = new StringBuilder();
+        int x = 0;
+        for (Read r : reads) {
+            if (r.isPaired()) {
+                l.add(r.getCrickBegin() - r.getWatsonEnd());
+//                inserts[x++] = ;
+                Globals.getINSTANCE().incPAIRED();
+            } else if (r.isMerged()) {
+                Globals.getINSTANCE().incMERGED();
             }
-            StatusUpdate.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts)) * 10) / 10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts) * 10) / 10 + ")");
+            for (int i = 0; i < r.getCount(); i++) {
+                insertSB.append(r.getInsertion()).append("\n");
+            }
         }
+        double[] inserts = new double[Globals.getINSTANCE().getPAIRED_COUNT()];
+        for (Integer i : l) {
+            inserts[x++] = i;
+        }
+        StatusUpdate.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts)) * 10) / 10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts) * 10) / 10 + ")");
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH()+"support"+File.separator+"insertSize.txt", insertSB.toString());
     }
 
     private static void plot() {

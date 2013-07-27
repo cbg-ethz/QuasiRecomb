@@ -20,11 +20,9 @@ package ch.ethz.bsse.quasirecomb.utils;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.ReadTMP;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import net.sf.samtools.AlignmentBlock;
 import net.sf.samtools.CigarElement;
 import static net.sf.samtools.CigarOperator.D;
 import static net.sf.samtools.CigarOperator.EQ;
@@ -62,32 +60,33 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
 
     private ReadTMP single(SAMRecord samRecord) {
         try {
-            List<AlignmentBlock> alignmentBlocks = samRecord.getAlignmentBlocks();
-            if (alignmentBlocks.isEmpty()) {
+            if (samRecord.getAlignmentBlocks().isEmpty()) {
                 return null;
             }
             int refStart = samRecord.getAlignmentStart() - 1;
             int readStart = 0;
-            List<Byte> buildRead = new ArrayList<>();
-            List<Double> buildQuality = new ArrayList<>();
+            int readLength_ = samRecord.getCigar().getReadLength();
+            List<Byte> buildRead = new ArrayList<>(readLength_);
+            List<Double> buildQuality = new ArrayList<>(readLength_);
             boolean hasQuality;
             if (Globals.getINSTANCE().isNO_QUALITY()) {
                 hasQuality = false;
             } else {
                 hasQuality = samRecord.getBaseQualities().length > 1;
             }
-            List<Boolean> buildCigar = new ArrayList<>();
+            List<Boolean> buildCigar = new ArrayList<>(readLength_);
+            byte[] readBases_pure = samRecord.getReadBases();
             for (CigarElement c : samRecord.getCigar().getCigarElements()) {
                 switch (c.getOperator()) {
                     case X:
                     case EQ:
                     case M:
-                        if ((readStart + c.getLength()) > samRecord.getReadBases().length) {
+                        if ((readStart + c.getLength()) > readBases_pure.length) {
                             System.out.println("\nInput alignment is corrupt.\nCIGAR is longer than actual read-length.");
                             System.exit(9);
                         }
                         for (int i = 0; i < c.getLength(); i++) {
-                            byte b = samRecord.getReadBases()[readStart];
+                            byte b = readBases_pure[readStart];
                             buildRead.add(b);
                             if (hasQuality) {
                                 double q = 1 - Math.pow(10, -(samRecord.getBaseQualities()[readStart]) / 10d);
@@ -117,6 +116,8 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                                 q = 0.01;
                                 if (c.getLength() % 3 == 0) {
                                     q = 0.79432823472;
+                                } else {
+                                    q = 0.5;
                                 }
                             }
                             buildQuality.add(q);
@@ -140,20 +141,17 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                         break;
                 }
             }
-            double[] quality = new double[buildQuality.size()];
-//            if (hasQuality) {
-            for (int i = 0; i < buildQuality.size(); i++) {
-                quality[i] = buildQuality.get(i);
-            }
-//            }
-            boolean[] cigar = new boolean[buildCigar.size()];
-            for (int i = 0; i < buildCigar.size(); i++) {
-                cigar[i] = buildCigar.get(i);
-            }
+
+            double[] quality = null;
+            boolean[] cigar = null;
             //---
             //cut read
             byte[] readBases = Utils.convertRead(buildRead.toArray(new Byte[buildRead.size()]));
             int readEnd = refStart + readBases.length;
+
+            double delCountSum = 0;
+            double delCountMax = 0;
+            double delCount = 0;
             if (Globals.getINSTANCE().isWINDOW()) {
 
                 int from = Globals.getINSTANCE().getWINDOW_BEGIN();
@@ -165,28 +163,100 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                     }
                     //leftover
                     if (refStart < from && readEnd <= to) {
-                        readBases = Arrays.copyOfRange(readBases, from - refStart, length);
-                        cigar = Arrays.copyOfRange(cigar, from - refStart, length);
-//                        if (hasQuality) {
-                        quality = Arrays.copyOfRange(quality, from - refStart, length);
-//                        }
+//                        readBases = Arrays.copyOfRange(readBases, from - refStart, length);
+//                        cigar = Arrays.copyOfRange(cigar, from - refStart, length);
+//                        quality = Arrays.copyOfRange(quality, from - refStart, length);
+                        int l = length - (from - refStart);
+                        byte[] readBases_ = new byte[l];
+                        cigar = new boolean[l];
+                        quality = new double[l];
+                        for (int i = from - refStart, j = 0; i < length; i++, j++) {
+                            readBases_[j] = readBases[i];
+                            cigar[j] = buildCigar.get(i);
+                            quality[j] = buildQuality.get(i);
+
+                            if (!cigar[j]) {
+                                delCount++;
+                                delCountSum++;
+                            } else {
+                                if (delCount > delCountMax) {
+                                    delCountMax = delCount;
+                                }
+                                delCount = 0;
+                            }
+                        }
+                        readBases = readBases_;
                         refStart = from;
                     } else if (refStart >= from && readEnd > to) {
                         //rightover
-                        readBases = Arrays.copyOfRange(readBases, 0, to - refStart);
-                        cigar = Arrays.copyOfRange(cigar, 0, to - refStart);
-//                        if (hasQuality) {
-                        quality = Arrays.copyOfRange(quality, 0, to - refStart);
-//                        }
+//                        readBases = Arrays.copyOfRange(readBases, 0, to - refStart);
+//                        cigar = Arrays.copyOfRange(cigar, 0, to - refStart);
+//                        quality = Arrays.copyOfRange(quality, 0, to - refStart);
+
+                        int l = to - refStart;
+                        byte[] readBases_ = new byte[l];
+                        cigar = new boolean[l];
+                        quality = new double[l];
+                        for (int i = 0; i < l; i++) {
+                            readBases_[i] = readBases[i];
+                            cigar[i] = buildCigar.get(i);
+                            quality[i] = buildQuality.get(i);
+
+                            if (!cigar[i]) {
+                                delCount++;
+                                delCountSum++;
+                            } else {
+                                if (delCount > delCountMax) {
+                                    delCountMax = delCount;
+                                }
+                                delCount = 0;
+                            }
+                        }
+                        readBases = readBases_;
                     } else if (refStart >= from && readEnd <= to) {
                         //inner
+                        int l = buildCigar.size();
+                        cigar = new boolean[l];
+                        quality = new double[l];
+                        for (int i = 0; i < l; i++) {
+                            cigar[i] = buildCigar.get(i);
+                            quality[i] = buildQuality.get(i);
+
+                            if (!cigar[i]) {
+                                delCount++;
+                                delCountSum++;
+                            } else {
+                                if (delCount > delCountMax) {
+                                    delCountMax = delCount;
+                                }
+                                delCount = 0;
+                            }
+                        }
                     } else if (refStart < from && readEnd > to) {
                         //outer
-                        readBases = Arrays.copyOfRange(readBases, from - refStart, to - refStart);
-                        cigar = Arrays.copyOfRange(cigar, from - refStart, to - refStart);
-//                        if (hasQuality) {
-                        quality = Arrays.copyOfRange(quality, from - refStart, to - refStart);
-//                        }
+//                        readBases = Arrays.copyOfRange(readBases, from - refStart, to - refStart);
+//                        cigar = Arrays.copyOfRange(cigar, from - refStart, to - refStart);
+//                        quality = Arrays.copyOfRange(quality, from - refStart, to - refStart);
+                        int l = (to - refStart) - (from - refStart);
+                        byte[] readBases_ = new byte[l];
+                        cigar = new boolean[l];
+                        quality = new double[l];
+                        for (int i = from - refStart, j = 0; i < to - refStart; i++, j++) {
+                            readBases_[j] = readBases[i];
+                            cigar[j] = buildCigar.get(i);
+                            quality[j] = buildQuality.get(i);
+
+                            if (!cigar[j]) {
+                                delCount++;
+                                delCountSum++;
+                            } else {
+                                if (delCount > delCountMax) {
+                                    delCountMax = delCount;
+                                }
+                                delCount = 0;
+                            }
+                        }
+                        readBases = readBases_;
                         refStart = from;
                     } else {
                         System.err.println("");
@@ -198,25 +268,30 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                     System.err.println("start: " + refStart + "\t+end:" + readEnd);
                     System.err.println("w00t");
                 }
+            } else {
+                int l = buildCigar.size();
+                cigar = new boolean[l];
+                quality = new double[l];
+                for (int i = 0; i < l; i++) {
+                    cigar[i] = buildCigar.get(i);
+                    quality[i] = buildQuality.get(i);
+
+                    if (!cigar[i]) {
+                        delCount++;
+                        delCountSum++;
+                    } else {
+                        if (delCount > delCountMax) {
+                            delCountMax = delCount;
+                        }
+                        delCount = 0;
+                    }
+                }
             }
 
             if (readBases.length < Globals.getINSTANCE().getREAD_MINLENGTH()) {
                 return null;
             }
-            double delCountSum = 0;
-            double delCountMax = 0;
-            double delCount = 0;
-            for (boolean b : cigar) {
-                if (!b) {
-                    delCount++;
-                    delCountSum++;
-                } else {
-                    if (delCount > delCountMax) {
-                        delCountMax = delCount;
-                    }
-                    delCount = 0;
-                }
-            }
+
             if (delCount > delCountMax) {
                 delCountMax = delCount;
             }
@@ -225,9 +300,10 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                     return null;
                 }
             }
-            if (delCountSum/cigar.length > Globals.getINSTANCE().getMAX_PERC_DEL()) {
+            if (cigar == null || delCountSum / cigar.length > Globals.getINSTANCE().getMAX_PERC_DEL()) {
                 return null;
             }
+
             String name = samRecord.getReadName();
 
             return new ReadTMP(name, quality, readBases, refStart, true, cigar);

@@ -35,9 +35,11 @@ public class ReadHMMStatic {
             int begin = read.getBegin();
 
             int length = read.getLength();
-            double[][][] fJKV = new double[length][jhmm.getK()][jhmm.getn()];
-            double[][] fJK = new double[length][jhmm.getK()];
-            double[][] bJK = new double[length][jhmm.getK()];
+            int K = jhmm.getK();
+            int n = jhmm.getn();
+            double[][][] fJKV = new double[length][K][n];
+            double[][] fJK = new double[length][K];
+            double[][] bJK = new double[length][K];
             double[] c = new double[length];
             double likelihood = 0;
 
@@ -51,13 +53,19 @@ public class ReadHMMStatic {
                     q = read.getQuality(j);
                 }
                 int jGlobal = j + begin;
-                for (int k = 0; k < jhmm.getK(); k++) {
-                    for (int v = 0; v < jhmm.getn(); v++) {
+
+//                if (jGlobal < Globals.getINSTANCE().getTRAIN_WINDOW_BEGIN() || jGlobal >= Globals.getINSTANCE().getTRAIN_WINDOW_END()) {
+//                    free(jhmm, storage);
+//                    return 0;
+//                }
+                for (int k = 0; k < K; k++) {
+
+                    for (int v = 0; v < n; v++) {
                         if (j == 0) {
                             fJKV[j][k][v] = jhmm.getPi()[jGlobal][k];
                         } else {
                             double sumL = 0d;
-                            for (int l = 0; l < jhmm.getK(); l++) {
+                            for (int l = 0; l < K; l++) {
                                 sumL += fJK[j - 1][l] * jhmm.getRho()[jGlobal - 1][l][k];
                             }
                             fJKV[j][k][v] = sumL;
@@ -66,7 +74,7 @@ public class ReadHMMStatic {
                         if (hit) {
                             if (q < 1) {
 //                                fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] * (1 - (jhmm.getn() - 1) * (1 - q)) : jhmm.getEps()[jGlobal] * (1 - q));
-                                fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] * q : jhmm.getEps()[jGlobal] * (1 - q));
+                                fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] * q : jhmm.getEps()[jGlobal] * (1 - q) / 3.0);
                             } else {
                                 fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]);
                             }
@@ -77,8 +85,8 @@ public class ReadHMMStatic {
                     }
                 }
                 c[j] = 1d / c[j];
-                for (int k = 0; k < jhmm.getK(); k++) {
-                    for (int v = 0; v < jhmm.getn(); v++) {
+                for (int k = 0; k < K; k++) {
+                    for (int v = 0; v < n; v++) {
                         fJKV[j][k][v] *= c[j];
                         fJK[j][k] += fJKV[j][k][v];
                     }
@@ -99,18 +107,18 @@ public class ReadHMMStatic {
                     b = read.getBase(j + 1);
                     q = read.getQuality(j + 1);
                 }
-                for (int k = 0; k < jhmm.getK(); k++) {
+                for (int k = 0; k < K; k++) {
                     if (j == length - 1) {
                         bJK[j][k] = c[j];
                     } else {
                         bJK[j][k] = 0;
-                        for (int l = 0; l < jhmm.getK(); l++) {
+                        for (int l = 0; l < K; l++) {
                             if (hit1) {
                                 double sumV = 0d;
-                                for (int v = 0; v < jhmm.getn(); v++) {
+                                for (int v = 0; v < n; v++) {
                                     if (q < 1) {
 //                                        sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] * (1 - (jhmm.getn() - 1) * (1 - q)) : jhmm.getEps()[jGlobal + 1] * (1 - q)) * jhmm.getMu()[jGlobal + 1][l][v];
-                                        sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] * q : jhmm.getEps()[jGlobal + 1] * (1 - q)) * jhmm.getMu()[jGlobal + 1][l][v];
+                                        sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] * q : jhmm.getEps()[jGlobal + 1] * (1 - q) / 3.0) * jhmm.getMu()[jGlobal + 1][l][v];
                                     } else {
                                         sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] : jhmm.getEps()[jGlobal + 1]) * jhmm.getMu()[jGlobal + 1][l][v];
                                     }
@@ -133,13 +141,13 @@ public class ReadHMMStatic {
                 if (hit) {
                     b = read.getBase(j);
                     double xiSum = 0d;
-                    for (int k = 0; k < jhmm.getK(); k++) {
+                    for (int k = 0; k < K; k++) {
                         if (gammaSum == 0) {
-                            for (int v = 0; v < jhmm.getn(); v++) {
-                                storage.addnJKV(jGlobal, k, v, ((double) read.getCount()) / jhmm.getn());
+                            for (int v = 0; v < n; v++) {
+                                storage.addnJKV(jGlobal, k, v, ((double) read.getCount()) / n);
                             }
                         } else {
-                            for (int v = 0; v < jhmm.getn(); v++) {
+                            for (int v = 0; v < n; v++) {
                                 double gamma = read.getCount() * fJKV[j][k][v] * bJK[j][k] / gammaSum;
                                 storage.addnJKV(jGlobal, k, v, gamma);
                                 if (b != v) {
@@ -148,9 +156,9 @@ public class ReadHMMStatic {
                             }
                         }
                         if (j > 0) {
-                            for (int l = 0; l < jhmm.getK(); l++) {
+                            for (int l = 0; l < K; l++) {
                                 double marginalV = 0d;
-                                for (int v = 0; v < jhmm.getn(); v++) {
+                                for (int v = 0; v < n; v++) {
                                     marginalV += (b == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
                                 }
                                 double xi = fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l];
@@ -158,11 +166,11 @@ public class ReadHMMStatic {
                             }
                         }
                     }
-                    for (int k = 0; k < jhmm.getK(); k++) {
+                    for (int k = 0; k < K; k++) {
                         if (xiSum != 0 && j > 0) {
-                            for (int l = 0; l < jhmm.getK(); l++) {
+                            for (int l = 0; l < K; l++) {
                                 double marginalV = 0d;
-                                for (int v = 0; v < jhmm.getn(); v++) {
+                                for (int v = 0; v < n; v++) {
                                     marginalV += (b == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]) * jhmm.getMu()[jGlobal][l][v];
                                 }
                                 double xi = read.getCount() * fJK[j - 1][k] * jhmm.getRho()[jGlobal - 1][k][l] * marginalV * bJK[j][l] / xiSum;

@@ -95,6 +95,8 @@ public class Globals {
     private int READ_MINLENGTH;
     private int WINDOW_BEGIN;
     private int WINDOW_END;
+    private int TRAIN_WINDOW_BEGIN;
+    private int TRAIN_WINDOW_END;
     private int ALIGNMENT_BEGIN = Integer.MAX_VALUE;
     private int ALIGNMENT_END = Integer.MIN_VALUE;
     private int STEPS;
@@ -762,4 +764,20 @@ public class Globals {
     public void setK_MIN(int K_MIN) {
         this.K_MIN = K_MIN;
     }
+
+//    public int getTRAIN_WINDOW_BEGIN() {
+//        return TRAIN_WINDOW_BEGIN;
+//    }
+//
+//    public void setTRAIN_WINDOW_BEGIN(int TRAIN_WINDOW_BEGIN) {
+//        this.TRAIN_WINDOW_BEGIN = TRAIN_WINDOW_BEGIN;
+//    }
+//
+//    public int getTRAIN_WINDOW_END() {
+//        return TRAIN_WINDOW_END;
+//    }
+//
+//    public void setTRAIN_WINDOW_END(int TRAIN_WINDOW_END) {
+//        this.TRAIN_WINDOW_END = TRAIN_WINDOW_END;
+//    }
 }

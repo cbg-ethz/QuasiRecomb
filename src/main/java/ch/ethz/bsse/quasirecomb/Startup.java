@@ -160,8 +160,6 @@ public class Startup {
     private boolean overlap;
     @Option(name = "-optimum")
     private String optimum;
-    @Option(name = "-perturb")
-    private int perturb = 0;
     @Option(name = "--kl")
     private boolean kl;
     @Option(name = "--intersect")
@@ -860,7 +858,7 @@ public class Startup {
         Globals.getINSTANCE().setK_MIN(Kmin);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
-
+    
     public void doMain(String[] args) throws IOException {
         CmdLineParser parser = new CmdLineParser(this);
 
@@ -873,7 +871,7 @@ public class Startup {
                 sb.append(arg).append(" ");
             }
             new File(this.output + File.separator + "support/").mkdirs();
-            Utils.saveFile(this.output + File.separator + "support/CMD", sb.toString());
+            Utils.appendFile(this.output + File.separator + "support/CMD", sb.toString());
             setMainParameters();
 
             if (this.sample) {
@@ -916,7 +914,7 @@ public class Startup {
             System.err.println(cmderror.getMessage());
             System.err.println("");
             System.err.println("QuasiRecomb version: " + Startup.class.getPackage().getImplementationVersion());
-            System.err.println("Get latest version from http://bit.ly/quasirecomb");
+            System.err.println("Get latest version from http://bit.ly/QuasiRecomb");
             System.err.println("");
             System.err.println("USAGE: java -jar QuasiRecomb.jar options...\n");
             System.err.println(" -------------------------");
@@ -958,7 +956,7 @@ public class Startup {
             System.err.println("   java -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam -noRecomb -r 790-2292");
             System.err.println("   java -XX:+UseParallelGC -Xms2g -Xmx10g -XX:+UseNUMA -XX:NewRatio=9 -jar QuasiRecomb.jar -i alignment.bam");
             System.err.println(" -------------------------");
-            System.err.println("  For further information, see http://bit.ly/quasirecomb-howto");
+            System.err.println("  For further information, see http://bit.ly/QuasiRecomb-howto");
             System.err.println(" -------------------------");
 //            System.err.println("  -d DOUBLE\t\t: Relative likehood threshold (default: 1e-8)");
 //            System.err.println("  -pdelta\t\t: Stop if there is no change of parameters, convergence criterium");
@@ -1003,6 +1001,65 @@ public class Startup {
             }
         }
     }
+
+    private void posterior(OptimalResult or, String haplotypeFile) {
+        Map<String, Double> haps = FastaParser.parseQuasispeciesFile(haplotypeFile);
+
+
+    }
+
+//    private void viterbi(OptimalResult or, String haplotypeFile) {
+//        int K = or.getK();
+//        int L = or.getL();
+//
+//        double[] pi = new double[K];
+//        double piSum = 0;
+//        for (int j = 0; j < or.getPi().length; j++) {
+//            for (int k = 0; k < or.getPi()[j].length; k++) {
+//                pi[k] += or.getPi()[j][k];
+//                piSum += or.getPi()[j][k];
+//            }
+//        }
+//        for (int k = 0; k < K; k++) {
+//            pi[k] /= piSum;
+//        }
+//
+//        Map<String, Double> haps = FastaParser.parseQuasispeciesFile(haplotypeFile);
+//
+//        for (String hap : haps.keySet()) {
+//            byte[] read = Utils.splitReadIntoByteArray(hap);
+//            double[][] f = new double[K][L];
+//            double[][] f2 = new double[K][L];
+//            for (int k = 0; k < K; k++) {
+//                f[k][0] = pi[k] * or.getMu()[0][k][read[0]];
+//                f2[k][0] = 0;
+//            }
+//            for (int j = 1; j < L; j++) {
+//                for (int k = 0; k < K; k++) {
+//                    double max = -1;
+//                    int argmax = -1;
+//                    for (int l = 0; l < K; l++) {
+//                        double x = f[l][j - 1] * or.getRho()[j - 1][l][k] * or.getMu()[j - 1][k][read[j]];
+//                        if (x > max) {
+//                            max = x;
+//                            argmax = l;
+//                        }
+//                    }
+//                    f[k][j] = max;
+//                    f2[k][j] = argmax;
+//                }
+//            }
+//            double[] z = new double[L];
+//            double[] x = new double[L];
+//            for (int k = 0; k < K; k++) {
+//                if (f[k][L - 1] > z[L - 1]) {
+//                    z[L - 1] = k;
+//                }
+//            }
+//            x[L-1] = 
+////            z[L-1] = 
+//        }
+//    }
 
     private void annotate() {
         StringBuilder fasta = new StringBuilder();

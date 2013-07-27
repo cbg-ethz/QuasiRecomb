@@ -25,7 +25,6 @@ import ch.ethz.bsse.quasirecomb.informationholder.Threading;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
-import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -203,6 +202,7 @@ public class JHMM extends Garage {
     private void maximizeMu() {
         double[] muJKV;
         for (int j = 0; j < L; j++) {
+//            if (j >= Globals.getINSTANCE().getTRAIN_WINDOW_BEGIN() && j < Globals.getINSTANCE().getTRAIN_WINDOW_END()) {
             for (int k = 0; k < K; k++) {
                 double eta = 0;
                 if (Globals.getINSTANCE().isANNEALING()) {
@@ -215,27 +215,27 @@ public class JHMM extends Garage {
                 }
                 double mult = Globals.getINSTANCE().getMULT_MU();
 //                if (Globals.getINSTANCE().getINTERPOLATE_MU() > 0) {
-                    double[] muPriorLocal = new double[n];
-                    System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
-                    boolean repeat = true;
-                    do {
-                        muJKV = Regularizations.regularizeOnce(muJKV, restart, muPriorLocal, mult);
-                        double prev = muJKV[0];
-                        for (int v = 1; v < n; v++) {
-                            if (prev != muJKV[v] && prev > 0d) {
-                                repeat = false;
-                            }
-                        }
-                        if (repeat) {
-                            mult *= 2;
-                            for (int v = 0; v < n; v++) {
-                                muPriorLocal[v] *= 10;
-                            }
-                        }
-                        if (mult > 1000) {
+                double[] muPriorLocal = new double[n];
+                System.arraycopy(this.muPrior, 0, muPriorLocal, 0, n);
+                boolean repeat = true;
+                do {
+                    muJKV = Regularizations.regularizeOnce(muJKV, restart, muPriorLocal, mult);
+                    double prev = muJKV[0];
+                    for (int v = 1; v < n; v++) {
+                        if (prev != muJKV[v] && prev > 0d) {
                             repeat = false;
                         }
-                    } while (repeat);
+                    }
+                    if (repeat) {
+                        mult *= 2;
+                        for (int v = 0; v < n; v++) {
+                            muPriorLocal[v] *= 10;
+                        }
+                    }
+                    if (mult > 1000) {
+                        repeat = false;
+                    }
+                } while (repeat);
 //                }
                 if (Globals.getINSTANCE().isMAX()) {
                     double max = 0;
@@ -262,12 +262,14 @@ public class JHMM extends Garage {
                 }
             }
         }
+//        }
     }
 
     private boolean maximizeRho() {
         boolean forceRho = false;
         double[] rhoJKL = null;
         for (int j = 1; j < L; j++) {
+//            if (j >= Globals.getINSTANCE().getTRAIN_WINDOW_BEGIN() && j < Globals.getINSTANCE().getTRAIN_WINDOW_END()) {
             for (int k = 0; k < K; k++) {
                 double eta = 0;
                 if (Globals.getINSTANCE().getINTERPOLATE_RHO() > 0) {
@@ -336,6 +338,7 @@ public class JHMM extends Garage {
                 }
             }
         }
+//        }
         return forceRho;
     }
 
@@ -344,6 +347,7 @@ public class JHMM extends Garage {
         double[][] piTmp = new double[L][K];
         double eta = Math.pow(s + 2, -1);
         for (int j = 0; j < L; j++) {
+//            if (j >= Globals.getINSTANCE().getTRAIN_WINDOW_BEGIN() && j < Globals.getINSTANCE().getTRAIN_WINDOW_END()) {
             double sum_j = 0;
             for (int k = 0; k < K; k++) {
                 double sum = 0d;
@@ -361,6 +365,7 @@ public class JHMM extends Garage {
             sb.setLength(sb.length() - 1);
             sb.append("\n");
         }
+//        }
 //        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "piDist.txt", sb.toString());
 //        double eta = Math.pow(s + 2, -1);
 //        pi = Regularizations.step(piTmp, pi, eta, false);

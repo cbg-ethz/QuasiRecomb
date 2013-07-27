@@ -1,10 +1,5 @@
 package ch.ethz.bsse.quasirecomb;
 
-import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
-import ch.ethz.bsse.quasirecomb.utils.BitMagic;
-import ch.ethz.bsse.quasirecomb.utils.FastaParser;
-import ch.ethz.bsse.quasirecomb.utils.Utils;
-
 /**
  * Unit test for simple App.
  */
