@@ -401,4 +401,38 @@ public class Read {
     public boolean isMerged() {
         return merged;
     }
+
+    public String watsonString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.count).append(" ").append(this.watsonBegin).append(" ");
+        for (double d : this.watsonQuality) {
+            if (d == 1.0) {
+                sb.append("J");
+            } else {
+                sb.append((char) Math.round(-10 * Math.log10(1 - d) + 33));
+            }
+        }
+        sb.append("\n");
+        sb.append(BitMagic.toString(this.watsonSequence)).append("\n");
+        return sb.toString();
+    }
+
+    public String crickString() {
+        if (this.crickSequence == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.count).append(" ").append(this.crickBegin).append(" ");
+        for (double d : this.crickQuality) {
+            if (d == 1.0) {
+                sb.append("J");
+            } else {
+                sb.append((char) Math.round(-10 * Math.log10(1 - d) + 33));
+            }
+        }
+        sb.append("\n");
+
+        sb.append(BitMagic.toString(this.crickSequence)).append("\n");
+        return sb.toString();
+    }
 }

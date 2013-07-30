@@ -32,12 +32,15 @@ import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -230,6 +233,8 @@ public class Startup {
     private double maxPercDel = 1;
     @Option(name = "-HIV")
     private String hiv;
+    @Option(name = "-prior")
+    private String prior;
 
     private void setInputOutput() {
         if (output == null) {
@@ -856,9 +861,10 @@ public class Startup {
             System.err.println("");
         }
         Globals.getINSTANCE().setK_MIN(Kmin);
+        Globals.getINSTANCE().setPRIOR(this.prior);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
-    
+
     public void doMain(String[] args) throws IOException {
         CmdLineParser parser = new CmdLineParser(this);
 
@@ -1056,11 +1062,10 @@ public class Startup {
 //                    z[L - 1] = k;
 //                }
 //            }
-//            x[L-1] = 
-////            z[L-1] = 
+//            x[L-1] =
+////            z[L-1] =
 //        }
 //    }
-
     private void annotate() {
         StringBuilder fasta = new StringBuilder();
         StringBuilder protein = new StringBuilder();

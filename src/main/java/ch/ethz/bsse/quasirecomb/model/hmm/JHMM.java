@@ -123,7 +123,9 @@ public class JHMM extends Garage {
         if (callables.isEmpty()) {
             final int readAmount = allReads.length;
             int max;
-            if (Globals.getINSTANCE().getSTEPS() == 2) {
+            if (readAmount <= (Runtime.getRuntime().availableProcessors() - 1)) {
+                max = 2;
+            } else if (Globals.getINSTANCE().getSTEPS() == 2) {
                 max = (int) (readAmount / (Runtime.getRuntime().availableProcessors() - 1));
             } else {
                 max = Globals.getINSTANCE().getSTEPS();

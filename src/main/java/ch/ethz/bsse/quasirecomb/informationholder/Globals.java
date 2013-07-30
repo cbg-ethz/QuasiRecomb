@@ -107,6 +107,7 @@ public class Globals {
     private int K_MIN;
     private final int cpus = Runtime.getRuntime().availableProcessors();
     private List<Integer> runtime = new LinkedList<>();
+    private String PRIOR;
     private String GENOME;
     private String OPTIMUM;
     private String SAVEPATH;
@@ -765,19 +766,26 @@ public class Globals {
         this.K_MIN = K_MIN;
     }
 
-//    public int getTRAIN_WINDOW_BEGIN() {
-//        return TRAIN_WINDOW_BEGIN;
-//    }
-//
-//    public void setTRAIN_WINDOW_BEGIN(int TRAIN_WINDOW_BEGIN) {
-//        this.TRAIN_WINDOW_BEGIN = TRAIN_WINDOW_BEGIN;
-//    }
-//
-//    public int getTRAIN_WINDOW_END() {
-//        return TRAIN_WINDOW_END;
-//    }
-//
-//    public void setTRAIN_WINDOW_END(int TRAIN_WINDOW_END) {
-//        this.TRAIN_WINDOW_END = TRAIN_WINDOW_END;
-//    }
+    //    public int getTRAIN_WINDOW_BEGIN() {
+    //        return TRAIN_WINDOW_BEGIN;
+    //    }
+    //
+    //    public void setTRAIN_WINDOW_BEGIN(int TRAIN_WINDOW_BEGIN) {
+    //        this.TRAIN_WINDOW_BEGIN = TRAIN_WINDOW_BEGIN;
+    //    }
+    //
+    //    public int getTRAIN_WINDOW_END() {
+    //        return TRAIN_WINDOW_END;
+    //    }
+    //
+    //    public void setTRAIN_WINDOW_END(int TRAIN_WINDOW_END) {
+    //        this.TRAIN_WINDOW_END = TRAIN_WINDOW_END;
+    //    }
+    public String getPRIOR() {
+        return PRIOR;
+    }
+
+    public void setPRIOR(String PRIOR) {
+        this.PRIOR = PRIOR;
+    }
 }

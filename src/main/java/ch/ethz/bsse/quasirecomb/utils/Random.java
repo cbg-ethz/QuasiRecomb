@@ -76,7 +76,15 @@ public class Random {
     }
 
     public static double[][] generateInitPi(int L, int K) {
-        if (Globals.getINSTANCE().isNO_RECOMB()) {
+        if (Globals.getINSTANCE().getPRIOR() != null) {
+            double[][] pi = new double[L][K];
+            for (int j = 0; j < L; j++) {
+                for (int k = 1; k <= K; k++) {
+                    pi[j][k - 1] = 1d / K;
+                }
+            }
+            return pi;
+        } else if (Globals.getINSTANCE().isNO_RECOMB()) {
             double[][] pis = new double[L][K];
             for (int j = 0; j < L; j++) {
                 pis[j] = new Dirichlet(K, 2).nextDistribution();
@@ -94,30 +102,42 @@ public class Random {
     }
 
     public static double[][][] generateMuInit(int L, int K, int n) {
-//        if (muDir == null) {
-        muDir = new Dirichlet(n, 100);
-//        }
+        boolean hasPrior = Globals.getINSTANCE().getPRIOR() != null;
         double[][][] mu = new double[L][K][n];
 
-        for (int j = L - 1; j >= 0; j--) {
-            for (int k = K - 1; k >= 0; k--) {
+        if (hasPrior) {
+            byte[][] haps = Utils.splitReadsIntoByteArrays(FastaParser.parseFarFile(Globals.getINSTANCE().getPRIOR()));
 
-//                if (Globals.getINSTANCE().isPRIORMU()) {
-                double[] d = new double[n];
-                for (int v = 0; v < n; v++) {
-//                        d[v] = (double) Globals.getINSTANCE().getMU_PRIOR()[j][v] + 1;
-                    d[v] = 1d / n;
-                }
-                if (Globals.getINSTANCE().isNO_RECOMB()) {
-                    mu[j][k] = muDir.nextDistribution();
-                } else {
+            for (int j = 0; j < L; j++) {
+                for (int k = 0; k < K; k++) {
+                    double[] priorMu = new double[n];
                     for (int v = 0; v < n; v++) {
-                        mu[j][k][v] = 1d / n;
+                        if (haps[k][j] == v) {
+                            priorMu[v] = 1;
+                        } else {
+                            priorMu[v] = 0.001;
+                        }
+                    }
+                    mu[j][k] = new Dirichlet(priorMu).nextDistribution();
+                }
+            }
+        } else {
+            muDir = new Dirichlet(n, 100);
+            for (int j = L - 1; j >= 0; j--) {
+                for (int k = K - 1; k >= 0; k--) {
+
+                    double[] d = new double[n];
+                    for (int v = 0; v < n; v++) {
+                        d[v] = 1d / n;
+                    }
+                    if (Globals.getINSTANCE().isNO_RECOMB()) {
+                        mu[j][k] = muDir.nextDistribution();
+                    } else {
+                        for (int v = 0; v < n; v++) {
+                            mu[j][k][v] = 1d / n;
+                        }
                     }
                 }
-//                } else {
-//                    mu[j][k] = muDir.nextDistribution();
-//                }
             }
         }
         return mu;

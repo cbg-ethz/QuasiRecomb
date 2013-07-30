@@ -31,7 +31,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
 
 /**
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
@@ -157,7 +156,7 @@ public class Utils extends FastaParser {
 
     public static void appendFile(String path, String sb) {
         try {
-            // Create file 
+            // Create file
             FileWriter fstream = new FileWriter(path, true);
             try (BufferedWriter out = new BufferedWriter(fstream)) {
                 out.write(sb);
@@ -171,7 +170,7 @@ public class Utils extends FastaParser {
 
     public static void saveFile(String path, String sb) {
         try {
-            // Create file 
+            // Create file
             FileWriter fstream = new FileWriter(path);
             try (BufferedWriter out = new BufferedWriter(fstream)) {
                 out.write(sb);
@@ -191,7 +190,7 @@ public class Utils extends FastaParser {
                 reads[index++] = read;
             }
         }
-        return splitReadsIntoByteArrays(reads);
+        return splitReadsIntoByteArraysPacked(reads);
     }
 
     public static String reverse(byte[] packed, int length) {
@@ -200,6 +199,14 @@ public class Utils extends FastaParser {
             sb.append(reverse(BitMagic.getPosition(packed, j)));
         }
         return sb.toString();
+    }
+
+    public static byte[][] splitReadsIntoByteArraysPacked(String[] reads) {
+        byte[][] Rs = new byte[reads.length][reads[0].length()];
+        for (int x = 0; x < reads.length; x++) {
+            Rs[x] = BitMagic.splitReadIntoBytes(reads[x]);
+        }
+        return Rs;
     }
 
     /**
@@ -212,7 +219,7 @@ public class Utils extends FastaParser {
     public static byte[][] splitReadsIntoByteArrays(String[] reads) {
         byte[][] Rs = new byte[reads.length][reads[0].length()];
         for (int x = 0; x < reads.length; x++) {
-            Rs[x] = BitMagic.splitReadIntoBytes(reads[x]);
+            Rs[x] = splitReadIntoByteArray(reads[x]);
         }
         return Rs;
     }

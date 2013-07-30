@@ -17,9 +17,11 @@
  */
 package ch.ethz.bsse.quasirecomb.model.hmm.parallel;
 
+import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMMStatic;
 import ch.ethz.bsse.quasirecomb.model.hmm.JHMM;
+import ch.ethz.bsse.quasirecomb.model.hmm.ReadHMMStatic_NR;
 import java.util.concurrent.Callable;
 
 /**
@@ -34,13 +36,17 @@ public class CallableReadHMMList implements Callable<Double> {
         this.jhmm = jhmm;
         this.reads = reads;
     }
-    @Override 
+
+    @Override
     public Double call() throws Exception {
         double d = 0;
         for (int i = 0; i < reads.length; i++) {
-            d += ReadHMMStatic.computeFB(jhmm, reads[i]);
+            if (Globals.getINSTANCE().isNO_RECOMB()) {
+                d += ReadHMMStatic_NR.computeFB(jhmm, reads[i]);
+            } else {
+                d += ReadHMMStatic.computeFB(jhmm, reads[i]);
+            }
         }
         return d;
     }
-    
 }

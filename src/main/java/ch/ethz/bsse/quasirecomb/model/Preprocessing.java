@@ -80,12 +80,27 @@ public class Preprocessing {
         }
         int n = countChars(reads);
         Globals.getINSTANCE().setTAU_OMEGA(reads, L);
-        plot();
+
 
         double N = 0;
+        StringBuilder readBuilder = new StringBuilder();
+        int readCount = 0;
         for (Read r : reads) {
-            N += r.getCount();
+            if (r.getWatsonLength() > 0) {
+                N += r.getCount();
+                readBuilder.append(">read").append(readCount).append(" ").append(r.watsonString());
+                if (r.isPaired()) {
+                    if (r.getCrickLength() > 0) {
+                        readBuilder.append(">read").append(readCount).append(" ").append(r.crickString());
+                    }
+                }
+                readCount++;
+            }
         }
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "reads.txt", readBuilder.toString());
+        readBuilder.setLength(0);
+
+        plot();
 
         if (Globals.getINSTANCE().isBOOTSTRAP()) {
             Multimap<Integer, Double> bics = ArrayListMultimap.create();
@@ -370,7 +385,7 @@ public class Preprocessing {
             inserts[x++] = i;
         }
         StatusUpdate.getINSTANCE().println("Insert size\t" + Math.round((new Mean().evaluate(inserts)) * 10) / 10 + " (±" + Math.round(new StandardDeviation().evaluate(inserts) * 10) / 10 + ")");
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH()+"support"+File.separator+"insertSize.txt", insertSB.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "insertSize.txt", insertSB.toString());
     }
 
     private static void plot() {
