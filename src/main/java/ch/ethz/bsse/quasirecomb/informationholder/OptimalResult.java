@@ -38,8 +38,9 @@ public class OptimalResult implements Serializable {
     private double[] eps;
     private double BIC;
     private int restarts;
+    private int start;
 
-    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[][] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts, TauOmega tauOmega, double[][] snv) {
+    public OptimalResult(int N, int K, int L, int n, double[][][] rho, double[][] pi, double[][][] mu, double llh, double BIC, double[] eps, int restarts, TauOmega tauOmega, double[][] snv, int start) {
         this.N = N;
         this.K = K;
         this.L = L;
@@ -53,6 +54,7 @@ public class OptimalResult implements Serializable {
         this.restarts = restarts;
         this.tauOmega = tauOmega;
         this.snv = snv;
+        this.start = start;
     }
 
     public int getK() {
@@ -105,5 +107,9 @@ public class OptimalResult implements Serializable {
 
     public double[][] getSnv() {
         return snv;
+    }
+
+    public int getStart() {
+        return start;
     }
 }

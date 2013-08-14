@@ -25,6 +25,7 @@ import ch.ethz.bsse.quasirecomb.informationholder.Threading;
 import ch.ethz.bsse.quasirecomb.model.hmm.parallel.CallableReadHMMList;
 import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
+import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -297,41 +298,49 @@ public class JHMM extends Garage {
                 }
 
                 double mult = Globals.getINSTANCE().getMULT_RHO();
-                double[] rhoPrior = new double[K];
-                boolean fix = false;
-                for (int l = 0; l < K; l++) {
-                    if (k == l) {
+                if (Globals.getINSTANCE().getPRIOR() == null) {
+                    double[] rhoPrior = new double[K];
+                    boolean fix = false;
+                    for (int l = 0; l < K; l++) {
+                        if (k == l) {
+                            if (max > 0.5 && lPrime != k && Globals.getINSTANCE().isSPIKERHO()) {
+                                rhoPrior[l] = 100;
+                                fix = true;
+                                forceRho = true;
+                                break;
+                            } else {
+                                rhoPrior[l] = Globals.getINSTANCE().getALPHA_Z() * 10;
+                            }
+                        } else {
+                            rhoPrior[l] = Globals.getINSTANCE().getALPHA_Z();
+                        }
+                    }
+                    if (!fix) {
+                        rhoJKL = Regularizations.regularizeOnceRho(k, rhoJKL, restart, rhoPrior, mult);
+                        lPrime = -1;
+                        max = -1;
+                        for (int l = 0; l < K; l++) {
+                            if (rhoJKL[l] > max) {
+                                max = rhoJKL[l];
+                                lPrime = l;
+                            }
+                        }
                         if (max > 0.5 && lPrime != k && Globals.getINSTANCE().isSPIKERHO()) {
-                            rhoPrior[l] = 100;
                             fix = true;
                             forceRho = true;
-                            break;
-                        } else {
-                            rhoPrior[l] = Globals.getINSTANCE().getALPHA_Z() * 10;
                         }
-                    } else {
+                    }
+                    if (fix) {
+                        rhoJKL = new double[K];
+                        for (int l = 0; l < K; l++) {
+                            rhoJKL[l] = l == k ? 1 : 0;
+                        }
+                    }
+                } else {
+                    double[] rhoPrior = new double[K];
+                    for (int l = 0; l < K; l++) {
                         rhoPrior[l] = Globals.getINSTANCE().getALPHA_Z();
-                    }
-                }
-                if (!fix) {
-                    rhoJKL = Regularizations.regularizeOnceRho(k, rhoJKL, restart, rhoPrior, mult);
-                    lPrime = -1;
-                    max = -1;
-                    for (int l = 0; l < K; l++) {
-                        if (rhoJKL[l] > max) {
-                            max = rhoJKL[l];
-                            lPrime = l;
-                        }
-                    }
-                    if (max > 0.5 && lPrime != k && Globals.getINSTANCE().isSPIKERHO()) {
-                        fix = true;
-                        forceRho = true;
-                    }
-                }
-                if (fix) {
-                    rhoJKL = new double[K];
-                    for (int l = 0; l < K; l++) {
-                        rhoJKL[l] = l == k ? 1 : 0;
+                        rhoJKL = Regularizations.regularizeOnceRho(k, rhoJKL, restart, rhoPrior, mult);
                     }
                 }
                 for (int l = 0; l < K; l++) {
@@ -368,7 +377,7 @@ public class JHMM extends Garage {
             sb.append("\n");
         }
 //        }
-//        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "piDist.txt", sb.toString());
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "piDist.txt", sb.toString());
 //        double eta = Math.pow(s + 2, -1);
 //        pi = Regularizations.step(piTmp, pi, eta, false);
     }

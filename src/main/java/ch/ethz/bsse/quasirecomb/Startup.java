@@ -33,7 +33,6 @@ import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -43,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -235,6 +235,8 @@ public class Startup {
     private String hiv;
     @Option(name = "-prior")
     private String prior;
+    @Option(name = "--mix")
+    private boolean mix;
 
     private void setInputOutput() {
         if (output == null) {
@@ -908,6 +910,8 @@ public class Startup {
                 cutnham();
             } else if (annotate) {
                 annotate();
+            } else if (mix) {
+                mix();
             } else {
                 train();
             }
@@ -1259,4 +1263,28 @@ public class Startup {
 //        Utils.saveFile(this.input + "_annotated", fasta.toString());
 //        Utils.saveFile(this.input + "_hesam", hesamFasta.toString());
 //    }
+
+    private void mix() {
+        String[] f1 = FastaParser.parseFarFile(this.input);
+        String[] f2 = FastaParser.parseFarFile(this.haplotypes);
+        if (f1.length != f2.length) {
+            System.err.println("Files are of different sizes.");
+            System.exit(0);
+        }
+        List<Integer> order = new LinkedList<>();
+        for (int i = 0; i < f2.length; i++) {
+            order.add(i);
+        }
+        int x = 0;
+        Collection<List<Integer>> permutations = Collections2.permutations(order);
+        for (List<Integer> l : permutations) {
+            StringBuilder sb = new StringBuilder();
+            int i = 0;
+            for (int j : l) {
+                sb.append(">").append(i).append(j).append("\n");
+                sb.append(f1[i++]).append(f2[j]).append("\n");
+            }
+            Utils.saveFile("permutation_" + x++ + ".fasta", sb.toString());
+        }
+    }
 }

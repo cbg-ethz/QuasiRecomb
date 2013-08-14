@@ -83,22 +83,22 @@ public class Preprocessing {
 
 
         double N = 0;
-        StringBuilder readBuilder = new StringBuilder();
-        int readCount = 0;
+//        StringBuilder readBuilder = new StringBuilder();
+//        int readCount = 0;
         for (Read r : reads) {
             if (r.getWatsonLength() > 0) {
                 N += r.getCount();
-                readBuilder.append(">read").append(readCount).append(" ").append(r.watsonString());
-                if (r.isPaired()) {
-                    if (r.getCrickLength() > 0) {
-                        readBuilder.append(">read").append(readCount).append(" ").append(r.crickString());
-                    }
-                }
-                readCount++;
+//                readBuilder.append(">read").append(readCount).append(" ").append(r.watsonString());
+//                if (r.isPaired()) {
+//                    if (r.getCrickLength() > 0) {
+//                        readBuilder.append(">read").append(readCount).append(" ").append(r.crickString());
+//                    }
+//                }
+//                readCount++;
             }
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "reads.txt", readBuilder.toString());
-        readBuilder.setLength(0);
+//        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "reads.txt", readBuilder.toString());
+//        readBuilder.setLength(0);
 
         plot();
 

@@ -117,7 +117,7 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                                 if (c.getLength() % 3 == 0) {
                                     q = 0.79432823472;
                                 } else {
-                                    q = 0.5;
+                                    q = 0.01;
                                 }
                             }
                             buildQuality.add(q);

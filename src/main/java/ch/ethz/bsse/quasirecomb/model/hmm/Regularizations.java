@@ -284,8 +284,8 @@ public class Regularizations {
             }
         }
         if (Double.isNaN(sum) || Double.isNaN(divisor)) {
-            System.out.println("reg nan");
-            System.exit(0);
+            System.out.println("ONCE reg nan");
+//            System.exit(0);
         }
         max = Double.MIN_VALUE;
         for (int v = 0; v < x; v++) {
@@ -355,7 +355,7 @@ public class Regularizations {
             }
         }
         if (Double.isNaN(sum) || Double.isNaN(divisor)) {
-            System.out.println("reg nan");
+            System.out.println("RHO reg nan");
             System.exit(0);
         }
         max = Double.MIN_VALUE;

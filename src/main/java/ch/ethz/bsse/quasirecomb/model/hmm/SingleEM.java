@@ -92,7 +92,7 @@ public class SingleEM {
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
-                calcBIC(), jhmm.getEps(), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), jhmm.getSnv());
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), jhmm.getSnv(), Globals.getINSTANCE().getALIGNMENT_BEGIN());
         Utils.saveOptimum(save + ".optimum", localOr);
         Summary summary = new Summary();
         Utils.saveFile(save + ".txt", summary.print(localOr));
@@ -485,7 +485,7 @@ public class SingleEM {
                 jhmm.getPi(),
                 jhmm.getMu(),
                 this.jhmm.getLoglikelihood(),
-                calcBIC(), jhmm.getEps(), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), jhmm.getSnv());
+                calcBIC(), jhmm.getEps(), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), jhmm.getSnv(), Globals.getINSTANCE().getALIGNMENT_BEGIN());
         Utils.saveOptimum(save + ".optimum", localOr);
 
         return Globals.getINSTANCE().getSnapshotDir() + (Globals.getINSTANCE().isMODELSELECTION() ? "modelselection" : "training") + File.separator + "R" + (repeat < 10 ? "00" : repeat < 100 ? "0" : "") + repeat + "_K" + K + "_" + (iterations < 10 ? "000" : iterations < 100 ? "00" : iterations < 1000 ? "0" : "") + iterations + ".optimum";
@@ -514,7 +514,7 @@ public class SingleEM {
                 Arrays.copyOf(jhmm.getPi(), jhmm.getPi().length),
                 muCopy,
                 this.jhmm.getLoglikelihood(),
-                BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), snvCopy);
+                BIC_current, Arrays.copyOf(jhmm.getEps(), jhmm.getEps().length), jhmm.getRestart(), Globals.getINSTANCE().getTAU_OMEGA(), snvCopy, Globals.getINSTANCE().getALIGNMENT_BEGIN());
     }
 
     public void printMeanTime() {

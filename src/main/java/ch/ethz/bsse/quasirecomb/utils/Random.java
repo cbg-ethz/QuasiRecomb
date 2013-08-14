@@ -19,6 +19,7 @@ package ch.ethz.bsse.quasirecomb.utils;
 
 import cc.mallet.types.Dirichlet;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
+import java.util.Arrays;
 
 /**
  * @author Armin Töpfer (armin.toepfer@bsse.ethz.ch)
