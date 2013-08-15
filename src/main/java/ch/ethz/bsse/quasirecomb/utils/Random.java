@@ -123,7 +123,7 @@ public class Random {
                 }
             }
         } else {
-            muDir = new Dirichlet(n, 100);
+            muDir = new Dirichlet(n, 1);
             for (int j = L - 1; j >= 0; j--) {
                 for (int k = K - 1; k >= 0; k--) {
 

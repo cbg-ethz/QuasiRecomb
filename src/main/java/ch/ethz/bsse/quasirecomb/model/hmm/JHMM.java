@@ -27,9 +27,12 @@ import ch.ethz.bsse.quasirecomb.utils.Random;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -44,7 +47,7 @@ import org.javatuples.Triplet;
  *
  * @author Armin Töpfer (armin.toepfer [at] gmail.com)
  */
-public class JHMM extends Garage {
+public class JHMM {
 
     protected int Kmin;
     protected int N;
@@ -77,6 +80,7 @@ public class JHMM extends Garage {
     private int unBiasCounter = 0;
     private int s = 0;
     private double beta = 0.0001;
+    private Map<Integer, ParallelJHMMStorage> garage = new HashMap<>();
 
     public JHMM(Read[] reads, int N, int L, int K, int n, double epsilon, int Kmin) {
         this(reads, N, L, K, n, epsilon,
@@ -119,7 +123,9 @@ public class JHMM extends Garage {
     List<Callable<Double>> callables = new LinkedList<>();
 
     private void eStep() {
-        clearGarage(L, K, n);
+        for (ParallelJHMMStorage p : this.garage.values()) {
+            p.clear();
+        }
         this.loglikelihood = 0d;
         if (callables.isEmpty()) {
             final int readAmount = allReads.length;
@@ -136,7 +142,9 @@ public class JHMM extends Garage {
                 if (b >= readAmount) {
                     b = readAmount;
                 }
-                callables.add(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b)));
+                ParallelJHMMStorage p = new ParallelJHMMStorage(L, K, n, i);
+                garage.put(i, p);
+                callables.add(new CallableReadHMMList(this, Arrays.copyOfRange(allReads, i, b), p));
                 StatusUpdate.getINSTANCE().printPercentage(K, (double) i / readAmount, Kmin);
             }
         }
@@ -146,11 +154,11 @@ public class JHMM extends Garage {
         } catch (InterruptedException ex) {
             Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        for (int i = 0; i < results.size(); i++) {
+        
+        int size = results.size();
+        for (int i = 0; i < size; i++) {
             try {
-                Double llh = results.get(i).get();
-                loglikelihood += llh;
+                loglikelihood += results.get(i).get();
             } catch (InterruptedException | ExecutionException ex) {
                 Logger.getLogger(JHMM.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -161,7 +169,12 @@ public class JHMM extends Garage {
 
     private void updateExpectedCounts() {
         if (Globals.getINSTANCE().isSTORAGE()) {
-            ParallelJHMMStorage store = mergeGarage();
+            Iterator<ParallelJHMMStorage> iterator = this.garage.values().iterator();
+            ParallelJHMMStorage store = iterator.next();
+            while (iterator.hasNext()) {
+                store.merge(iterator.next());
+            }
+
             this.nJKL = new double[L][K][K];
             this.nJKV = new double[L][K][n];
             this.nneqPos = new double[L];

@@ -25,13 +25,8 @@ import ch.ethz.bsse.quasirecomb.informationholder.ParallelJHMMStorage;
  */
 public class ReadHMMStatic {
 
-    private static void free(JHMM jhmm, ParallelJHMMStorage storage) {
-        jhmm.free(storage.getId());
-    }
-
-    public static double computeFB(JHMM jhmm, Read read) {
+    public static double computeFB(JHMM jhmm, Read read, ParallelJHMMStorage storage) {
         try {
-            ParallelJHMMStorage storage = jhmm.getStorage();
             int begin = read.getBegin();
 
             int length = read.getLength();
@@ -74,7 +69,7 @@ public class ReadHMMStatic {
                         if (hit) {
                             if (q < 1) {
 //                                fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] * (1 - (jhmm.getn() - 1) * (1 - q)) : jhmm.getEps()[jGlobal] * (1 - q));
-                                fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] * q : jhmm.getEps()[jGlobal] * (1 - q) / 3.0);
+                                fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] * q : jhmm.getEps()[jGlobal] * (1 - q) / (double) n);
                             } else {
                                 fJKV[j][k][v] *= (b == v ? jhmm.getAntieps()[jGlobal] : jhmm.getEps()[jGlobal]);
                             }
@@ -118,7 +113,7 @@ public class ReadHMMStatic {
                                 for (int v = 0; v < n; v++) {
                                     if (q < 1) {
 //                                        sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] * (1 - (jhmm.getn() - 1) * (1 - q)) : jhmm.getEps()[jGlobal + 1] * (1 - q)) * jhmm.getMu()[jGlobal + 1][l][v];
-                                        sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] * q : jhmm.getEps()[jGlobal + 1] * (1 - q) / 3.0) * jhmm.getMu()[jGlobal + 1][l][v];
+                                        sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] * q : jhmm.getEps()[jGlobal + 1] * (1 - q) / (double) n) * jhmm.getMu()[jGlobal + 1][l][v];
                                     } else {
                                         sumV += (b == v ? jhmm.getAntieps()[jGlobal + 1] : jhmm.getEps()[jGlobal + 1]) * jhmm.getMu()[jGlobal + 1][l][v];
                                     }
@@ -182,7 +177,6 @@ public class ReadHMMStatic {
             }
             likelihood *= read.getCount();
 
-            free(jhmm, storage);
             return likelihood;
         } catch (Exception e) {
             System.err.println(e);

@@ -26,9 +26,17 @@ public class ParallelJHMMStorage {
     private double[][][] nJKV;
     private double[] nneqPos;
     private int id;
+    private int L, K, n;
 
     public ParallelJHMMStorage(int L, int K, int n, int id) {
+        this.L = L;
+        this.K = K;
+        this.n = n;
         this.id = id;
+        this.clear();
+    }
+    
+    public void clear() {
         this.nJKL = new double[L][K][K];
         this.nJKV = new double[L][K][n];
         this.nneqPos = new double[L];
