@@ -341,6 +341,9 @@ public class Preprocessing {
         int[][] alignment = countPos(reads, L);
         double[][] alignmentWeighted = countPosWeighted(reads, L);
         double alignmentEntropy = 0;
+        Globals.getINSTANCE().setENTROPY(new double[L]);
+        StringBuilder sbE = new StringBuilder();
+        sbE.append("#Offset: ").append(Globals.getINSTANCE().getALIGNMENT_BEGIN()).append("\n");
         for (int i = 0; i < L; i++) {
             double sum = 0;
             for (int j = 0; j < 5; j++) {
@@ -353,6 +356,8 @@ public class Preprocessing {
                     shannonEntropy_pos -= alignmentWeighted[i][j] * Math.log(alignmentWeighted[i][j]) / Math.log(5);
                 }
             }
+            Globals.getINSTANCE().getENTROPY()[i] = shannonEntropy_pos;
+            sbE.append(i).append("\t").append(shannonEntropy_pos).append("\n");
             alignmentEntropy += shannonEntropy_pos;
             StatusUpdate.getINSTANCE().print("Computing entropy\t" + (Math.round((entropyCounter++ / L) * 100)) + "%");
         }
@@ -361,6 +366,7 @@ public class Preprocessing {
         computeAllelFrequencies(L, alignment, alignmentWeighted);
         StatusUpdate.getINSTANCE().print("Allel frequencies\t100%");
         StatusUpdate.getINSTANCE().println("Alignment entropy\t" + Math.round(alignmentEntropy * 1000) / 1000d);
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "entropy_distribution.txt", sbE.toString());
         return alignment;
     }
 

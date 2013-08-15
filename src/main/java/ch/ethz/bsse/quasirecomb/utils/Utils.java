@@ -285,7 +285,6 @@ public class Utils extends FastaParser {
     }
 
     public static Map<String, Read> parseBAMSAMPure(String location) {
-        Map<String, Read> readMap = new HashMap<>();
         File bam = new File(location);
         SAMFileReader sfr = new SAMFileReader(bam);
         double size = 0;
@@ -322,6 +321,7 @@ public class Utils extends FastaParser {
         sfr.close();
         StatusUpdate.getINSTANCE().println("Start pairing");
         StringBuilder sb = new StringBuilder();
+        Map<String, Read> readMap = new HashMap<>(readFutures.size());
         for (Future<List<ReadTMP>> future : readFutures) {
             try {
                 List<ReadTMP> readList = future.get();

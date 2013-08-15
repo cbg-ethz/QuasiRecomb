@@ -92,6 +92,7 @@ public class Globals {
     private double CURRENT_DELTA_LLH = 0;
     private double MAX_LLH = -1;
     private double MIN_BIC = Double.MIN_VALUE;
+    private double[] ENTROPY;
     private int READ_MINLENGTH;
     private int WINDOW_BEGIN;
     private int WINDOW_END;
@@ -787,5 +788,13 @@ public class Globals {
 
     public void setPRIOR(String PRIOR) {
         this.PRIOR = PRIOR;
+    }
+
+    public double[] getENTROPY() {
+        return ENTROPY;
+    }
+
+    public void setENTROPY(double[] ENTROPY) {
+        this.ENTROPY = ENTROPY;
     }
 }

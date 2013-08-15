@@ -129,6 +129,8 @@ public class Summary extends Utils {
         Arrays.sort(order);
         int min = order[0];
         StringBuilder sb = new StringBuilder();
+        int x = 0;
+        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "alignment.txt", "");
         for (int item : order) {
             List<Read> currentReads = readMap.get(item);
             for (Read currentRead : currentReads) {
@@ -140,9 +142,14 @@ public class Summary extends Utils {
                     sb.append(reverse(Integer.parseInt("" + c)));
                 }
                 sb.append("\n");
+                x++;
+                if (x % 10000 == 0) {
+                    Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "alignment.txt", sb.toString());
+                    sb.setLength(0);
+                }
             }
         }
-        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "alignment.txt", sb.toString());
+        Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "alignment.txt", sb.toString());
     }
 
     public void circos(int L, int[][] alignment) {
