@@ -237,6 +237,8 @@ public class Startup {
     private String prior;
     @Option(name = "--mix")
     private boolean mix;
+    @Option(name = "-onlyPaired")
+    private boolean onlyPaired;
 
     private void setInputOutput() {
         if (output == null) {
@@ -477,7 +479,6 @@ public class Startup {
         Map<String, Double> quasiDouble = FastaParser.parseQuasispeciesFile(input);
         Map<String, String> haps = FastaParser.parseHaplotypeFile(haplotypes);
         double[] precision = DistanceUtils.calculatePhi2(haps, quasiDouble);
-
 
         String[] quasispecies = quasiDouble.keySet().toArray(new String[quasiDouble.size()]);
         quasiDouble.clear();
@@ -864,6 +865,7 @@ public class Startup {
         }
         Globals.getINSTANCE().setK_MIN(Kmin);
         Globals.getINSTANCE().setPRIOR(this.prior);
+        Globals.getINSTANCE().setONLY_PAIRED(this.onlyPaired);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 
@@ -1014,7 +1016,6 @@ public class Startup {
 
     private void posterior(OptimalResult or, String haplotypeFile) {
         Map<String, Double> haps = FastaParser.parseQuasispeciesFile(haplotypeFile);
-
 
     }
 

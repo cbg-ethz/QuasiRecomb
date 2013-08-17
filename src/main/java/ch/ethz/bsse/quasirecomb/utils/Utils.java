@@ -366,6 +366,19 @@ public class Utils extends FastaParser {
                 System.err.println(ex);
             }
         }
+        if (Globals.getINSTANCE().isONLY_PAIRED()) {
+            StatusUpdate.getINSTANCE().println("Start remove single-end reads");
+            List<String> singleEnd = new LinkedList<>();
+            for (Map.Entry<String, Read> e : readMap.entrySet()) {
+                if (!e.getValue().isPaired()) {
+                    singleEnd.add(e.getKey());
+                }
+            }
+            for (String s : singleEnd) {
+                readMap.remove(s);
+            }
+            StatusUpdate.getINSTANCE().println("End remove single-end reads");
+        }
         if (Globals.getINSTANCE().isDEBUG()) {
             Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support/fragment.size", sb.toString());
         }

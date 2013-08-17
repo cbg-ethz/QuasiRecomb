@@ -72,6 +72,7 @@ public class Globals {
     private boolean PAIRED = false;
     private boolean PRIORMU;
     private boolean SPIKERHO;
+    private boolean ONLY_PAIRED;
     private double MAX_DEL;
     private double MAX_OVERALL_DEL;
     private double CUTOFF;
@@ -796,5 +797,13 @@ public class Globals {
 
     public void setENTROPY(double[] ENTROPY) {
         this.ENTROPY = ENTROPY;
+    }
+
+    public boolean isONLY_PAIRED() {
+        return ONLY_PAIRED;
+    }
+
+    public void setONLY_PAIRED(boolean ONLY_PAIRED) {
+        this.ONLY_PAIRED = ONLY_PAIRED;
     }
 }
