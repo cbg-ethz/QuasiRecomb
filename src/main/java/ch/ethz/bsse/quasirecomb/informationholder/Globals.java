@@ -73,6 +73,8 @@ public class Globals {
     private boolean PRIORMU;
     private boolean SPIKERHO;
     private boolean ONLY_PAIRED;
+    private boolean PRUNE;
+    private boolean SUBSAMPLE;
     private double MAX_DEL;
     private double MAX_OVERALL_DEL;
     private double CUTOFF;
@@ -87,7 +89,6 @@ public class Globals {
     private double ESTIMATION_EPSILON;
     private double DELTA_LLH;
     private double DELTA_REFINE_LLH;
-    private boolean PRUNE;
     private double INTERPOLATE_MU;
     private double INTERPOLATE_RHO;
     private double CURRENT_DELTA_LLH = 0;
@@ -103,10 +104,12 @@ public class Globals {
     private int ALIGNMENT_END = Integer.MIN_VALUE;
     private int STEPS;
     private int DESIRED_REPEATS;
+    private int MS_REPEATS;
     private int SAMPLING_NUMBER;
     private int NREAL;
     private int REPEATS;
     private int K_MIN;
+    private int SUBSAMPLE_COUNT;
     private final int cpus = Runtime.getRuntime().availableProcessors();
     private List<Integer> runtime = new LinkedList<>();
     private String PRIOR;
@@ -805,5 +808,29 @@ public class Globals {
 
     public void setONLY_PAIRED(boolean ONLY_PAIRED) {
         this.ONLY_PAIRED = ONLY_PAIRED;
+    }
+
+    public boolean isSUBSAMPLE() {
+        return SUBSAMPLE;
+    }
+
+    public void setSUBSAMPLE(boolean SUBSAMPLE) {
+        this.SUBSAMPLE = SUBSAMPLE;
+    }
+
+    public int getMS_REPEATS() {
+        return MS_REPEATS;
+    }
+
+    public void setMS_REPEATS(int MS_REPEATS) {
+        this.MS_REPEATS = MS_REPEATS;
+    }
+
+    public int getSUBSAMPLE_COUNT() {
+        return SUBSAMPLE_COUNT;
+    }
+
+    public void setSUBSAMPLE_COUNT(int SUBSAMPLE_COUNT) {
+        this.SUBSAMPLE_COUNT = SUBSAMPLE_COUNT;
     }
 }

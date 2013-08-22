@@ -25,6 +25,11 @@ import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -53,12 +58,13 @@ public class ModelSelection {
     private ModelSelectionStorage msTemp = new ModelSelectionStorage();
     private SortedMap<Integer, Double[]> bics = new TreeMap<>();
 
-    public ModelSelection(Read[] reads, int Kmin, int Kmax, int N, int L, int n) {
+    public ModelSelection(Read[] reads, int Kmin, int Kmax, int L, int n) {
         this.kMax = Kmax;
         this.kMin = Kmin;
-        this.N = N;
+        this.N = reads.length;
         this.L = L;
         this.n = n;
+        Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getMS_REPEATS());
         this.start(reads);
     }
 
@@ -82,18 +88,84 @@ public class ModelSelection {
         if (!Globals.getINSTANCE().isBOOTSTRAP()) {
             Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "training");
             Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
-            StatusUpdate.getINSTANCE().setPERCENTAGE(0);
-            EM em = new EM(this.N, this.L, bestK, this.n, reads);
-            if (em.getOr().getLlh() > optBIC || optBIC == 0) {
-                or = em.getOr();
-            }
+            if (Globals.getINSTANCE().getDESIRED_REPEATS() > 0) {
+                StatusUpdate.getINSTANCE().setPERCENTAGE(0);
 
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
-            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-snvs.txt", new Summary().snvs(or));
-            //save optimumJava
-            Utils.saveOptimum(save + File.separator + "best.optimum", or);
+                if (Globals.getINSTANCE().isSUBSAMPLE()) {
+                    shuffleArray(reads);
+                    List<Read> subsample = new LinkedList<>();
+                    Map<String, Integer> generators = new HashMap<>();
+                    Globals.getINSTANCE().setDESIRED_REPEATS(0);
+                    double mult_mu = Globals.getINSTANCE().getMULT_MU();
+                    double mult_rho = Globals.getINSTANCE().getMULT_RHO();
+                    Globals.getINSTANCE().setMULT_MU(1);
+                    Globals.getINSTANCE().setMULT_RHO(1);
+                    for (int i = 0; i < reads.length; i++) {
+                        if (subsample.size() < reads.length / Globals.getINSTANCE().getSUBSAMPLE_COUNT() || i + reads.length / Globals.getINSTANCE().getSUBSAMPLE_COUNT() > reads.length) {
+                            subsample.add(reads[i]);
+                        } else {
+                            Read[] readsSubsample = subsample.toArray(new Read[subsample.size()]);
+                            Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getMS_REPEATS());
+                            EM em = new EM(this.N, this.L, bestK, this.n, readsSubsample);
+                            subsample.clear();
+                            saveSubSample(em.getOr().getMu(), generators, L);
+                        }
+                    }
+                    for (Map.Entry<String, Integer> e : generators.entrySet()) {
+                        System.out.println(e.getValue() + "\t" + e.getKey());
+                    }
+                    Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
+                    System.exit(0);
+                }
+
+                EM em = new EM(this.N, this.L, bestK, this.n, reads);
+                if (em.getOr().getLlh() > optBIC || optBIC == 0) {
+                    or = em.getOr();
+                }
+
+                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
+                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
+                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
+                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-snvs.txt", new Summary().snvs(or));
+                //save optimumJava
+                Utils.saveOptimum(save + File.separator + "best.optimum", or);
+            }
+        }
+    }
+
+    private static void saveSubSample(double[][][] mu, Map<String, Integer> generators, int L) {
+        int K = mu[0].length;
+        for (int k = 0; k < K; k++) {
+            StringBuilder gen = new StringBuilder();
+            for (int j = 0; j < L; j++) {
+                gen.append(max(mu[j][k]));
+            }
+            String generator = gen.toString();
+            int count = generators.containsKey(generator) ? generators.get(generator) : 0;
+            generators.put(generator, count + 1);
+        }
+    }
+
+    private static String max(double[] array) {
+        int index = -1;
+        double max = -1;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] > max) {
+                index = i;
+                max = array[i];
+            }
+        }
+        return Utils.reverse(index);
+    }
+
+    private static void shuffleArray(Read[] ar) {
+        Random rnd = new Random();
+        for (int i = ar.length - 1; i >= 0; i--) {
+            int index = rnd.nextInt(i + 1);
+            // Simple swap
+            Read a = ar[index];
+            ar[index] = ar[i];
+            ar[i] = a;
         }
     }
 

@@ -233,12 +233,14 @@ public class Startup {
     private double maxPercDel = 1;
     @Option(name = "-HIV")
     private String hiv;
-    @Option(name = "-prior")
+    @Option(name = "-initMu")
     private String prior;
     @Option(name = "--mix")
     private boolean mix;
     @Option(name = "-onlyPaired")
     private boolean onlyPaired;
+    @Option(name = "-sublearn")
+    private int subSample;
 
     private void setInputOutput() {
         if (output == null) {
@@ -834,6 +836,7 @@ public class Startup {
         Globals.getINSTANCE().setDELTA_LLH(this.d);
         Globals.getINSTANCE().setDELTA_REFINE_LLH(this.dd);
         Globals.getINSTANCE().setREPEATS(this.m);
+        Globals.getINSTANCE().setMS_REPEATS(this.m);
         Globals.getINSTANCE().setDESIRED_REPEATS(this.t);
         Globals.getINSTANCE().setDEBUG(this.verbose);
         Globals.getINSTANCE().setSAVEPATH(output + File.separator);
@@ -866,6 +869,8 @@ public class Startup {
         Globals.getINSTANCE().setK_MIN(Kmin);
         Globals.getINSTANCE().setPRIOR(this.prior);
         Globals.getINSTANCE().setONLY_PAIRED(this.onlyPaired);
+        Globals.getINSTANCE().setSUBSAMPLE(this.subSample > 0);
+        Globals.getINSTANCE().setSUBSAMPLE_COUNT(this.subSample);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 

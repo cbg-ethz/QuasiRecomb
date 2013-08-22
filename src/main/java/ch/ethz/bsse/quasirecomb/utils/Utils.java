@@ -29,6 +29,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.sf.samtools.AbstractBAMFileIndex;
+import net.sf.samtools.BAMIndexMetaData;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 
@@ -288,8 +290,14 @@ public class Utils extends FastaParser {
         File bam = new File(location);
         SAMFileReader sfr = new SAMFileReader(bam);
         double size = 0;
-        for (final SAMRecord samRecord : sfr) {
-            size++;
+//        for (final SAMRecord samRecord : sfr) {
+//            size++;
+//        }
+        AbstractBAMFileIndex index = (AbstractBAMFileIndex) sfr.getIndex();
+        int nRefs = index.getNumberOfReferences();
+        for (int i = 0; i < nRefs; i++) {
+            BAMIndexMetaData meta = index.getMetaData(i);
+            size += meta.getAlignedRecordCount();
         }
         sfr.close();
         sfr = new SAMFileReader(bam);

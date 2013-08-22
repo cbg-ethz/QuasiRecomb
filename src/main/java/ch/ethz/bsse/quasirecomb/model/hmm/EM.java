@@ -97,14 +97,16 @@ public class EM extends Utils {
 
             StatusUpdate.getINSTANCE().printBIC(K, (int) or.getBIC());
             System.out.print("\n");
+            if (!Globals.getINSTANCE().isSUBSAMPLE()) {
 //            Globals.getINSTANCE().setREFINEMENT(true);
-            if (!Globals.getINSTANCE().isANNEALING()) {
-                SingleEM bestEM = new SingleEM(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
-                this.or = bestEM.getOptimalResult();
-            }
-            StatusUpdate.getINSTANCE().printBIC(K, 100, (int) this.or.getBIC());
-            if (Globals.getINSTANCE().isLOGGING()) {
-                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "log_K" + K, Globals.getINSTANCE().getLOG().toString());
+                if (!Globals.getINSTANCE().isANNEALING()) {
+                    SingleEM bestEM = new SingleEM(or, Globals.getINSTANCE().getDELTA_REFINE_LLH(), reads);
+                    this.or = bestEM.getOptimalResult();
+                }
+                StatusUpdate.getINSTANCE().printBIC(K, 100, (int) this.or.getBIC());
+                if (Globals.getINSTANCE().isLOGGING()) {
+                    Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "log_K" + K, Globals.getINSTANCE().getLOG().toString());
+                }
             }
         }
     }

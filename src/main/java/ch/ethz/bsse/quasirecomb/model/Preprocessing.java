@@ -50,14 +50,9 @@ public class Preprocessing {
     /**
      * Entry point. Forwards invokes of the specified workflow.
      *
-     * @param L length of the reads
-     * @param exp is it an experimental dataset
      * @param input path to the fasta file
      * @param Kmin minimal amount of generators
      * @param Kmax minimal amount of generators
-     * @param n size of the alphabet
-     * @param f distribution of the haplotypes if sampling has to be done
-     * @param N amount of reads in case exp is false
      */
     public static void workflow(String input, int Kmin, int Kmax) {
         Utils.mkdir(Globals.getINSTANCE().getSAVEPATH() + "support");
@@ -83,22 +78,11 @@ public class Preprocessing {
 
 
         double N = 0;
-//        StringBuilder readBuilder = new StringBuilder();
-//        int readCount = 0;
         for (Read r : reads) {
             if (r.getWatsonLength() > 0) {
                 N += r.getCount();
-//                readBuilder.append(">read").append(readCount).append(" ").append(r.watsonString());
-//                if (r.isPaired()) {
-//                    if (r.getCrickLength() > 0) {
-//                        readBuilder.append(">read").append(readCount).append(" ").append(r.crickString());
-//                    }
-//                }
-//                readCount++;
             }
         }
-//        Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "reads.txt", readBuilder.toString());
-//        readBuilder.setLength(0);
 
         plot();
 
@@ -125,7 +109,7 @@ public class Preprocessing {
                 }
 
                 Read[] rs = hashed.values().toArray(new Read[hashed.values().size()]);
-                ModelSelection ms = new ModelSelection(rs, Kmin, Kmax, rs.length, L, n);
+                ModelSelection ms = new ModelSelection(rs, Kmin, Kmax, L, n);
                 bics.putAll(ms.getMsTemp().getMaxBICs());
             }
             StringBuilder sb = new StringBuilder();
@@ -158,10 +142,27 @@ public class Preprocessing {
             Kmax = Kmin;
             Globals.getINSTANCE().setBOOTSTRAP(false);
         }
-
-        ModelSelection ms = new ModelSelection(reads, Kmin, Kmax, reads.length, L, n);
-//        errorCorrection(ms, reads);
-
+        ModelSelection ms = null;
+//        if (Globals.getINSTANCE().isSUBSAMPLE()) {
+//            shuffleArray(reads);
+//            List<Read> subsample = new LinkedList<>();
+//            Map<String, Integer> generators = new HashMap<>();
+//            Globals.getINSTANCE().setDESIRED_REPEATS(0);
+//            for (int i = 0; i < reads.length; i++) {
+//                if (subsample.size() < reads.length / 10 || i + reads.length / 10 > reads.length) {
+//                    subsample.add(reads[i]);
+//                } else {
+//                    Read[] readsSubsample = subsample.toArray(new Read[subsample.size()]);
+//                    ModelSelection msSubsample = new ModelSelection(readsSubsample, Kmin, Kmax, L, n);
+//                    subsample.clear();
+//                    saveSubSample(msSubsample.getOptimalResult().getMu(), generators, L);
+//                }
+//            }
+//            for (Map.Entry<String, Integer> e : generators.entrySet()) {
+//                System.out.println(e.getValue() + "\t" + e.getKey());
+//            }
+//        } else {
+        ms = new ModelSelection(reads, Kmin, Kmax, L, n);
         if (!Globals.getINSTANCE().isNOSAMPLE()) {
             ModelSampling modelSampling = new ModelSampling(ms.getOptimalResult(), Globals.getINSTANCE().getSAVEPATH());
             modelSampling.save();
@@ -170,6 +171,10 @@ public class Preprocessing {
         if (!Globals.getINSTANCE().isDEBUG()) {
             deleteDirectory(new File(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "snapshots"));
         }
+//        }
+//        errorCorrection(ms, reads);
+
+
     }
 
     static public boolean deleteDirectory(File path) {
