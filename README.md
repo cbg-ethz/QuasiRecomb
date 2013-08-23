@@ -20,7 +20,7 @@ steps to infer a viral quasispecies from Next Generation Sequencing (NGS) data.
 If you use QuasiRecomb, please cite the paper <i>Töpfer et al.</i> in <a href="http://online.liebertpub.com/doi/abs/10.1089/cmb.2012.0232">Journal of Computational Biology</a>
 
 ### DOWNLOAD:
-Please get the latest binary at https://sourceforge.net/projects/quasirecomb/
+Please get the latest binary at https://github.com/armintoepfer/QuasiRecomb/releases
 
 ### FEATURES:
  - First algorithm that models the recombination process
