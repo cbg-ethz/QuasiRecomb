@@ -68,9 +68,6 @@ If you are new to QuasiRecomb, please read the **[Beginners' guide to viral popu
 ### Reconstruct specific region with respect to reference genome numbering
  `-r 790-2292`
 
-### Robust model selection
- `-bootstrap`
-
 ### Incorporate PHRED quality scores (slower)
  `-quality`
 

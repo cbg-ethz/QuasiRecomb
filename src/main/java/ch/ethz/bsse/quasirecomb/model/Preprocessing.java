@@ -17,24 +17,31 @@
  */
 package ch.ethz.bsse.quasirecomb.model;
 
+import ch.ethz.bsse.quasirecomb.distance.DistanceUtils;
 import ch.ethz.bsse.quasirecomb.informationholder.Globals;
 import ch.ethz.bsse.quasirecomb.informationholder.ModelSelectionBootstrapStorage;
+import ch.ethz.bsse.quasirecomb.informationholder.OptimalResult;
 import ch.ethz.bsse.quasirecomb.informationholder.Read;
 import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
+import ch.ethz.bsse.quasirecomb.utils.FastaParser;
 import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
@@ -76,8 +83,7 @@ public class Preprocessing {
         int n = countChars(reads);
         Globals.getINSTANCE().setTAU_OMEGA(reads, L);
 
-
-        double N = 0;
+        int N = 0;
         for (Read r : reads) {
             if (r.getWatsonLength() > 0) {
                 N += r.getCount();
@@ -87,34 +93,92 @@ public class Preprocessing {
         plot();
 
         if (Globals.getINSTANCE().isBOOTSTRAP()) {
+            String[] truth = FastaParser.parseFarFile(Globals.getINSTANCE().getPRIOR());
             Multimap<Integer, Double> bics = ArrayListMultimap.create();
-            Map<Read, Double> piMap = new HashMap<>();
+            List<Read> readList = Lists.newArrayListWithExpectedSize(N);
+            int x = 0;
             for (Read r : reads) {
-                piMap.put(r, r.getCount() / N);
+                int count = r.getCount();
+                for (int i = 0; i < count; i++) {
+                    readList.add(new Read(r));
+                }
+//                r.setCount(1);
             }
-            Frequency<Read> readDist = new Frequency<>(piMap);
-
-            for (int i = 0; i < 10; i++) {
+//            for (Read r : reads) {
+//                Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "pi_bootstrap_original.txt", + r.getCount() + "\n");
+//            }
+            Read[] readArray = readList.toArray(new Read[readList.size()]);
+            for (int i = 0; i < 100; i++) {
                 StatusUpdate.getINSTANCE().println("Bootstrap " + i + "\n");
                 Map<Integer, Read> hashed = new HashMap<>();
-
-                for (int x = 0; x < N; x++) {
-                    Read r = readDist.roll();
+                Random rnd = new Random();
+                for (int y = 0; y < N; y++) {
+                    Read r = readArray[rnd.nextInt(N)];
                     int hash = r.hashCode();
                     if (hashed.containsKey(hash)) {
                         hashed.get(hash).incCount();
                     } else {
-                        hashed.put(hash, new Read(r));
+                        hashed.put(r.hashCode(), r);
                     }
                 }
 
-                Read[] rs = hashed.values().toArray(new Read[hashed.values().size()]);
+//                for (Read r : reads) {
+//                    Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "pi_bootstrap_" + i + ".txt", (hashed.get(r.hashCode()) == null ? 0 : hashed.get(r.hashCode()).getCount()) + "\n");
+//                }
+                Read[] rs = hashed.values().toArray(new Read[hashed.size()]);
                 ModelSelection ms = new ModelSelection(rs, Kmin, Kmax, L, n);
+                OptimalResult or = ms.getOptimalResult();
+                double[] pi = new double[or.getPi()[0].length];
+                double piSum = 0;
+                for (int j = 0; j < or.getPi().length; j++) {
+                    for (int k = 0; k < or.getPi()[j].length; k++) {
+                        pi[k] += or.getPi()[j][k];
+                        piSum += or.getPi()[j][k];
+                    }
+                }
+                StringBuilder piSB = new StringBuilder();
+                piSB.append(pi[0] / piSum);
+                for (int k = 1; k < pi.length; k++) {
+                    piSB.append("\t");
+                    piSB.append(pi[k] / piSum);
+                }
+                new File(Globals.getINSTANCE().getSAVEPATH() + i).mkdirs();
+                ModelSampling modelSampling = new ModelSampling(or, Globals.getINSTANCE().getSAVEPATH() + i + File.separator);
+                modelSampling.save();
+                Map<String, Double> quasispecies = FastaParser.parseQuasispeciesFile(Globals.getINSTANCE().getSAVEPATH() + i + File.separator + "quasispecies.fasta");
+
+                double[] frequencies = new double[truth.length];
+                for (Map.Entry<String, Double> e : quasispecies.entrySet()) {
+                    int distance = Integer.MAX_VALUE;
+                    int index = -1;
+                    for (int t = 0; t < truth.length; t++) {
+                        int hamming = DistanceUtils.calcHamming(e.getKey(), truth[t]);
+                        if (hamming < distance) {
+                            index = t;
+                            distance = hamming;
+                        }
+                    }
+                    frequencies[index] += e.getValue();
+                }
+
+                StringBuilder fSB = new StringBuilder();
+                fSB.append(frequencies[0]);
+                for (int f = 1; f < frequencies.length; f++) {
+                    fSB.append("\t");
+                    fSB.append(frequencies[f]);
+                }
+
+                Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "bootstrap.txt", fSB.toString() + "\n");
+
+                Utils.appendFile(Globals.getINSTANCE().getSAVEPATH() + "pi_bootstrap.txt", piSB.toString() + "\n");
+
                 bics.putAll(ms.getMsTemp().getMaxBICs());
             }
+            System.exit(0);
+
             StringBuilder sb = new StringBuilder();
 
-            int x = bics.asMap().values().iterator().next().size();
+            int bootstraps = bics.asMap().values().iterator().next().size();
             Set<Integer> keySet = bics.keySet();
             for (int i : keySet) {
                 sb.append(i).append("\t");
@@ -122,9 +186,7 @@ public class Preprocessing {
             sb.setLength(sb.length() - 1);
             sb.append("\n");
 
-
-
-            for (int l = 0; l < x; l++) {
+            for (int l = 0; l < bootstraps; l++) {
                 for (int i : keySet) {
                     ArrayList arrayList = new ArrayList(bics.get(i));
                     if (l < arrayList.size()) {
@@ -173,7 +235,6 @@ public class Preprocessing {
         }
 //        }
 //        errorCorrection(ms, reads);
-
 
     }
 

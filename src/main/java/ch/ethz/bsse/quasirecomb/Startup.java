@@ -951,7 +951,7 @@ public class Startup {
             System.err.println("  -sampleProteins\t: Sample full-length protein sequences in three reading frames.");
             System.err.println("  -coverage\t\t: If your dataset only contains a single region of interest, "
                     + "\n\t\t\t  regions with a minimum coverage of 100x, 500x, 1,000x and 10,000x are reported.");
-            System.err.println("  -bootstrap\t\t: Model-selection is performed on 10 bootstrapped datasets. Very time consuming, but robust.");
+//            System.err.println("  -bootstrap\t\t: Model-selection is performed on 10 bootstrapped datasets. Very time consuming, but robust.");
             System.err.println("  -refine\t\t: Can only be used after QuasiRecomb has been executed once before on the same dataset in the same directory."
                     + "\n\t\t\t  Thins the number of haplotypes.");
             System.err.println("  -noGaps\t\t: Ignore gaps; useful if data is 454 and gaps are only technical errors.");

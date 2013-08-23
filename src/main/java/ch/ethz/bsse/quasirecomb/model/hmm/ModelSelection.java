@@ -85,52 +85,52 @@ public class ModelSelection {
             }
         }
         Globals.getINSTANCE().setMODELSELECTION(false);
-        if (!Globals.getINSTANCE().isBOOTSTRAP()) {
-            Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "training");
-            Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
-            if (Globals.getINSTANCE().getDESIRED_REPEATS() > 0) {
-                StatusUpdate.getINSTANCE().setPERCENTAGE(0);
+//        if (!Globals.getINSTANCE().isBOOTSTRAP()) {
+        Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "training");
+        Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
+        if (Globals.getINSTANCE().getDESIRED_REPEATS() > 0) {
+            StatusUpdate.getINSTANCE().setPERCENTAGE(0);
 
-                if (Globals.getINSTANCE().isSUBSAMPLE()) {
-                    shuffleArray(reads);
-                    List<Read> subsample = new LinkedList<>();
-                    Map<String, Integer> generators = new HashMap<>();
-                    Globals.getINSTANCE().setDESIRED_REPEATS(0);
-                    double mult_mu = Globals.getINSTANCE().getMULT_MU();
-                    double mult_rho = Globals.getINSTANCE().getMULT_RHO();
-                    Globals.getINSTANCE().setMULT_MU(1);
-                    Globals.getINSTANCE().setMULT_RHO(1);
-                    for (int i = 0; i < reads.length; i++) {
-                        if (subsample.size() < reads.length / Globals.getINSTANCE().getSUBSAMPLE_COUNT() || i + reads.length / Globals.getINSTANCE().getSUBSAMPLE_COUNT() > reads.length) {
-                            subsample.add(reads[i]);
-                        } else {
-                            Read[] readsSubsample = subsample.toArray(new Read[subsample.size()]);
-                            Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getMS_REPEATS());
-                            EM em = new EM(this.N, this.L, bestK, this.n, readsSubsample);
-                            subsample.clear();
-                            saveSubSample(em.getOr().getMu(), generators, L);
-                        }
+            if (Globals.getINSTANCE().isSUBSAMPLE()) {
+                shuffleArray(reads);
+                List<Read> subsample = new LinkedList<>();
+                Map<String, Integer> generators = new HashMap<>();
+                Globals.getINSTANCE().setDESIRED_REPEATS(0);
+                double mult_mu = Globals.getINSTANCE().getMULT_MU();
+                double mult_rho = Globals.getINSTANCE().getMULT_RHO();
+                Globals.getINSTANCE().setMULT_MU(1);
+                Globals.getINSTANCE().setMULT_RHO(1);
+                for (int i = 0; i < reads.length; i++) {
+                    if (subsample.size() < reads.length / Globals.getINSTANCE().getSUBSAMPLE_COUNT() || i + reads.length / Globals.getINSTANCE().getSUBSAMPLE_COUNT() > reads.length) {
+                        subsample.add(reads[i]);
+                    } else {
+                        Read[] readsSubsample = subsample.toArray(new Read[subsample.size()]);
+                        Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getMS_REPEATS());
+                        EM em = new EM(this.N, this.L, bestK, this.n, readsSubsample);
+                        subsample.clear();
+                        saveSubSample(em.getOr().getMu(), generators, L);
                     }
-                    for (Map.Entry<String, Integer> e : generators.entrySet()) {
-                        System.out.println(e.getValue() + "\t" + e.getKey());
-                    }
-                    Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
-                    System.exit(0);
                 }
-
-                EM em = new EM(this.N, this.L, bestK, this.n, reads);
-                if (em.getOr().getLlh() > optBIC || optBIC == 0) {
-                    or = em.getOr();
+                for (Map.Entry<String, Integer> e : generators.entrySet()) {
+                    System.out.println(e.getValue() + "\t" + e.getKey());
                 }
-
-                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
-                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
-                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
-                Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-snvs.txt", new Summary().snvs(or));
-                //save optimumJava
-                Utils.saveOptimum(save + File.separator + "best.optimum", or);
+                Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
+                System.exit(0);
             }
+
+            EM em = new EM(this.N, this.L, bestK, this.n, reads);
+            if (em.getOr().getLlh() > optBIC || optBIC == 0) {
+                or = em.getOr();
+            }
+
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-result.txt", new Summary().print(or));
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-minimal.txt", new Summary().minimal(or));
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-summary.html", new Summary().html(or));
+            Utils.saveFile(Globals.getINSTANCE().getSAVEPATH() + "support" + File.separator + "K" + or.getK() + "-snvs.txt", new Summary().snvs(or));
+            //save optimumJava
+            Utils.saveOptimum(save + File.separator + "best.optimum", or);
         }
+//        }
     }
 
     private static void saveSubSample(double[][][] mu, Map<String, Integer> generators, int L) {
