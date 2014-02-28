@@ -110,12 +110,11 @@ public class SFRComputing implements Callable<List<ReadTMP>> {
                             buildRead.add((byte) "-".charAt(0));
                             double q;
 
-                            if (Globals.getINSTANCE().isNO_GAPS()) {
-                                q = 0.0;
+                            if (c.getLength() % 3 == 0) {
+                                q = 0.79432823472;
                             } else {
-                                q = 0.01;
-                                if (c.getLength() % 3 == 0) {
-                                    q = 0.79432823472;
+                                if (Globals.getINSTANCE().isNO_GAPS()) {
+                                    q = 0.0;
                                 } else {
                                     q = 0.01;
                                 }

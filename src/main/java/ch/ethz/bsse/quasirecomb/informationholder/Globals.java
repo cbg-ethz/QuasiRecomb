@@ -94,6 +94,7 @@ public class Globals {
     private double CURRENT_DELTA_LLH = 0;
     private double MAX_LLH = -1;
     private double MIN_BIC = Double.MIN_VALUE;
+    private double SUB_SAMPLE_PERC;
     private double[] ENTROPY;
     private int READ_MINLENGTH;
     private int WINDOW_BEGIN;
@@ -832,5 +833,13 @@ public class Globals {
 
     public void setSUBSAMPLE_COUNT(int SUBSAMPLE_COUNT) {
         this.SUBSAMPLE_COUNT = SUBSAMPLE_COUNT;
+    }
+
+    public double getSUB_SAMPLE_PERC() {
+        return SUB_SAMPLE_PERC;
+    }
+
+    public void setSUB_SAMPLE_PERC(double SUB_SAMPLE_PERC) {
+        this.SUB_SAMPLE_PERC = SUB_SAMPLE_PERC;
     }
 }

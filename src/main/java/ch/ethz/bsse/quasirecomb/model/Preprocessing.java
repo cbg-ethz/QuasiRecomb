@@ -26,18 +26,15 @@ import ch.ethz.bsse.quasirecomb.model.hmm.ModelSelection;
 import ch.ethz.bsse.quasirecomb.modelsampling.ModelSampling;
 import ch.ethz.bsse.quasirecomb.utils.BitMagic;
 import ch.ethz.bsse.quasirecomb.utils.FastaParser;
-import ch.ethz.bsse.quasirecomb.utils.Frequency;
 import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +68,7 @@ public class Preprocessing {
             Globals.getINSTANCE().setINTERPOLATE_MU(.5);
         }
         int[][] alignment = computeAlignment(reads, L);
-        StatusUpdate.getINSTANCE().println("Unique reads\t" + reads.length);
+        
         StatusUpdate.getINSTANCE().println("Paired reads\t" + Globals.getINSTANCE().getPAIRED_COUNT());
         computeInsertDist(reads);
         StatusUpdate.getINSTANCE().println("Merged reads\t" + Globals.getINSTANCE().getMERGED() + "\n");

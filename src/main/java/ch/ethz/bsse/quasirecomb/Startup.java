@@ -241,6 +241,8 @@ public class Startup {
     private boolean onlyPaired;
     @Option(name = "-sublearn")
     private int subSample;
+    @Option(name = "-subsample")
+    private double subSamplePerc;
 
     private void setInputOutput() {
         if (output == null) {
@@ -871,6 +873,7 @@ public class Startup {
         Globals.getINSTANCE().setONLY_PAIRED(this.onlyPaired);
         Globals.getINSTANCE().setSUBSAMPLE(this.subSample > 0);
         Globals.getINSTANCE().setSUBSAMPLE_COUNT(this.subSample);
+        Globals.getINSTANCE().setSUB_SAMPLE_PERC(this.subSamplePerc);
         Preprocessing.workflow(this.input, Kmin, Kmax);
     }
 

@@ -25,6 +25,7 @@ import ch.ethz.bsse.quasirecomb.utils.StatusUpdate;
 import ch.ethz.bsse.quasirecomb.utils.Summary;
 import ch.ethz.bsse.quasirecomb.utils.Utils;
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,7 +62,6 @@ public class ModelSelection {
     public ModelSelection(Read[] reads, int Kmin, int Kmax, int L, int n) {
         this.kMax = Kmax;
         this.kMin = Kmin;
-        this.N = reads.length;
         this.L = L;
         this.n = n;
         Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getMS_REPEATS());
@@ -73,6 +73,16 @@ public class ModelSelection {
         String save = Globals.getINSTANCE().getSAVEPATH() + "support";
         Utils.mkdir(Globals.getINSTANCE().getSnapshotDir());
 
+        if (Globals.getINSTANCE().getSUB_SAMPLE_PERC() > 0d) {
+            shuffleArray(reads);
+            reads = Arrays.copyOfRange(reads, 0, (int) Math.round(Globals.getINSTANCE().getSUB_SAMPLE_PERC() * reads.length));
+        }
+
+        for (Read r : reads) {
+            this.N += r.getCount();
+        }
+        StatusUpdate.getINSTANCE().println("Unique reads\t" + reads.length);
+        StatusUpdate.getINSTANCE().println("Total reads\t" + this.N + "\n");
         if (!Globals.getINSTANCE().isUSER_OPTIMUM()) {
             if (kMin != kMax) {
                 Globals.getINSTANCE().setMODELSELECTION(true);
@@ -88,9 +98,9 @@ public class ModelSelection {
 //        if (!Globals.getINSTANCE().isBOOTSTRAP()) {
         Utils.mkdir(Globals.getINSTANCE().getSnapshotDir() + File.separator + "training");
         Globals.getINSTANCE().setREPEATS(Globals.getINSTANCE().getDESIRED_REPEATS());
+
         if (Globals.getINSTANCE().getDESIRED_REPEATS() > 0) {
             StatusUpdate.getINSTANCE().setPERCENTAGE(0);
-
             if (Globals.getINSTANCE().isSUBSAMPLE()) {
                 shuffleArray(reads);
                 List<Read> subsample = new LinkedList<>();
