@@ -1,4 +1,7 @@
-# QuasiRecomb
+<p align="center">
+  <img src="https://github.com/armintoepfer/QuasiRecomb/blob/master/QR.png?raw=true" alt="QuasiRecomb logo"/>
+</p>
+<h1 align="center">QuasiRecomb</b></h1>
 RNA viruses are present in a single host as a population of different
 but related strains. This population, shaped by the combination of
 genetic change and selection, is called quasispecies. Genetic change
