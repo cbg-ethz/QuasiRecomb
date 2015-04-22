@@ -50,7 +50,7 @@ Please get the latest binary at https://github.com/armintoepfer/QuasiRecomb/rele
  - JDK 7 (http://jdk7.java.net/)
 
 ## HOW-TO:
-If you are new to QuasiRecomb, please read the **[Beginners' guide to viral population inference](https://github.com/armintoepfer/QuasiRecomb/blob/master/HOWTO.md)**
+If you are new to QuasiRecomb, please read the **[Beginners' guide to viral population inference](https://github.com/cbg-ethz/QuasiRecomb/blob/master/HOWTO.md)**
 
 ## RUN:
 ### Local / Global reconstruction
