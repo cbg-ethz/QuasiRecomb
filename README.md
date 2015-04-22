@@ -2,6 +2,9 @@
   <img src="https://github.com/armintoepfer/QuasiRecomb/blob/master/QR.png?raw=true" alt="QuasiRecomb logo"/>
 </p>
 <h1 align="center">QuasiRecomb</b></h1>
+***
+<p align="center">Dr. Armin Töpfer, <a href="http://www.armintoepfer.com">armintoepfer.com</a></p>
+***
 RNA viruses are present in a single host as a population of different
 but related strains. This population, shaped by the combination of
 genetic change and selection, is called quasispecies. Genetic change
@@ -130,7 +133,7 @@ R CMD BATCH support/modelselection.R
 # CONTACT:
     Armin Töpfer
     armin.toepfer (at) gmail.com
-    http://www.bsse.ethz.ch/cbg/people/toepfera
+    http://www.armintoepfer.com
 
 # LICENSE:
  GNU GPLv3 http://www.gnu.org/licenses/gpl-3.0
