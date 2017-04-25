@@ -2,9 +2,13 @@
   <img src="https://github.com/cbg-ethz/QuasiRecomb/blob/master/QR.png?raw=true" alt="QuasiRecomb logo"/>
 </p>
 <h1 align="center">QuasiRecomb</b></h1>
+
 ***
+
 <p align="center">Dr. Armin Töpfer, <a href="http://www.armintoepfer.com">armintoepfer.com</a></p>
+
 ***
+
 RNA viruses are present in a single host as a population of different
 but related strains. This population, shaped by the combination of
 genetic change and selection, is called quasispecies. Genetic change
@@ -102,19 +106,19 @@ R CMD BATCH support/modelselection.R
 ```
 
 ## Technical details
-#####To minimize the memory consumption and the number of full garbage collector executions, use:
+##### To minimize the memory consumption and the number of full garbage collector executions, use:
 `java -XX:NewRatio=9 -jar QuasiRecomb.jar`
 
-#####If your dataset is very large and you run out of memory, increase the heapspace with:
+##### If your dataset is very large and you run out of memory, increase the heapspace with:
 `java -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
-####On multicore systems:
+#### On multicore systems:
 `java -XX:+UseParallelGC -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
-####On multi-CPU systems:
+#### On multi-CPU systems:
 `java -XX:+UseParallelGC -XX:+UseNUMA -XX:NewRatio=9 -Xms2G -Xmx10G -jar QuasiRecomb.jar`
 
-#####Unix wrapper:
+##### Unix wrapper:
 `function qr() { java -XX:+UseParallelGC -Xms2g -Xmx10g -XX:+UseNUMA -XX:NewRatio=9 -jar ~/QuasiRecomb.jar $*; }`
 
 ### Help:
